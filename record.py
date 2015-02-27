@@ -24,7 +24,7 @@ __author__ = 'Mark Richards'
 __email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
 
 
-def make_recordtype(typename, fieldnames, rename=False):
+def make_type(typename, fieldnames, rename=False):
     """Make a custom record class.
 
     Class factory for creating a custom record class with attributes

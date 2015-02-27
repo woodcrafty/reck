@@ -4,14 +4,14 @@ import unittest
 
 import record
 
-Rec = record.make_recordtype('Rec', ['a', 'b'])
+Rec = record.make_type('Rec', ['a', 'b'])
 
 
 class RecordTestCase(unittest.TestCase):
 
 
     def setUp(self):
-        #self.Rec = record.make_recordtype('Rec', ['a', 'b'])
+        #self.Rec = record.make_type('Rec', ['a', 'b'])
         self.rec = Rec([1, 2])
 
     def test_contains(self):
@@ -55,62 +55,62 @@ class RecordTestCase(unittest.TestCase):
 
     def test_creation_with_more_than_256_fields(self):
         fieldnames = ['f{0}'.format(i) for i in range(1000)]
-        R = record.make_recordtype('R', fieldnames)
+        R = record.make_type('R', fieldnames)
         rec = R(list(range(1000)))
         self.assertEqual(rec.f0, 0)
         self.assertEqual(rec.f999, 999)
 
     def test_fieldname_starting_with_underscore(self):
         with self.assertRaises(ValueError):
-            R = record.make_recordtype('R', ['a', '_b'])
+            R = record.make_type('R', ['a', '_b'])
 
     def test_duplicate_fieldnames(self):
         with self.assertRaises(ValueError):
-            R = record.make_recordtype('R', ['a', 'a'])
+            R = record.make_type('R', ['a', 'a'])
 
     def test_non_string_typename_and_fieldname(self):
         with self.assertRaises(TypeError):
-            R = record.make_recordtype([1], ['a', 'b'])
+            R = record.make_type([1], ['a', 'b'])
         with self.assertRaises(TypeError):
-            R = record.make_recordtype('R', ['a', [1]])
+            R = record.make_type('R', ['a', [1]])
 
     def test_keyword_typename_and_fieldname(self):
         with self.assertRaises(ValueError):
-            R = record.make_recordtype('for', ['a', 'b'])
+            R = record.make_type('for', ['a', 'b'])
         with self.assertRaises(ValueError):
-            R = record.make_recordtype('R', ['a', 'for'])
+            R = record.make_type('R', ['a', 'for'])
 
     def test_non_alphanumeric_typename_and_fieldname(self):
         with self.assertRaises(ValueError):
-            R = record.make_recordtype('-R', ['a', 'b'])
+            R = record.make_type('-R', ['a', 'b'])
         with self.assertRaises(ValueError):
-            R = record.make_recordtype('R', ['a', '-b'])
+            R = record.make_type('R', ['a', '-b'])
 
     def test_typename_and_fieldname_starting_with_number(self):
         with self.assertRaises(ValueError):
-            R = record.make_recordtype('1R', ['a', 'b'])
+            R = record.make_type('1R', ['a', 'b'])
         with self.assertRaises(ValueError):
-            R = record.make_recordtype('R', ['1a', 'b'])
+            R = record.make_type('R', ['1a', 'b'])
 
     def test_rename(self):
         # Use some invalid fieldnames and check that they are renamed
         # appropriately
         # [keyword, evaluates to not, digit, starts with underscore]
         fieldnames = ['for', 'None', '1', '_']
-        R = record.make_recordtype('R', fieldnames, rename=True)
+        R = record.make_type('R', fieldnames, rename=True)
         for i, fieldname in enumerate(fieldnames):
             self.assertEqual(R._fieldnames[i], '_{0}'.format(i))
 
         # Test that duplicate fieldname is renamed
         fieldnames = ['a', 'a']
-        R = record.make_recordtype('R', fieldnames, rename=True)
+        R = record.make_type('R', fieldnames, rename=True)
         self.assertEqual(R._fieldnames[1], '_1')
 
     def test_index(self):
         self.assertEqual(self.rec.index(2), 1)
 
     def test_count(self):
-        R = record.make_recordtype('R', ['a', 'b', 'c'])
+        R = record.make_type('R', ['a', 'b', 'c'])
         rec = R([1, 2, 2])
         self.assertEqual(rec.count(1), 1)
         self.assertEqual(rec.count(2), 2)
@@ -170,7 +170,7 @@ class RecordTestCase(unittest.TestCase):
         # fields argument of the constructor are preserved in __slots__
         fields = (
             ['field_b', 'field_d', 'field_c', 'field_f', 'field_e', 'field_a'])
-        Rec = record.make_recordtype('Rec', fields)
+        Rec = record.make_type('Rec', fields)
         rec = Rec(list(range(len(fields))))
         self.assertEqual(rec.field_b, 0)
         self.assertEqual(rec.field_d, 1)
@@ -180,7 +180,7 @@ class RecordTestCase(unittest.TestCase):
         self.assertEqual(rec.field_a, 5)
 
     def test___getitem__(self):
-        R = record.make_recordtype('R', ['a', 'b', 'c', 'd'])
+        R = record.make_type('R', ['a', 'b', 'c', 'd'])
         rec = R([1, 2, 3, 4])
 
         # Test access by numerical index
@@ -200,7 +200,7 @@ class RecordTestCase(unittest.TestCase):
             _ = rec[99999]
 
     def test___setitem__(self):
-        R = record.make_recordtype('R', ['a', 'b', 'c', 'd', 'e'])
+        R = record.make_type('R', ['a', 'b', 'c', 'd', 'e'])
         rec = R([1, 2, 3, 4, 5])
 
         # Test __setitem__ by numerical index
