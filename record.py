@@ -1,16 +1,9 @@
 """
-Similar to namedtuple, but is writable and is not limited to 256 fields.
+Create custom record classes that have mutable field values.
 
 TODO:
 Finish/polish docstrings
 Add _set___dict__ to the __dict__ property?
-
-Add url to setup.py
-Add test option to setup.py
-Create Git repo
-Clone to GitHub
-
-Test on all versions of Python 3x
 """
 
 import collections
@@ -47,7 +40,7 @@ def make_type(typename, fieldnames, rename=False):
             Names of the fields in the record, e.g. ['name', 'age'].
             Any valid Python identifier may be used as a fieldname,
             except for names starting with an underscore.
-        rename: logical
+        rename: boolean
             If rename is True, invalid fieldnames are automatically replaced
             with positional names. For example, ('abc', 'def', 'ghi', 'abc')
             is converted to ('abc', '_1', 'ghi', '_3'), eliminating the
@@ -184,6 +177,9 @@ def __getitem__(self, index):
         index: int or slice object
             Index can be an integer or slice object for normal sequence
             item access.
+    Returns:
+        The value of the field corresponding to the index or a list of values
+        corresponding to slice indices.
     """
     if isinstance(index, int):
         return self._attr_getters[index](self)
@@ -210,10 +206,11 @@ def __setitem__(self, index, value):
             Value to set.
     """
     if isinstance(index, int):
-        return setattr(self, self.__slots__[index], value)
+        setattr(self, self.__slots__[index], value)
     else:  # Slice object
         fields = self.__slots__[index]
-        return [setattr(self, field, v) for field, v in zip(fields, value)]
+        for field, v in zip(fields, value):
+            setattr(self, field, v)
 
 
 def __getnewargs__(self):
