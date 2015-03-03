@@ -82,6 +82,10 @@ class RecordTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             rec = Rec([1])
 
+    def test_instantiation_with_invalid_type(self):
+        with self.assertRaises(TypeError):
+            rec = Rec(1)
+
     def test_instantiation_with_more_values_than_fields(self):
         # When instantiating a record with more values than there are
         # fields, the surplus values should be ignored without raising
@@ -217,7 +221,7 @@ class RecordTestCase(unittest.TestCase):
 
     def test_asdict(self):
         self.assertEqual(
-            self.rec._asdict(), collections.OrderedDict([('a', 1), ('b', 2)]))
+            self.rec._asdict(), OrderedDict([('a', 1), ('b', 2)]))
 
     def test___dict__(self):
         # These assertions are necessary because record uses __slots__
