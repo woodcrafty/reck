@@ -367,32 +367,6 @@ def __setitem__(self, index, value):
             setattr(self, field, v)
 
 
-def _defaults_mapping_to_list(self, defaults_mapping):
-    """Convert a mapping of default values to a list.
-
-    The map's keys should be a superset of _fieldnames. Keys that do not
-    match a fieldname are ignored. The resulting list of default values
-    is ordered to match the order of the fields in __slots__.
-    """
-    if all([name in defaults_mapping for name in self._fieldnames]):
-        defaults_list = [None] * len(self._fieldnames)
-        for k, v in defaults_mapping.items():
-            try:
-                index = self._fieldnames.find(k)
-            except ValueError:
-                # The keys of the defaults mapping is allowed to be a
-                # superset of _fieldnames, so Attribute Errors are
-                # allowed.
-                pass
-            else:
-                defaults_list[index] = v
-    else:
-        raise ValueError(
-            "when defaults is a mapping its keys must contain all of"
-            "the record's fieldnames")
-    return defaults_list
-
-
 def __getnewargs__(self):
     """Return self as a plain tuple. Used by copy and pickle."""
     return tuple(self)
