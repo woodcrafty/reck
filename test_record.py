@@ -1,4 +1,5 @@
 
+from collections import OrderedDict
 import pickle
 import unittest
 
@@ -11,20 +12,56 @@ class RecordTestCase(unittest.TestCase):
 
 
     def setUp(self):
-        #self.Rec = record.make_type('Rec', ['a', 'b'])
         self.rec = Rec([1, 2])
 
-    def test_contains(self):
-        self.assertEqual(1 in self.rec, True)
-        self.assertEqual(2 in self.rec, True)
-        self.assertEqual(3 in self.rec, False)
+    def test_make_type_with_defaults(self):
+        # Sequence of( 2-tuples
+        R = record.make_type('R', [('a', 1), ('b', 2)])
+        self.assertEqual(R._get_defaults(), (1, 2))
+        # Instantiate with defaults
+        r = R()
+        self.assertEqual(r.a, 1)
+        self.assertEqual(r.b, 2)
+        # Instantiate without defaults
+        r = R([3, 4])
+        self.assertEqual(r.a, 3)
+        self.assertEqual(r.b, 4)
+
+        # Mapping
+        R = record.make_type('R', OrderedDict([('a', 1), ('b', 2)]))
+        self.assertEqual(R._get_defaults(), (1, 2))
+        # Instantiate with defaults
+        r = R()
+        self.assertEqual(r.a, 1)
+        self.assertEqual(r.b, 2)
+        # Instantiate without defaults
+        r = R([3, 4])
+        self.assertEqual(r.a, 3)
+        self.assertEqual(r.b, 4)
+
+    def test_make_type_without_defaults(self):
+        R = record.make_type('R', ['a', 'b'])
+        self.assertEqual(R._get_defaults(), record.NO_DEFAULT)
+        # When no defaults have been set then values must be passed in
+        # at instantiation
+        with self.assertRaises(ValueError):
+            r = R()
+
+    def test_make_type_with_string(self):
+        R = record.make_type('R', 'a, b')
+        self.assertEqual(R._fieldnames, ('a', 'b'))
+        R = record.make_type('R', 'a b')
+        self.assertEqual(R._fieldnames, ('a', 'b'))
+        R = record.make_type('R', 'ab')
+        self.assertEqual(R._fieldnames, ('ab',))
+        self.assertEqual(R._get_defaults(), record.NO_DEFAULT)
 
     def test_instantiation_with_sequence(self):
         self.assertEqual(self.rec.a, 1)
         self.assertEqual(self.rec.b, 2)
 
     def test_instantiation_with_mapping(self):
-        rec = Rec(dict(a=1, b=2))
+        rec = Rec(OrderedDict([('a', 1), ('b', 2)]))
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
@@ -32,7 +69,7 @@ class RecordTestCase(unittest.TestCase):
         # A mapping whose keys do not contain all the fieldnames
         # should raise an AttributeError
         with self.assertRaises(ValueError):
-            rec = Rec(dict(a=1, c=2))
+            rec = Rec(OrderedDict(([('a', 1), ('c', 2)])))
 
     def test_instantiation_with_string(self):
         # Strings are iterable so each character should be assigned to the
@@ -53,12 +90,43 @@ class RecordTestCase(unittest.TestCase):
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
-    def test_creation_with_more_than_256_fields(self):
+    def test_instantiation_with_more_than_256_fields(self):
         fieldnames = ['f{0}'.format(i) for i in range(1000)]
         R = record.make_type('R', fieldnames)
         rec = R(list(range(1000)))
         self.assertEqual(rec.f0, 0)
         self.assertEqual(rec.f999, 999)
+
+    def test_contains(self):
+        self.assertEqual(1 in self.rec, True)
+        self.assertEqual(2 in self.rec, True)
+        self.assertEqual(3 in self.rec, False)
+
+    def test_get_and_set_defaults(self):
+        R = record.make_type('R', OrderedDict([('a', 1), ('b', 2)]))
+        # NO_DEFAULT
+        R._set_defaults(record.NO_DEFAULT)
+        self.assertEqual(R._get_defaults(), record.NO_DEFAULT)
+
+        # with mapping
+        R._set_defaults(OrderedDict([('a', 3), ('b', 4)]))
+        self.assertEqual(R._get_defaults(), (3, 4))
+
+        # with sequence of (fieldname, default-value) tuples
+        R._set_defaults([('a', 5), ('b', 6)])
+        self.assertEqual(R._get_defaults(), (5, 6))
+
+        # With another record instance
+        R._set_defaults(R([7, 8]))
+        self.assertEqual(R._get_defaults(), (7, 8))
+
+        # with sequence of non (fieldname, default-value) tuples
+        with self.assertRaises(ValueError):
+            # Flat sequence
+            R._set_defaults([7, 8])
+        with self.assertRaises(ValueError):
+            # 3-tuples instead of 2-tuples
+            R._set_defaults([('a', 5, 7), ('b', 6, 8)])
 
     def test_fieldname_starting_with_underscore(self):
         with self.assertRaises(ValueError):
@@ -132,7 +200,7 @@ class RecordTestCase(unittest.TestCase):
         self.assertEqual(self.rec.a, 3)
         self.assertEqual(self.rec.b, 4)
 
-    def test_attribute_not_defined_in__slots__(self):
+    def test_attribute_not_defined_in_slots(self):
         with self.assertRaises(AttributeError):
             _ = self.rec.c
         with self.assertRaises(AttributeError):
@@ -143,10 +211,13 @@ class RecordTestCase(unittest.TestCase):
         # pickled, hence the use of Rec here.
         rec = Rec([1, 2])
         for protocol in 0, 1, 2, 3:
-            s = pickle.dumps(rec, protocol)
             pickled_rec = pickle.loads(pickle.dumps(rec, protocol))
             self.assertEqual(rec, pickled_rec)
             self.assertEqual(rec._fieldnames, pickled_rec._fieldnames)
+
+    def test_asdict(self):
+        self.assertEqual(
+            self.rec._asdict(), collections.OrderedDict([('a', 1), ('b', 2)]))
 
     def test___dict__(self):
         # These assertions are necessary because record uses __slots__
@@ -157,11 +228,11 @@ class RecordTestCase(unittest.TestCase):
         self.assertEqual(self.rec.__dict__, {'a': 1, 'b': 2})
         self.assertEqual(vars(self.rec), {'a': 1, 'b': 2})
 
-    def test___eq__(self):
+    def test_equality(self):
         rec = Rec([1, 2])
         self.assertEqual(rec, self.rec)
 
-    def test___ne__(self):
+    def test_inequality(self):
         rec = Rec([1, 3])
         self.assertNotEqual(rec, self.rec)
 
@@ -179,7 +250,7 @@ class RecordTestCase(unittest.TestCase):
         self.assertEqual(rec.field_e, 4)
         self.assertEqual(rec.field_a, 5)
 
-    def test___getitem__(self):
+    def test_getitem(self):
         R = record.make_type('R', ['a', 'b', 'c', 'd'])
         rec = R([1, 2, 3, 4])
 
@@ -199,7 +270,7 @@ class RecordTestCase(unittest.TestCase):
         with self.assertRaises(IndexError):
             _ = rec[99999]
 
-    def test___setitem__(self):
+    def test_setitem(self):
         R = record.make_type('R', ['a', 'b', 'c', 'd', 'e'])
         rec = R([1, 2, 3, 4, 5])
 
@@ -228,11 +299,11 @@ class RecordTestCase(unittest.TestCase):
     def test_iteration(self):
         self.assertEqual([value for value in self.rec], [1, 2])
 
-    def test___repr__(self):
+    def test_repr(self):
         self.rec.a = '1'
         self.assertEqual(repr(self.rec), "Rec(a='1', b=2)")
 
-    def test___str__(self):
+    def test_str(self):
         self.rec.a = '1'
         self.assertEqual(str(self.rec), "Rec(a=1, b=2)")
 
