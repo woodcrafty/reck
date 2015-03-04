@@ -127,7 +127,7 @@ Class method that returns a tuple of the default values or
     of the class. Alternatively, defaults can be disabled by
     passing ``record.NO_DEFAULT``.
 
-somerecord.\ **_asdict**()
+somerecord.\ **_asdict**\ ()
 
     Return a new ``OrderedDict`` which maps fieldnames to their corresponding
     values.
@@ -136,6 +136,8 @@ somerecord.\ **_fieldnames**
 
     Tuple of strings listing the fieldnames. Useful for introspection and
     creating new record types from existing record types.
+
+.. py:function:: _asdict()
 
 Benchmarks
 ----------
