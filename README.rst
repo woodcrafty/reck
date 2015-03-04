@@ -121,7 +121,6 @@ Class method that returns a tuple of the default values or
 ``record.NO_DEFAULT`` if no defaults have been set.
 
 *classmethod* somerecord.\ **_set_defaults**\ (defaults)
-
     Class method that sets new defaults from an existing mapping of the form
     {fieldname: default}, sequence of (fieldname, default) tuples, instance
     of the class. Alternatively, defaults can be disabled by
@@ -137,7 +136,6 @@ somerecord.\ **_fieldnames**
     Tuple of strings listing the fieldnames. Useful for introspection and
     creating new record types from existing record types.
 
-.. py:function:: _asdict()
 
 Benchmarks
 ----------
@@ -160,8 +158,7 @@ on your use-case other data types may be more appropriate:
     - the data has more than 255 fields
 * named tuples are suitable for data with a static structure
 * dictionaries should be used when the structure of the data is dynamic
-* SimpleNamespace (available in in Python 3.3+) is suitable when the structure
-of the data is dynamic and attribute access is required
+* SimpleNamespace (available in in Python 3.3+) is suitable when the structure of the data is dynamic and attribute access is required
 * classes are needed when you need to add methods to objects
 
 
