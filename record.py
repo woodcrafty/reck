@@ -2,8 +2,11 @@
 Create custom record classes that have mutable field values.
 
 TODO:
-Add support for a _make() class method that creates a new record from a set
-of args/kwargs? Like dict(a=1, b=2). Convenience function
+Switch _make and __init__ around so that __init__ accepts args and kwargs as
+fields and _make accepts an iterable (for when >255 field present).
+
+Perhaps even have alternative __inits__ depending on number of fields specified
+during type creation?
 """
 
 import collections
@@ -243,7 +246,6 @@ def _set_defaults(cls, defaults):
         raise TypeError(
             'defaults is not iterable or equal to record.NO_DEFAULT')
 
-    # if defaults is an instance of this class
     if isinstance(defaults, cls):
         cls._defaults = tuple(defaults[:])
         return
@@ -288,18 +290,16 @@ def _make(cls, *args, **kwargs):
     Example:
 
     >>> MyRec = record.make_type('MyRec', ['a', 'b', 'c', 'd'])
-    >>> rec = MyRec._make(1, 2, d=4, c=3)
+    >>> MyRec._make(1, 2, d=4, c=3)
+    MyRec(a=1, b=2, c=3, d=4)
 
-    Note that this method can only be used to create new instances of
+    NOTE: this method can only be used to create new instances of
     record types that have fewer than 256 fields.
 
-    TODO: optimise this function?
+    TODO: optimise this function? using setattr?
     """
-    dct = {}
-    for fieldname, arg in zip(cls._fieldnames, args):
-        dct[fieldname] = arg
-    for k, v in kwargs.items():
-        dct[k] = v
+    dct = dict([(fieldname, arg) in zip(cls._fieldnames, args)])
+    dct.update(kwargs)
     return cls(dct)
 
 
