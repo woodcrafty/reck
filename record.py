@@ -366,6 +366,7 @@ def _asdict(self):
     return collections.OrderedDict(
         [(k, getattr(self, k)) for k in self.__slots__])
 
+
 def _set__dict__(self, dct):
     """Redirect the setting of __dict__ to __slots__"""
     for k, v in dct.items():
