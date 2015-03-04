@@ -6,16 +6,16 @@ record is a Python module for creating lightweight custom record classes.
 It is similar to collections.namedtuple except that custom record classes have mutable
 (i.e. writable) fields and can have more than 256 fields.
 
-Similar to ''collections.namedtuple'' except that a ''record'' can have more than 256 fields and instances are mutable.
+Similar to ``collections.namedtuple`` except that a ``record`` can have more than 256 fields and instances are mutable.
 
-Record is a Python package that provides a factory function for making record-like classes. It is similar to ''collections.namedtuple'', with the following differences:
+Record is a Python package that provides a factory function for making record-like classes. It is similar to ``collections.namedtuple``, with the following differences:
 
 record in 4 points:
 
 * field values are mutable
 * a record can have more than 256 fields
 * instances are initialised with a sequence or mapping rather than positional and keyword arguments
-* lower memory footprint (''record'' objects are based on slots)
+* lower memory footprint (``record`` objects are based on slots)
 
 
 |------------------------+---------+-----------+-----------|
@@ -30,12 +30,12 @@ record in 4 points:
 
 Typical usage
 -------------
-First, create a ''record'' type like you would create a ''namedtuple'' type::
+First, create a ``record`` type like you would create a ``namedtuple`` type::
 
     >>> import record
     >>> Person =  record.make_type('Person', ['name', 'age'])
 
-Next, create an instance of ''Person'' with values for ''name'' and ''age''::
+Next, create an instance of ``Person`` with values for ``name`` and ``age``::
 
     >>> p = Person(['Arthur', 42])
 
@@ -45,22 +45,22 @@ You can also initialise the instance using a mapping instead of a sequence::
     >>> p
     Person(name='Arthur', age=42)
 
-You can retrieve field values as you would with a ''namedtuple''::
+You can retrieve field values as you would with a ``namedtuple``::
 
     >>>  p.name
     'Arthur'
     >>> p.age
     42
    
-Unlike the tuple-based objects created by ''collections.namedtuple'', the
-fields of an object created by ''record.make_type'' are mutable, meaning they
+Unlike the tuple-based objects created by ``collections.namedtuple``, the
+fields of an object created by ``record.make_type`` are mutable, meaning they
 can be modified after creation::
 
     >>> p.age = 31
     >>> p.age
     31
 
-However, you cannot add new fields to an instance of a ''record'' type::
+However, you cannot add new fields to an instance of a ``record`` type::
 
     >>> p.height = 1.71
     AttributeError                  Traceback (most recent call last)
@@ -82,8 +82,8 @@ Fields can also be accessed by index and iterated over::
     Arthur
     29
 
-Instances of ''record'' classes have a low memory requirement because they use
-''__slots__'' rather than a per-instance ''__dict__'' to store attributes::
+Instances of ``record`` classes have a low memory requirement because they use
+``__slots__`` rather than a per-instance ``__dict__`` to store attributes::
 
     >>> from collections import namedtuple
     >>> import sys
@@ -99,8 +99,8 @@ Instances of ''record'' classes have a low memory requirement because they use
     >>> sys.getsizeof(dict_p)
     288
 
-Despite using ''__slots__'', instances of classes created by
-''record.make_type'' can be pickled::
+Despite using ``__slots__``, instances of classes created by
+``record.make_type`` can be pickled::
 
     >>> import pickle
     >>> pickled_rec = pickle.loads(pickle.dumps(p))
@@ -114,17 +114,17 @@ methods and one attribute. To prevent conflicts with fieldnames, the method
 and attribute names start with an underscore.
 
 *classmethod* somerecord.**_get_defaults**
-    Class method that returns ''record.NO_DEFAULT'' if no defaults have been
+    Class method that returns ``record.NO_DEFAULT`` if no defaults have been
     set, otherwise a tuple of the default values.
 
 *classmethod* somerecord.**_set_defaults**(defaults)
     Class method that sets new defaults from an existing mapping of the form
     {fieldnameL default}, sequence of (fieldname, default) tuples, instance
     of the class. Alternatively, defaults can be disabled by passing
-     ''record.NO_DEFAULT''.
+     ``record.NO_DEFAULT``.
 
 somerecord.**_asdict**()
-    Return a new ''OrderedDict'' which maps fieldnames to their corresponding
+    Return a new ``OrderedDict`` which maps fieldnames to their corresponding
     values.
 
 somerecord.**_fieldnames**
@@ -136,11 +136,11 @@ Benchmarks
 ----------
 The following benchmarks show the relative speed of various operations on
 records and namedtuples in Python 3.4. They are intended to give the user a
-rough idea of the speed gains and penalties involved with the use of ''record''
-over ''namedtuple''.
+rough idea of the speed gains and penalties involved with the use of ``record``
+over ``namedtuple``.
 
-The benchmarks show that access by field name is faster for a ''record'' than a
-''namedtuple'' but all other operations are slower
+The benchmarks show that access by field name is faster for a ``record`` than a
+``namedtuple`` but all other operations are slower
 
 Choosing a data type
 --------------------
