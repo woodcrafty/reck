@@ -115,12 +115,12 @@ In addition to the usual sequence methods, records support three additional
 methods and one attribute. To prevent conflicts with fieldnames, the method
 and attribute names start with an underscore.
 
-*classmethod* somerecord.\ **_get_defaults**()
+*classmethod* somerecord.\ **_get_defaults**\ ()
 
 Class method that returns a tuple of the default values or
 ``record.NO_DEFAULT`` if no defaults have been set.
 
-*classmethod* somerecord.\ **_set_defaults**(defaults)
+*classmethod* somerecord.\ **_set_defaults**\ (defaults)
 
     Class method that sets new defaults from an existing mapping of the form
     {fieldname: default}, sequence of (fieldname, default) tuples, instance
@@ -128,10 +128,12 @@ Class method that returns a tuple of the default values or
     passing ``record.NO_DEFAULT``.
 
 somerecord.\ **_asdict**()
+
     Return a new ``OrderedDict`` which maps fieldnames to their corresponding
     values.
 
 somerecord.\ **_fieldnames**
+
     Tuple of strings listing the fieldnames. Useful for introspection and
     creating new record types from existing record types.
 
