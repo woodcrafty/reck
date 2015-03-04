@@ -2,6 +2,8 @@
 Create custom record classes that have mutable field values.
 
 TODO:
+Add support for a _make() class method that creates a new record from a set
+of args/kwargs? Like dict(a=1, b=2). Convenience function
 """
 
 import collections
@@ -78,8 +80,9 @@ def make_type(typename, fieldnames, rename=False):
         _defaults = tuple(_defaults)
     else:
         raise TypeError(
-            'fieldnames must be a sequence of strings or sequence of '
-            '(fieldname, default-value) tuples')
+            'fieldnames must be a sequence of strings, a sequence of '
+            '(fieldname, default) tuples, or a mapping of the form '
+            '{fieldname: default}.')
 
     # # If a default value is specified this takes precedence over any defaults
     # # set via the fieldnames arg. The default value is used for every field.
@@ -136,6 +139,7 @@ def make_type(typename, fieldnames, rename=False):
         _fieldnames=tuple(_fieldnames),
         _defaults=_defaults,
         _asdict=_asdict,
+        _make=_make,
         _get_defaults=_get_defaults,
         _set_defaults=_set_defaults,
         _attr_getters=[operator.attrgetter(field) for field in _fieldnames],
@@ -270,6 +274,33 @@ def _set_defaults(cls, defaults):
         _defaults.append(default_values[i])
     cls._defaults = tuple(_defaults)
     return
+
+
+@classmethod
+def _make(cls, *args, **kwargs):
+    """Make a new instance from positional and/or keyword arguments.
+
+    Positional arguments must be provided in the same order as their
+    corresponding fieldnames. Keyword arguments can be in any order but
+    the keywords must match all of the fieldnames not fulfilled by the
+    position arguments.
+
+    Example:
+
+    >>> MyRec = record.make_type('MyRec', ['a', 'b', 'c', 'd'])
+    >>> rec = MyRec._make(1, 2, d=4, c=3)
+
+    Note that this method can only be used to create new instances of
+    record types that have fewer than 256 fields.
+
+    TODO: optimise this function?
+    """
+    dct = {}
+    for fieldname, arg in zip(cls._fieldnames, args):
+        dct[fieldname] = arg
+    for k, v in kwargs.items():
+        dct[k] = v
+    return cls(dct)
 
 
 def __eq__(self, other):
