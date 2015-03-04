@@ -2,53 +2,6 @@
 Create custom record classes that have mutable field values.
 
 TODO:
-Finish/polish docstrings
-Add _set___dict__ to the __dict__ property?
-Enable __init__ to instantiate from sequence of (fieldname, value) tuples?
-
-Defaults behaviour:
-If values is a mapping or sequence of (fieldname, default) pairings then
-defaults are set from those.
-
-Otherwise if defaults=single value then this becomes the default value for all
-fields.
-
-Or fields can be a sequence of same length as fieldnames or a mapping/seq of
-fieldname, default value pairings.
-
-Mappings and field-default value pairs do not all have to specify defaults -
-if a field does not have a per-field default specified the value of the
-defaults argument is used, e.g.:
-R = make_type('Rec', [('a', 1), 'b'], defaults=3)
-
-Alternative:
-Above doesn't make sense because if passing in values as a seq then you must
-pass in all vals - only makes sense for mappings or args/kwargs. So it's an
-all or nothing regarding values/default use. This makes implementation easier.
-Defaults are either set by passing an (ordered) mapping to make_type or by
-setting the default arg to a sequence.
-
-iF default is a single value then thar value is used for all fields.
-
-If mapping is passed to values and default param is specified then the
-default param take precedence.
-
-default arg defaults to NODEFAULT which means value must always be supplied
-when creating an instance.
-
-Defaults are stored as a sequence that
- can be zipped to init fields.
-
-def make_type(typename, values, default=NODEFAULT, rename=False)
-e.g.
-mytype = make_type('mytype', dict(a=1, b=2))
-mytype = make_typw('mytpe', [('1', 1), ('b', 2)])
-mytype = make_type('mytype', ['a', 'b'], default=[1, 2])
-mytype = make_type('mytype', ['a', 'b'], default=1)
-
-Implementation:
-Amend make_type so it accepts a mapping and pulls defaults and fieldnames
-out from it.
 """
 
 import collections
@@ -71,33 +24,32 @@ def make_type(typename, fieldnames, rename=False):
     corresponding to the names given in the fieldnames argument. The
     custom record class is used to create record objects with mutable
     fields that are accessible by attribute lookup or by index, and are
-    iterable. There is no restriction on the number of fields, unlike
-    named tuples which are limited to 255 fields.
+    iterable. There is no restriction on the number of fields.
 
     Record objects do not have per-instance dictionaries. They store
     attributes in __slots__, so they are lightweight, requiring one
     less byte of memory than an equivalent tuple or namedtuple. However,
     this means that instances of record objects cannot be assigned new
-    fields/attributes not listed in the custom record class definition.
+    fields/attributes.
 
     Args:
         typename: str
             Name of the record-like class to create, e.g. 'MyRecord'.
         fieldnames: iterable
-            Names of the fields in the record, e.g. ['name', 'age'].
-            Any valid Python identifier may be used as a fieldname,
-            except for names starting with an underscore.
-        default: any
-            Default value to use for each field if no values are passed
-            at object instantiation. Overrides any defaults obtained
-            via the fieldnames argument (e.g. if it was a mapping). If
-            set to record.NO_DEFAULT then no default values are set
-            (unless they are obtained via the fieldnames parameter).
+            Must be a string or sequence of fieldnames, or a mapping
+            of the form fieldname: default or a sequence of tuples of
+            the form (fieldname, default). Note that it only makes sense
+            to pass an ordered mapping (e.g. OrderedDict) since acces by
+            index or iteration is affected by the order of the fieldnames.
+            If fieldnames is a string each fieldname should be separated
+            by a space and/or comma, e.g. 'field1 field2 field3'. A
+            fieldname may be any valid Python identifier except for names
+            starting with an underscore.
         rename: boolean
             If rename is True, invalid fieldnames are automatically replaced
             with positional names. For example, ('abc', 'def', 'ghi', 'abc')
             is converted to ('abc', '_1', 'ghi', '_3'), eliminating the
-            keyword def and the duplicate fieldname abc.
+            keyword 'def' and the duplicate fieldname 'abc'.
     Returns:
         A custom record class.
     """
@@ -188,7 +140,10 @@ def make_type(typename, fieldnames, rename=False):
         _set_defaults=_set_defaults,
         _attr_getters=[operator.attrgetter(field) for field in _fieldnames],
         __init__=__init__,
-        # Allow __dict__ to reflect __slots__
+        # _asdict() is used to provide a dictionary representation of the
+        # record when __dict__ is called.  This enables the vars() built-in
+        # to return a dict even though the record's attributes are stored
+        # in __slots__.
         __dict__=property(_asdict, _set__dict__),
         __iter__=__iter__,
         __getitem__=__getitem__,
@@ -223,16 +178,17 @@ def __init__(self, values=None):
         values: iterable or None
             Values with which to populate the record. The values should be
             in the same order as _fieldnames, unless it is a mapping,
-            in which case the keys are used to identify the fields. If
-            values is None then the instance is initialised using default
-            values.
+            in which case the keys are used to identify the appropriate
+            fields. If values is None then the instance is initialised
+            using default values. If no defaults are set then values must
+            be an iterable.
     """
     if values is None:
         if self._defaults != NO_DEFAULT:
             values = list(self._defaults)
         else:
             raise ValueError(
-                'values must be specified because no defaults have been set')
+                'values must be specified when no defaults have been set')
 
     try:
         _ = iter(values)
@@ -250,7 +206,7 @@ def __init__(self, values=None):
             setattr(self, fieldname, values[fieldname])
     else:  # values must be a sequence
         if len(values) < len(self._fieldnames):
-            raise ValueError('Too few items in values')
+            raise ValueError('too few items in values')
         for attr, value in zip(self._fieldnames, values):
             setattr(self, attr, value)
 
@@ -266,8 +222,8 @@ def _set_defaults(cls, defaults):
 
     Args:
         defaults: mapping, sequence of 2-tuples, class instance or NO_DEFAULT
-            Can be a {fieldname: default-value} mapping, a sequence of
-            (fieldname, default-value) tuples, an instance of this class,
+            Can be a {fieldname: default} mapping, a sequence of
+            (fieldname, default) tuples, an instance of this class,
             or NO_DEFAULT. The default values are used when new instances
             of the record class are instantiated without passing in field
             values. If default is set to NO_DEFAULT, field values must be
@@ -280,7 +236,8 @@ def _set_defaults(cls, defaults):
     try:
         _ = iter(defaults)
     except TypeError:
-        raise TypeError('defaults is not iterable')
+        raise TypeError(
+            'defaults is not iterable or equal to record.NO_DEFAULT')
 
     # if defaults is an instance of this class
     if isinstance(defaults, cls):
@@ -342,12 +299,7 @@ def __getitem__(self, index):
 
 
 def __setitem__(self, index, value):
-    """
-    TODO: Should slice support be removed? Because the number of fields
-    is immutable, list-style slice behaviour cannot be supported - see
-    below:
-
-    Note: if index is a slice and value is longer than the slice then
+    """Note: if index is a slice and value is longer than the slice then
     the surplus values are discarded. This behaviour differs from that
     of list.__setitem__ which inserts the surplus values into the list.
     Similarly, if value contains too few values, the surplus fields are
@@ -356,7 +308,7 @@ def __setitem__(self, index, value):
     Args:
         index: int or slice object
             Index/slice to be set.
-        value: anything
+        value: any
             Value to set.
     """
     if isinstance(index, int):
@@ -410,13 +362,7 @@ def __str__(self):
 
 
 def _asdict(self):
-    """Return an OrderedDict which maps field names to their values.
-
-    This function is used internally to provide a dictionary
-    representation of the attributes when __dict__ is called.
-    This enables the vars() built-in to return a dict even
-    though the record's attributes are stored in __slots__.
-    """
+    """Return a new OrderedDict which maps field names to their values."""
     return collections.OrderedDict(
         [(k, getattr(self, k)) for k in self.__slots__])
 
