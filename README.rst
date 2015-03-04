@@ -18,14 +18,14 @@ record in 4 points:
 * lower memory footprint (``record`` objects are based on slots)
 
 
-|------------------------+---------+-----------+-----------|
++------------------------+---------+-----------+-----------+
 | Type                   | mutable |    max    | defaults  |
 |                        | fields  |   fields  | supported |
-|------------------------+---------+-----------+-----------|
++------------------------+---------+-----------+-----------+
+| record                 |    Y    | unlimited |     Y     |
 | collections.namedtuple |    N    |    256    |     N     |
 | recordtype             |    Y    |    256    |     Y     |
-| record                 |    Y    | unlimited |     N     |
-|------------------------+---------+-----------+-----------|
++------------------------+---------+-----------+-----------+
 
 
 Typical usage
@@ -164,7 +164,6 @@ Installation
 
 Versions tested
 ---------------
-Python 3.1
 Python 3.2
 Python 3.3
 Python 3.4
