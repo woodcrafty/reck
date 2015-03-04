@@ -116,8 +116,9 @@ methods and one attribute. To prevent conflicts with fieldnames, the method
 and attribute names start with an underscore.
 
 *classmethod* somerecord.**_get_defaults**
-    Class method that returns a tuple of the default values or
-    ``record.NO_DEFAULT`` if no defaults have been set.
+
+Class method that returns a tuple of the default values or
+``record.NO_DEFAULT`` if no defaults have been set.
 
 *classmethod* somerecord.**_set_defaults**(defaults)
     Class method that sets new defaults from an existing mapping of the form
