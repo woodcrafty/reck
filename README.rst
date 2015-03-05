@@ -1,22 +1,15 @@
 record
 ======
 
-record is a Python module for creating lightweight custom record classes.
+``record`` is a Python module for creating lightweight custom record classes.
 
-It is similar to collections.namedtuple except that custom record classes have mutable
-(i.e. writable) fields and can have more than 256 fields.
+Records are similar to ``collections.namedtuple`` except that a record class
+has mutable (i.e. writable) fields and are not limited to 255 fields. Also,
+``record`` instances are based on slots and do not have per-instance dictionaries,
+so they are lightweight, requiring slightly less memory than a ``namedtuple``.
 
-Similar to ``collections.namedtuple`` except that a ``record`` can have more than 256 fields and instances are mutable.
-
-Record is a Python package that provides a factory function for making record-like classes. It is similar to ``collections.namedtuple``, with the following differences:
-
-record in 4 points:
-
-* field values are mutable
-* a record can have more than 256 fields
-* instances are initialised with a sequence or mapping rather than positional and keyword arguments
-* lower memory footprint (``record`` objects are based on slots)
-
+Like namedtuples, ``record`` classes have fields accessible by attribute lookup
+as well as being indexable and iterable.
 
 +------------------------+---------+------------+------------+
 | Type                   | Mutable | Max fields | Defaults   |
@@ -62,7 +55,8 @@ can be modified after creation::
     >>> p.age
     31
 
-However, you cannot add new fields to an instance of a ``record`` type::
+However, because classes created by ``record.make_type()`` are based on slots,
+you cannot add new fields to an instance::
 
     >>> p.height = 1.71
     AttributeError                  Traceback (most recent call last)
@@ -71,7 +65,7 @@ However, you cannot add new fields to an instance of a ``record`` type::
 
     AttributeError: 'Person' object has no attribute 'height'
 
-Fields can also be accessed by index and iterated over::
+Fields are also indexable and iterable::
 
     >>> p[1]
     42
@@ -84,7 +78,7 @@ Fields can also be accessed by index and iterated over::
     Arthur
     29
 
-Instances of ``record`` classes have a low memory requirement because they use
+Instances of ``record`` classes have a low memory footprint because they use
 ``__slots__`` rather than a per-instance ``__dict__`` to store attributes::
 
     >>> from collections import namedtuple
@@ -101,22 +95,56 @@ Instances of ``record`` classes have a low memory requirement because they use
     >>> sys.getsizeof(dict_p)
     288
 
-Despite using ``__slots__``, instances of classes created by
-``record.make_type`` can be pickled::
+They are therefore much smaller than an equivalent ``dict`` and slightly smaller
+than an equivalent ``namedtuple``.
+
+Instances of classes created by ``record.make_type`` can be pickled::
 
     >>> import pickle
     >>> pickled_rec = pickle.loads(pickle.dumps(p))
     >>> pickled_rec == p
     True
 
+TODO:
+demo type creation with defaults
+demo get and set defsults
+demo _fieldnames
+demo _make
+
+
 API
 ---
 
 record.\ **make_type**\ (*typename, fieldnames, rename=False*)
 
-    In addition to the usual sequence methods, records support four additional
-    methods and one attribute. To prevent conflicts with fieldnames, the method
-    and attribute names start with an underscore.
+    Returns a new custom record class named *typename*. The new class is used
+    to create record objects that have fields accessible by attribute
+    lookup as well as being indexable and iterable.
+
+    The *fieldnames* are a single string with each fieldname separated by
+    whitespace and/or commas, for example ``'x y'`` or ``'x, y'``.
+    Alternatively, *fieldnames* can be a sequence of strings such as
+    ``['x', 'y']``.
+
+    Default values can also be specified along with the fieldnames if
+    *fieldnames* is a mapping for the form ``{fieldname: default}`` such as
+    ``{'x': 1, 'y': 2}`` or a sequence of tuples of the form
+    ``[(x, 1), (y, 2)]``.
+
+    Any valid Python identifier may be used for a fieldname except for names
+    starting with an underscore. Valid identifiers consist of letters, digits,
+    and underscores but do not start with a digit or underscore and cannot be
+    a ``keyword`` such as *class*, *for*, *return*, *global*, *pass*, or
+    *raise*.
+
+    If *rename* is true, invalid fieldnames are automatically replaced with
+    positional names. For example, ``['abc', 'def', 'ghi', 'abc']``
+    is converted to ``['abc', '_1', 'ghi', '_3']``, eliminating the keyword
+    ``def`` and the duplicate fieldname ``abc``.
+
+In addition to the usual sequence methods, records support four additional
+methods and one attribute. To prevent conflicts with fieldnames, the method
+and attribute names start with an underscore.
 
 *classmethod* somerecord.\ **_make**\ (*\*args, \*\*kwargs*)
 
