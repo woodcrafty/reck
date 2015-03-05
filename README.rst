@@ -3,10 +3,11 @@ record
 
 ``record`` is a Python module for creating lightweight custom record classes.
 
-Records are similar to ``collections.namedtuple`` except that a record class
-has mutable (i.e. writable) fields and are not limited to 255 fields. Also,
-``record`` instances are based on slots and do not have per-instance dictionaries,
-so they are lightweight, requiring slightly less memory than a ``namedtuple``.
+A records class is similar to a ``collections.namedtuple`` except that it has
+mutable (i.e. writable) fields and is are not limited to 255 fields. Records
+are based on slots (they do not have a per-instance dictionary), so are
+lightweight, requiring slightly less memory than a ``namedtuple`` and much less
+than a ``dict``.
 
 Like namedtuples, ``record`` classes have fields accessible by attribute lookup
 as well as being indexable and iterable.
@@ -78,26 +79,6 @@ Fields are also indexable and iterable::
     Arthur
     29
 
-Instances of ``record`` classes have a low memory footprint because they use
-``__slots__`` rather than a per-instance ``__dict__`` to store attributes::
-
-    >>> from collections import namedtuple
-    >>> import sys
-    >>> RecordPerson =  record.make_type('Person', ['name', 'age'])
-    >>> record_p = RecordPerson(['Brian', 20])
-    >>> NamedTuplePerson = namedtuple('NamedTuplePerson', ['name', 'age'])
-    >>> namedtuple_p = NamedTuplePerson(name='Brian', age=20)
-    >>> dict_p = dict(name='Brian', age=20)
-    >>> sys.getsizeof(record_p)
-    56
-    >>> sys.getsizeof(namedtuple_p)
-    64
-    >>> sys.getsizeof(dict_p)
-    288
-
-They are therefore much smaller than an equivalent ``dict`` and slightly smaller
-than an equivalent ``namedtuple``.
-
 Instances of classes created by ``record.make_type`` can be pickled::
 
     >>> import pickle
@@ -114,7 +95,6 @@ demo _make
 
 API
 ---
-
 record.\ **make_type**\ (*typename, fieldnames, rename=False*)
 
     Returns a new custom record class named *typename*. The new class is used
@@ -181,30 +161,53 @@ somerecord.\ **_fieldnames**
     creating new record types from existing record types.
 
 
-Benchmarks
-----------
+Memory usage and speed benchmarks
+---------------------------------
+Instances of ``record`` classes have a low memory footprint because they use
+``__slots__`` rather than a per-instance ``__dict__`` to store attributes::
+
+    >>> from collections import namedtuple
+    >>> import sys
+    >>> import record
+    >>> RecordPerson =  record.make_type('Person', ['name', 'age'])
+    >>> record_p = RecordPerson(['Brian', 20])
+    >>> NamedTuplePerson = namedtuple('NamedTuplePerson', ['name', 'age'])
+    >>> namedtuple_p = NamedTuplePerson(name='Brian', age=20)
+    >>> dict_p = dict(name='Brian', age=20)
+    >>> sys.getsizeof(record_p)
+    56
+    >>> sys.getsizeof(namedtuple_p)
+    64
+    >>> sys.getsizeof(dict_p)
+    288
+
+They are therefore much smaller than an equivalent ``dict`` and slightly smaller
+than an equivalent ``namedtuple``.
+
 The following benchmarks show the relative speed of various operations on
 records and namedtuples in Python 3.4. They are intended to give the user a
 rough idea of the speed gains and penalties involved with the use of ``record``
 over ``namedtuple``.
 
-The benchmarks show that access by field name is faster for a ``record`` than a
-``namedtuple`` but all other operations are slower
+TODO: insert benchmarks table here
+
+The benchmarks show that access by field name is slightly faster for a
+``record`` than a ``namedtuple``, but all other operations are significantly
+slower.
 
 Choosing a data type
 --------------------
 Believe it or not, records are not always the best data type to use. Depending
 on your use-case other data types may be more appropriate:
 
-* records are a good choice when one or more of the following are true:
+* records may be a good choice when one or more of the following are true:
     - the data has a static structure but dynamic values
-    - the dataset consists of a large number of instances
+    - the data set consists of a very large number of instances
     - the data has more than 255 fields
 * named tuples are suitable for data with a static structure
 * dictionaries should be used when the structure of the data is dynamic
 * SimpleNamespace (available in in Python 3.3+) is suitable when the structure of the data is dynamic and attribute access is required
 * classes are needed when you need to add methods to objects
-
 
 Installation
 ------------
