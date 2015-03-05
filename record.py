@@ -2,11 +2,6 @@
 Create custom record classes that have mutable field values.
 
 TODO:
-Switch _make and __init__ around so that __init__ accepts args and kwargs as
-fields and _make accepts an iterable (for when >255 field present).
-
-Perhaps even have alternative __inits__ depending on number of fields specified
-during type creation?
 """
 
 import collections
@@ -64,12 +59,12 @@ def make_type(typename, fieldnames, rename=False):
         raise TypeError('fieldnames is not iterable')
 
     # Parse fieldnames into a list of fieldnames and a list of defaults
-    if isinstance(fieldnames, str):
-        _fieldnames = fieldnames.replace(',', ' ').split()
-        _defaults = NO_DEFAULT
-    elif isinstance(fieldnames, collections.Mapping):
+    if isinstance(fieldnames, collections.Mapping):
         _fieldnames = list(fieldnames.keys())
         _defaults = tuple(fieldnames.values())
+    elif isinstance(fieldnames, str):
+        _fieldnames = fieldnames.replace(',', ' ').split()
+        _defaults = NO_DEFAULT
     # Fieldnames could be a sequence of strings
     elif all([isinstance(item, str) for item in fieldnames]):
         _fieldnames = fieldnames
@@ -83,17 +78,12 @@ def make_type(typename, fieldnames, rename=False):
         _defaults = tuple(_defaults)
     else:
         raise TypeError(
-            'fieldnames must be a sequence of strings, a sequence of '
-            '(fieldname, default) tuples, or a mapping of the form '
-            '{fieldname: default}.')
-
-    # # If a default value is specified this takes precedence over any defaults
-    # # set via the fieldnames arg. The default value is used for every field.
-    # if default != NO_DEFAULT:
-    #     _defaults = [default] * len(_fieldnames)
+            'fieldnames must be a string of comma or space separated '
+            'fieldnames, a sequence of strings or (fieldname, default) '
+            'tuples, or a mapping of the form {fieldname: default}')
 
     if rename:
-        # Rename any bad names with a sanitised name
+        # Rename any bad names with something sane
         used_names = set()
         for i, name in enumerate(_fieldnames):
             if (not all(c.isalnum() or c == '_' for c in name)
@@ -137,39 +127,49 @@ def make_type(typename, fieldnames, rename=False):
 
     # _attr_getters is included because operator.attrgetter offers a
     # slight speed up over using getattr()
-    dct = dict(
-        __slots__=tuple(_fieldnames),
-        _fieldnames=tuple(_fieldnames),
-        _defaults=_defaults,
-        _asdict=_asdict,
-        _make=_make,
-        _get_defaults=_get_defaults,
-        _set_defaults=_set_defaults,
-        _attr_getters=[operator.attrgetter(field) for field in _fieldnames],
-        __init__=__init__,
-        # _asdict() is used to provide a dictionary representation of the
-        # record when __dict__ is called.  This enables the vars() built-in
-        # to return a dict even though the record's attributes are stored
-        # in __slots__.
-        __dict__=property(_asdict, _set__dict__),
-        __iter__=__iter__,
-        __getitem__=__getitem__,
-        __setitem__=__setitem__,
-        __getnewargs__=__getnewargs__,
-        __getstate__=__getstate__,
-        __len__=_len__,
-        __setstate__=__setstate__,
-        __repr__=__repr__,
-        __str__=__str__,
-        __eq__=__eq__,
-        __ne__=__ne__,
-    )
+    # dct = dict(
+    #     __slots__=tuple(_fieldnames),
+    #     _fieldnames=tuple(_fieldnames),
+    #     _defaults=_defaults,
+    #     _asdict=_asdict,
+    #     _make=_make,
+    #     _get_defaults=_get_defaults,
+    #     _set_defaults=_set_defaults,
+    #     _attr_getters=tuple(
+    #         [operator.attrgetter(field) for field in _fieldnames]),
+    #     __init__=__init__,
+    #     # _asdict() is used to provide a dictionary representation of the
+    #     # record when __dict__ is called.  This enables the vars() built-in
+    #     # to return a dict even though the record's attributes are stored
+    #     # in __slots__.
+    #     __dict__=property(_asdict, _set__dict__),
+    #     __iter__=__iter__,
+    #     __getitem__=__getitem__,
+    #     __setitem__=__setitem__,
+    #     __getnewargs__=__getnewargs__,
+    #     __getstate__=__getstate__,
+    #     __len__=__len__,
+    #     __setstate__=__setstate__,
+    #     __repr__=__repr__,
+    #     __str__=__str__,
+    #     __eq__=__eq__,
+    #     __ne__=__ne__,
+    # )
     # For pickling to work, the __module__ variable needs to be set to the
     # frame where the named tuple is created.  Bypass this step in
     # environments where sys._getframe is not defined (Jython for example)
     # or sys._getframe is not defined for arguments greater than 0
     # (e.g. IronPython).
-    cls = type(typename, (collections.Sequence,), dct)
+    dct = dict(
+        __slots__=tuple(_fieldnames),
+        _fieldnames=tuple(_fieldnames),
+        _defaults=_defaults,
+        _attr_getters=tuple(
+            [operator.attrgetter(field) for field in _fieldnames]),
+        __dict__=property(_asdict, _set__dict__),
+    )
+    cls = type(typename, (Record,), dct)
+
     try:
         cls.__module__ = sys._getframe(1).f_globals.get('__name__', '__main__')
     except (AttributeError, ValueError):
@@ -177,228 +177,275 @@ def make_type(typename, fieldnames, rename=False):
 
     return cls
 
-
-def __init__(self, values=None):
-    """Make a new instance from an existing sequence or mapping.
-
-    Args:
-        values: iterable or None
-            Values with which to populate the record. The values should be
-            in the same order as _fieldnames, unless it is a mapping,
-            in which case the keys are used to identify the appropriate
-            fields. If values is None then the instance is initialised
-            using default values. If no defaults are set then values must
-            be an iterable.
-    """
-    if values is None:
-        if self._defaults != NO_DEFAULT:
-            values = list(self._defaults)
-        else:
-            raise ValueError(
-                'values must be specified when no defaults have been set')
-
-    try:
-        _ = iter(values)
-    except TypeError:
-        raise TypeError('values is not iterable')
-
-    if isinstance(values, collections.Mapping):
-        # The keys of the values mapping is allowed to be a superset
-        # of self._fieldnames, so Attribute Errors are allowed
-        if not all([name in values for name in self._fieldnames]):
-            raise ValueError(
-                "when values is a mapping its keys must contain all of "
-                "the record's fieldnames")
-        for fieldname in self._fieldnames:
-            setattr(self, fieldname, values[fieldname])
-    else:  # values must be a sequence
-        if len(values) < len(self._fieldnames):
-            raise ValueError('too few items in values')
-        for attr, value in zip(self._fieldnames, values):
-            setattr(self, attr, value)
-
-
-@classmethod
-def _get_defaults(cls):
-    return cls._defaults
-
-
-@classmethod
-def _set_defaults(cls, defaults):
-    """Set the default field values for new instances of the record class.
-
-    Args:
-        defaults: mapping, sequence of 2-tuples, class instance or NO_DEFAULT
-            Can be a {fieldname: default} mapping, a sequence of
-            (fieldname, default) tuples, an instance of this class,
-            or NO_DEFAULT. The default values are used when new instances
-            of the record class are instantiated without passing in field
-            values. If default is set to NO_DEFAULT, field values must be
-            passed in when a new record object is instantiated.
-    """
-    if defaults == NO_DEFAULT:
-        cls._defaults = defaults
-        return
-
-    try:
-        _ = iter(defaults)
-    except TypeError:
-        raise TypeError(
-            'defaults is not iterable or equal to record.NO_DEFAULT')
-
-    if isinstance(defaults, cls):
-        cls._defaults = tuple(defaults[:])
-        return
-
-    if isinstance(defaults, collections.Mapping):
-        if not all([name in defaults for name in cls._fieldnames]):
-            raise ValueError(
-                "when defaults is a mapping its keys must contain all of "
-                "the record's fieldnames")
-        cls._defaults = tuple([defaults[name] for name in cls._fieldnames])
-        return
-
-    if (not all([isinstance(v, collections.Sequence) for v in defaults])
-            or not all(
-                [len(v) == 2 and not isinstance(v, str) for v in defaults])):
-        raise ValueError(
-            'when defaults is a sequence it must contain (fieldname, default-'
-            'value) tuples')
-
-    # Must be a sequence of 2-tuples (or other 2-element non-string sequences!)
-    fieldnames, default_values = zip(*defaults)
-    if not all([name in fieldnames for name in cls._fieldnames]):
-        raise ValueError("defaults must contain all of the record's fieldnames")
-
-    _defaults = []
-    for fieldname in cls._fieldnames:
-        i = fieldnames.index(fieldname)
-        _defaults.append(default_values[i])
-    cls._defaults = tuple(_defaults)
-    return
-
-
-@classmethod
-def _make(cls, *args, **kwargs):
-    """Make a new instance from positional and/or keyword arguments.
-
-    Positional arguments must be provided in the same order as their
-    corresponding fieldnames. Keyword arguments can be in any order but
-    the keywords must match all of the fieldnames not fulfilled by the
-    position arguments.
-
-    Example:
-
-    >>> MyRec = record.make_type('MyRec', ['a', 'b', 'c', 'd'])
-    >>> MyRec._make(1, 2, d=4, c=3)
-    MyRec(a=1, b=2, c=3, d=4)
-
-    NOTE: this method can only be used to create new instances of
-    record types that have fewer than 256 fields.
-
-    TODO: optimise this function? using setattr?
-    """
-    dct = dict([(fieldname, arg) in zip(cls._fieldnames, args)])
-    dct.update(kwargs)
-    return cls(dct)
-
-
-def __eq__(self, other):
-    return (isinstance(other, self.__class__)
-        and self.__dict__ == other.__dict__)
-
-
-def __ne__(self, other):
-    return not self.__eq__(other)
-
-
-def __getitem__(self, index):
-    """Retrieve a field or slice of fields from the record.
-
-    Args:
-        index: int or slice object
-            Index can be an integer or slice object for normal sequence
-            item access.
-    Returns:
-        The value of the field corresponding to the index or a list of values
-        corresponding to slice indices.
-    """
-    if isinstance(index, int):
-        return self._attr_getters[index](self)
-    else:  # Slice object
-        return [getter(self) for getter in self._attr_getters[index]]
-
-
-def __setitem__(self, index, value):
-    """Note: if index is a slice and value is longer than the slice then
-    the surplus values are discarded. This behaviour differs from that
-    of list.__setitem__ which inserts the surplus values into the list.
-    Similarly, if value contains too few values, the surplus fields are
-    left unaffected. With a list, the surplus items are deleted.
-
-    Args:
-        index: int or slice object
-            Index/slice to be set.
-        value: any
-            Value to set.
-    """
-    if isinstance(index, int):
-        setattr(self, self.__slots__[index], value)
-    else:  # Slice object
-        fields = self.__slots__[index]
-        for field, v in zip(fields, value):
-            setattr(self, field, v)
-
-
-def __getnewargs__(self):
-    """Return self as a plain tuple. Used by copy and pickle."""
-    return tuple(self)
-
-
-def __getstate__(self):
-    """Return a picklable object.
-
-    Returns:
-        A tuple to allow the __slots__ based object to be pickled.
-    """
-    return tuple(self)
-
-
-def __setstate__(self, state):
-    """Re-populate the record's attributes with the unpickled tuple."""
-    for attr, value in zip(self.__slots__, state):
-        setattr(self, attr, value)
-
-
-def __iter__(self):
-    """Iterate over fields."""
-    for getter in self._attr_getters:
-        yield getter(self)
-
-
-def _len__(self):
-    return len(self.__slots__)
-
-
-def __repr__(self):
-    return '{}({})'.format(
-        self.__class__.__name__, ', '.join('{}={}'.format(
-            attr, repr(getattr(self, attr))) for attr in self.__slots__))
-
-
-def __str__(self):
-    return '{}({})'.format(
-        self.__class__.__name__, ', '.join('{}={}'.format(
-            attr, str(getattr(self, attr))) for attr in self.__slots__))
-
-
 def _asdict(self):
     """Return a new OrderedDict which maps field names to their values."""
     return collections.OrderedDict(
         [(k, getattr(self, k)) for k in self.__slots__])
 
-
 def _set__dict__(self, dct):
     """Redirect the setting of __dict__ to __slots__"""
     for k, v in dct.items():
         setattr(self, k, v)
+
+
+class Record(collections.Sequence):
+    """
+    Base class for custom record types.
+    """
+
+    def __init__(self, values=None):
+        """Make a new instance from an existing sequence or mapping.
+
+        Args:
+            values: iterable or None
+                Values with which to populate the record. The values should be
+                in the same order as _fieldnames, unless it is a mapping,
+                in which case the keys are used to identify the appropriate
+                fields. If values is None then the instance is initialised
+                using default values. If no defaults are set then values must
+                be an iterable.
+        """
+        if values is None:
+            if self._defaults == NO_DEFAULT:
+                raise ValueError(
+                    'values must be specified when no defaults have been set')
+            for attr, default in zip(self._fieldnames, self._defaults):
+                setattr(self, attr, default)
+            return
+
+        if isinstance(values, collections.Mapping):
+            # The keys of the values mapping is allowed to be a superset
+            # of self._fieldnames, so Attribute Errors are allowed
+            if not all([name in values for name in self._fieldnames]):
+                raise ValueError(
+                    "when values is a mapping its keys must contain all of "
+                    "the record's fieldnames")
+            for fieldname in self._fieldnames:
+                setattr(self, fieldname, values[fieldname])
+            return
+
+        # values should be iterable
+        try:
+            _ = iter(values)
+        except TypeError:
+            raise TypeError('values is not iterable')
+
+        if len(values) < len(self._fieldnames):
+            raise ValueError('too few items in values')
+
+        for attr, value in zip(self._fieldnames, values):
+            setattr(self, attr, value)
+        return
+
+    # @property
+    # def __dict__(self):
+    #     return self._asdict()
+    #
+    # @__dict__.setter
+    # def __dict__(self):
+    #     """Redirect the setting of __dict__ to __slots__"""
+    #     for k, v in dct.items():
+    #         setattr(self, k, v)
+
+
+    # This getter and setter is required because you can't use @property and
+    # @setter._defaults on a class method
+    @classmethod
+    def _get_defaults(cls):
+        """Get a tuple of the default field values."""
+        return cls._defaults
+
+
+    @classmethod
+    def _set_defaults(cls, defaults):
+        """Set the default field values for new instances of the record class.
+
+        Args:
+            defaults: mapping, sequence of 2-tuples, class instance or NO_DEFAULT
+                Can be a {fieldname: default} mapping, a sequence of
+                (fieldname, default) tuples, an instance of this class,
+                or NO_DEFAULT. The default values are used when new instances
+                of the record class are instantiated without passing in field
+                values. If default is set to NO_DEFAULT, field values must be
+                passed in when a new record object is instantiated.
+        """
+        if defaults == NO_DEFAULT:
+            cls._defaults = defaults
+            return
+
+        try:
+            _ = iter(defaults)
+        except TypeError:
+            raise TypeError(
+                'defaults is not iterable or equal to record.NO_DEFAULT')
+
+        if isinstance(defaults, cls):
+            cls._defaults = tuple(defaults[:])
+            return
+
+        if isinstance(defaults, collections.Mapping):
+            if not all([name in defaults for name in cls._fieldnames]):
+                raise ValueError(
+                    "when defaults is a mapping its keys must contain all of "
+                    "the record's fieldnames")
+            cls._defaults = tuple([defaults[name] for name in cls._fieldnames])
+            return
+
+        if (not all([isinstance(v, collections.Sequence) for v in defaults])
+                or not all(
+                    [len(v) == 2 and not isinstance(v, str) for v in defaults])):
+            raise ValueError(
+                'when defaults is a sequence it must contain (fieldname, default)'
+                'tuples')
+
+        # Must be a sequence of 2-tuples (or other 2-element non-string sequences!)
+        fieldnames, default_values = zip(*defaults)
+        if not all([name in fieldnames for name in cls._fieldnames]):
+            raise ValueError("defaults must contain all of the record's fieldnames")
+
+        _defaults = []
+        for fieldname in cls._fieldnames:
+            i = fieldnames.index(fieldname)
+            _defaults.append(default_values[i])
+        cls._defaults = tuple(_defaults)
+        return
+
+
+    @classmethod
+    def _make(cls, *args, **kwargs):
+        """Make a new instance from positional and/or keyword arguments.
+
+        Positional arguments must be provided in the same order as their
+        corresponding fieldnames. Keyword arguments can be in any order but
+        there nust be a matching keyword for each of the fieldnames not
+        fulfilled by the positional arguments.
+
+        Example:
+
+        >>> MyRec = record.make_type('MyRec', ['a', 'b', 'c', 'd'])
+        >>> MyRec._make(1, 2, d=4, c=3)
+        MyRec(a=1, b=2, c=3, d=4)
+
+        If more positional arguments are passed than there are fields in the
+        record the surplus positional arguments are left unused. Similarly,
+        if there are surplus keyword arguments that do not match a fieldname
+        they are ignored.
+
+        NOTE: this method can only be used to create new instances of
+        record types that have fewer than 256 fields.
+        """
+        dct = dict(
+            [(fieldname, arg) for fieldname, arg in zip(cls._fieldnames, args)])
+        dct.update(kwargs)
+        return cls(dct)
+
+
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__)
+            and self.__dict__ == other.__dict__)
+
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+    def __getitem__(self, index):
+        """Retrieve a field or slice of fields from the record.
+
+        Args:
+            index: int or slice object
+                Index can be an integer or slice object for normal sequence
+                item access.
+        Returns:
+            The value of the field corresponding to the index or a list of values
+            corresponding to slice indices.
+        """
+        if isinstance(index, int):
+            return self._attr_getters[index](self)
+        else:  # Slice object
+            return [getter(self) for getter in self._attr_getters[index]]
+
+
+    def __setitem__(self, index, value):
+        """Note: if index is a slice and value is longer than the slice then
+        the surplus values are discarded. This behaviour differs from that
+        of list.__setitem__ which inserts the surplus values into the list.
+        Similarly, if value contains too few values, the surplus fields are
+        left unaffected. With a list, the surplus items are deleted.
+
+        Args:
+            index: int or slice object
+                Index/slice to be set.
+            value: any
+                Value to set.
+        """
+        if isinstance(index, int):
+            setattr(self, self.__slots__[index], value)
+        else:  # Slice object
+            fields = self.__slots__[index]
+            for field, v in zip(fields, value):
+                setattr(self, field, v)
+
+
+    def __getnewargs__(self):
+        """Return self as a plain tuple. Used by copy and pickle."""
+        return tuple(self)
+
+
+    def __getstate__(self):
+        """Return self as a picklable object (a tuple).
+
+        Returns:
+            A tuple to allow the __slots__ based object to be pickled.
+        """
+        return tuple(self)
+
+
+    def __setstate__(self, state):
+        """Re-populate the record's attributes with the unpickled tuple."""
+        for attr, value in zip(self.__slots__, state):
+            setattr(self, attr, value)
+
+
+    def __iter__(self):
+        """Iterate over fields."""
+        for getter in self._attr_getters:
+            yield getter(self)
+
+
+    def __len__(self):
+        return len(self.__slots__)
+
+
+    def __repr__(self):
+        return '{}({})'.format(
+            self.__class__.__name__, ', '.join('{}={}'.format(
+                attr, repr(getattr(self, attr))) for attr in self.__slots__))
+
+
+    def __str__(self):
+        return '{}({})'.format(
+            self.__class__.__name__, ', '.join('{}={}'.format(
+                attr, str(getattr(self, attr))) for attr in self.__slots__))
+
+
+    def _asdict(self):
+        """Return a new OrderedDict which maps field names to their values."""
+        return collections.OrderedDict(
+            [(k, getattr(self, k)) for k in self.__slots__])
+
+
+    def _set__dict__(self, dct):
+        """Redirect the setting of __dict__ to __slots__"""
+        for k, v in dct.items():
+            setattr(self, k, v)
+
+Rec = make_type('Rec', ['a', 'b'])
+print(Rec)
+rec = Rec([1, 2])
+print(rec)
+print(sys.getsizeof(rec))
+rec.c = 3
+print(rec.c)
+print(sys.getsizeof(rec))
+print(rec.__dict__)
