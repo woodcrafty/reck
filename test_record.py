@@ -27,6 +27,11 @@ class RecordTestCase(unittest.TestCase):
         self.assertEqual(r.a, 3)
         self.assertEqual(r.b, 4)
 
+        # Invalid sequence: sequence of 2-tuples except for one element which
+        # is a 2-character sting
+        with self.assertRaises(TypeError):
+            R = record.make_type('R', [('a', 1), 'ab'])
+
         # Mapping
         R = record.make_type('R', OrderedDict([('a', 1), ('b', 2)]))
         self.assertEqual(R._get_defaults(), (1, 2))
@@ -82,7 +87,8 @@ class RecordTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             rec = Rec([1])
 
-    def test_instantiation_with_invalid_type(self):
+    def test_instantiation_with_invalid_types(self):
+        # Non interable/NO_DEFAULT value
         with self.assertRaises(TypeError):
             rec = Rec(1)
 
@@ -100,6 +106,38 @@ class RecordTestCase(unittest.TestCase):
         rec = R(list(range(1000)))
         self.assertEqual(rec.f0, 0)
         self.assertEqual(rec.f999, 999)
+
+    def test_make(self):
+        R = record.make_type('Rec', 'a b c d')
+        rec2 = R([1, 2, 3, 4])
+
+        # All args
+        rec1 = R._make(1, 2, 3, 4)
+        self.assertEqual(rec1, rec2)
+
+        # Mixture of args and kwargs
+        rec1 = R._make(1, 2, d=4, c=3)
+        self.assertEqual(rec1, rec2)
+
+        # All kwargs
+        rec1 = R._make(b=2, a=1, d=4, c=3)
+        self.assertEqual(rec1, rec2)
+
+        # Too few args
+        with self.assertRaises(ValueError):
+            R._make(1, 2, d=4)
+
+        # Too many positional args (currently this is allowed)
+        # with self.assertRaises(ValueError):
+        #     R._make(1, 2, 3, 4, 5)
+
+        # Too many keyword args (currently this is allowed)
+        # with self.assertRaises(ValueError):
+        #     R._make(1, 2, 3, 4, 5)
+
+        # Invalid keyword arg
+        with self.assertRaises(ValueError):
+            R._make(1, 2, 3, e=4)
 
     def test_contains(self):
         self.assertEqual(1 in self.rec, True)
