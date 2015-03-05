@@ -2,6 +2,7 @@
 Create custom record classes that have mutable field values.
 
 TODO:
+Confirm docstring examples are correct.
 """
 
 import collections
@@ -25,6 +26,19 @@ def make_type(typename, fieldnames, rename=False):
     custom record class is used to create record objects with mutable
     fields that are accessible by attribute lookup or by index, and are
     iterable. There is no restriction on the number of fields.
+
+    Example with no defaults set:
+
+    >>> import record
+    >>> Point = record.make_type('Point', ['x', 'y'])
+    >>> Point([1, 2])
+    Point(x=1, y=2)
+
+    Example with defaults set:
+
+    >>> Point = record.make_type('MyRec', dict(x=None, y=None))
+    >>> Point()
+    Point(x=None, y=None)
 
     Record objects do not have per-instance dictionaries. They store
     attributes in __slots__, so they are lightweight, requiring one
@@ -125,51 +139,21 @@ def make_type(typename, fieldnames, rename=False):
                 'encountered duplicate fieldname: {0!r}'.format(name))
         used_names.add(name)
 
-    # _attr_getters is included because operator.attrgetter offers a
-    # slight speed up over using getattr()
-    # dct = dict(
-    #     __slots__=tuple(_fieldnames),
-    #     _fieldnames=tuple(_fieldnames),
-    #     _defaults=_defaults,
-    #     _asdict=_asdict,
-    #     _make=_make,
-    #     _get_defaults=_get_defaults,
-    #     _set_defaults=_set_defaults,
-    #     _attr_getters=tuple(
-    #         [operator.attrgetter(field) for field in _fieldnames]),
-    #     __init__=__init__,
-    #     # _asdict() is used to provide a dictionary representation of the
-    #     # record when __dict__ is called.  This enables the vars() built-in
-    #     # to return a dict even though the record's attributes are stored
-    #     # in __slots__.
-    #     __dict__=property(_asdict, _set__dict__),
-    #     __iter__=__iter__,
-    #     __getitem__=__getitem__,
-    #     __setitem__=__setitem__,
-    #     __getnewargs__=__getnewargs__,
-    #     __getstate__=__getstate__,
-    #     __len__=__len__,
-    #     __setstate__=__setstate__,
-    #     __repr__=__repr__,
-    #     __str__=__str__,
-    #     __eq__=__eq__,
-    #     __ne__=__ne__,
-    # )
-    # For pickling to work, the __module__ variable needs to be set to the
-    # frame where the named tuple is created.  Bypass this step in
-    # environments where sys._getframe is not defined (Jython for example)
-    # or sys._getframe is not defined for arguments greater than 0
-    # (e.g. IronPython).
+    # Attributes of the new record type
     dct = dict(
         __slots__=tuple(_fieldnames),
         _fieldnames=tuple(_fieldnames),
         _defaults=_defaults,
         _attr_getters=tuple(
             [operator.attrgetter(field) for field in _fieldnames]),
-        __dict__=property(_asdict, _set__dict__),
     )
     cls = type(typename, (Record,), dct)
 
+    # For pickling to work, the __module__ variable needs to be set to the
+    # frame where the named tuple is created.  Bypass this step in
+    # environments where sys._getframe is not defined (Jython for example)
+    # or sys._getframe is not defined for arguments greater than 0
+    # (e.g. IronPython).
     try:
         cls.__module__ = sys._getframe(1).f_globals.get('__name__', '__main__')
     except (AttributeError, ValueError):
@@ -177,21 +161,12 @@ def make_type(typename, fieldnames, rename=False):
 
     return cls
 
-def _asdict(self):
-    """Return a new OrderedDict which maps field names to their values."""
-    return collections.OrderedDict(
-        [(k, getattr(self, k)) for k in self.__slots__])
-
-def _set__dict__(self, dct):
-    """Redirect the setting of __dict__ to __slots__"""
-    for k, v in dct.items():
-        setattr(self, k, v)
-
 
 class Record(collections.Sequence):
     """
     Base class for custom record types.
     """
+    __slots__ = ()
 
     def __init__(self, values=None):
         """Make a new instance from an existing sequence or mapping.
@@ -237,16 +212,15 @@ class Record(collections.Sequence):
             setattr(self, attr, value)
         return
 
-    # @property
-    # def __dict__(self):
-    #     return self._asdict()
-    #
-    # @__dict__.setter
-    # def __dict__(self):
-    #     """Redirect the setting of __dict__ to __slots__"""
-    #     for k, v in dct.items():
-    #         setattr(self, k, v)
+    @property
+    def __dict__(self):
+        return self._asdict()
 
+    @__dict__.setter
+    def __dict__(self):
+        """Redirect the setting of __dict__ to __slots__"""
+        for k, v in dct.items():
+            setattr(self, k, v)
 
     # This getter and setter is required because you can't use @property and
     # @setter._defaults on a class method
@@ -254,7 +228,6 @@ class Record(collections.Sequence):
     def _get_defaults(cls):
         """Get a tuple of the default field values."""
         return cls._defaults
-
 
     @classmethod
     def _set_defaults(cls, defaults):
@@ -310,18 +283,18 @@ class Record(collections.Sequence):
         cls._defaults = tuple(_defaults)
         return
 
-
     @classmethod
     def _make(cls, *args, **kwargs):
         """Make a new instance from positional and/or keyword arguments.
 
         Positional arguments must be provided in the same order as their
         corresponding fieldnames. Keyword arguments can be in any order but
-        there nust be a matching keyword for each of the fieldnames not
+        there must be a matching keyword for each of the fieldnames not
         fulfilled by the positional arguments.
 
         Example:
 
+        >>> import record
         >>> MyRec = record.make_type('MyRec', ['a', 'b', 'c', 'd'])
         >>> MyRec._make(1, 2, d=4, c=3)
         MyRec(a=1, b=2, c=3, d=4)
@@ -339,15 +312,12 @@ class Record(collections.Sequence):
         dct.update(kwargs)
         return cls(dct)
 
-
     def __eq__(self, other):
         return (isinstance(other, self.__class__)
             and self.__dict__ == other.__dict__)
 
-
     def __ne__(self, other):
         return not self.__eq__(other)
-
 
     def __getitem__(self, index):
         """Retrieve a field or slice of fields from the record.
@@ -364,7 +334,6 @@ class Record(collections.Sequence):
             return self._attr_getters[index](self)
         else:  # Slice object
             return [getter(self) for getter in self._attr_getters[index]]
-
 
     def __setitem__(self, index, value):
         """Note: if index is a slice and value is longer than the slice then
@@ -386,11 +355,9 @@ class Record(collections.Sequence):
             for field, v in zip(fields, value):
                 setattr(self, field, v)
 
-
     def __getnewargs__(self):
         """Return self as a plain tuple. Used by copy and pickle."""
         return tuple(self)
-
 
     def __getstate__(self):
         """Return self as a picklable object (a tuple).
@@ -400,52 +367,35 @@ class Record(collections.Sequence):
         """
         return tuple(self)
 
-
     def __setstate__(self, state):
         """Re-populate the record's attributes with the unpickled tuple."""
         for attr, value in zip(self.__slots__, state):
             setattr(self, attr, value)
-
 
     def __iter__(self):
         """Iterate over fields."""
         for getter in self._attr_getters:
             yield getter(self)
 
-
     def __len__(self):
         return len(self.__slots__)
-
 
     def __repr__(self):
         return '{}({})'.format(
             self.__class__.__name__, ', '.join('{}={}'.format(
                 attr, repr(getattr(self, attr))) for attr in self.__slots__))
 
-
     def __str__(self):
         return '{}({})'.format(
             self.__class__.__name__, ', '.join('{}={}'.format(
                 attr, str(getattr(self, attr))) for attr in self.__slots__))
-
 
     def _asdict(self):
         """Return a new OrderedDict which maps field names to their values."""
         return collections.OrderedDict(
             [(k, getattr(self, k)) for k in self.__slots__])
 
-
     def _set__dict__(self, dct):
         """Redirect the setting of __dict__ to __slots__"""
         for k, v in dct.items():
             setattr(self, k, v)
-
-Rec = make_type('Rec', ['a', 'b'])
-print(Rec)
-rec = Rec([1, 2])
-print(rec)
-print(sys.getsizeof(rec))
-rec.c = 3
-print(rec.c)
-print(sys.getsizeof(rec))
-print(rec.__dict__)
