@@ -111,19 +111,35 @@ Despite using ``__slots__``, instances of classes created by
 
 API
 ---
-In addition to the usual sequence methods, records support three additional
-methods and one attribute. To prevent conflicts with fieldnames, the method
-and attribute names start with an underscore.
+
+record.\ **make_type**\ (*typename, fieldnames, rename=False*)
+
+    In addition to the usual sequence methods, records support four additional
+    methods and one attribute. To prevent conflicts with fieldnames, the method
+    and attribute names start with an underscore.
+
+*classmethod* somerecord.\ **_make**\ (*\*args, \*\*kwargs*)
+
+    Convenience function for making a new instance from positional and/or
+    keyword arguments::
+
+        >>> MyRec = record.make_type('MyRec', ['a', 'b', 'c', 'd'])
+        >>> rec = MyRec._make(1, 2, d=4, c=3)
+        MyRec(a=1, b=2, c=3, d=4)
+
+    Note that this method can only be used to create new instances of
+    record types that have fewer than 256 fields.
 
 *classmethod* somerecord.\ **_get_defaults**\ ()\.
 
-Class method that returns a tuple of the default values or
-``record.NO_DEFAULT`` if no defaults have been set.
+    Class method that returns a tuple of the default values or
+    ``record.NO_DEFAULT`` if no defaults have been set.
 
-*classmethod* somerecord.\ **_set_defaults**\ (defaults)\.
+*classmethod* somerecord.\ **_set_defaults**\ (*defaults*)
+
     Class method that sets new defaults from an existing mapping of the form
-    {fieldname: default}, sequence of (fieldname, default) tuples, instance
-    of the class. Alternatively, defaults can be disabled by
+    {fieldname: default}, sequence of (fieldname, default) tuples, or
+    instance of the class. Alternatively, defaults can be disabled by
     passing ``record.NO_DEFAULT``.
 
 somerecord.\ **_asdict**\ ()
