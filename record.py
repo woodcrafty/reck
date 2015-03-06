@@ -3,6 +3,19 @@ Create custom record classes that have mutable field values.
 
 TODO:
 Confirm docstring examples are correct.
+Make alternative class constructors using @classmethod for different data types
+e.g. Record.from_mapping(dict(a=1, b=2)
+e.g. Record.from_2tuples([('a', 1), ('b', 2)])
+e.g. Record(typename, values_seq, defaults_seq)
+
+Pros:
+    more explicit intentions
+    simpler/more atomic units
+    easier to subclass/override
+    faster initialisation because knock out if statements
+    invoking code reads better/more explicit
+Cons:
+    bigger API
 """
 
 import collections
