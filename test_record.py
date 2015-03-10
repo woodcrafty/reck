@@ -240,7 +240,7 @@ class RecordTestCase(unittest.TestCase):
         self.assertEqual(rec.b, 4)
 
     def test_attribute_not_defined_in_slots(self):
-        rec = Rec(a=1, b=2)
+        rec = Rec(1, 2)
         with self.assertRaises(AttributeError):
             _ = rec.c
         with self.assertRaises(AttributeError):
@@ -251,9 +251,7 @@ class RecordTestCase(unittest.TestCase):
         # pickled, hence the use of Rec here.
         rec = Rec(1, 2)
         for protocol in 0, 1, 2, 3:
-            _ = pickle.dumps(rec, protocol)
-            pickled_rec = pickle.loads(_)
-            #pickled_rec = pickle.loads(pickle.dumps(rec, protocol))
+            pickled_rec = pickle.loads(pickle.dumps(rec, protocol))
             self.assertEqual(rec, pickled_rec)
             self.assertEqual(rec._fieldnames, pickled_rec._fieldnames)
 

@@ -32,16 +32,20 @@ class BaseRecord(collections.Sequence):
         )
         record_type = type(typename, (cls,), type_dct)
         # For pickling to work, the __module__ variable needs to be set to the
-        # frame where the named tuple is created.  Bypass this step in
+        # frame where the record type is created.  Bypass this step in
         # environments where sys._getframe is not defined (Jython for example)
         # or sys._getframe is not defined for arguments greater than 0
         # (e.g. IronPython).
-        cls.__module__ = _get_client_module_name()
+        #record_type.__module__ = _get_client_module_name()
+        #record_type.__module__ = '__main__'
         # try:
-        #     cls.__module__ = sys._getframe(7).f_globals.get(
+        #     record_type.__module__ = sys._getframe(2).f_globals.get(
         #         '__name__', '__main__')
         # except (AttributeError, ValueError):
         #     pass
+        record_type.__module__ = _get_client_module_name()
+        # This suggestion from
+        # http://stackoverflow.com/questions/13624603/python-how-to-register-dynamic-class-in-module
 
         return record_type
 
@@ -66,6 +70,37 @@ class BaseRecord(collections.Sequence):
     @classmethod
     def _check_typename(cls, typename):
         cls._common_name_check(typename, 'type')
+
+    @classmethod
+    def _parse_fieldnames(cls, fieldnames, rename):
+        # Process fieldnames sequence, creating a list of corrected fieldnames
+        # and a map of fieldnames to default values.
+        defaults = {}
+        checked_fieldnames = []
+        used_names = set()
+        for idx, fieldname in enumerate(fieldnames):
+            if isinstance(fieldname, str):
+                has_default = False
+            else:
+                try:
+                    if len(fieldname) != 2:
+                        raise ValueError(
+                            'fieldname {0!r} must be a 2-tuple of the form '
+                            '(fieldname, default_value)'.format(fieldname))
+                except TypeError:
+                    raise ValueError(
+                        'fieldname {0!r} must be a 2-tuple of the form '
+                        '(fieldname, default_value)'.format(fieldname))
+                has_default = True
+                default = fieldname[1]
+                fieldname = fieldname[0]
+
+            fieldname = cls._check_fieldname(fieldname, used_names, rename, idx)
+            checked_fieldnames.append(fieldname)
+            used_names.add(fieldname)
+            if has_default:
+                defaults[fieldname] = default
+        return checked_fieldnames, defaults
 
     @staticmethod
     def _common_name_check(name, nametype):
@@ -146,9 +181,9 @@ class BaseRecord(collections.Sequence):
             for field, v in zip(fields, value):
                 setattr(self, field, v)
 
-    def __getnewargs__(self):
-        """Return self as a plain tuple. Used by copy and pickle."""
-        return tuple(self)
+    # def __getnewargs__(self):
+    #     """Return self as a plain tuple. Used by copy and pickle."""
+    #     return tuple()
 
     def __getstate__(self):
         """Return self as a picklable object (a tuple).
@@ -250,35 +285,9 @@ class Record(BaseRecord):
         elif isinstance(fieldnames, str):
             fieldnames = fieldnames.replace(',', ' ').split()
 
-        # Process fieldnames sequence, creating a list of corrected fieldnames
-        # and a map of fieldnames to default values.
-        defaults = {}
-        checked_fieldnames = []
-        used_names = set()
-        for idx, fieldname in enumerate(fieldnames):
-            if isinstance(fieldname, str):
-                has_default = False
-            else:
-                try:
-                    if len(fieldname) != 2:
-                        raise ValueError(
-                            'fieldname {0!r} must be a 2-tuple of the form '
-                            '(fieldname, default_value)'.format(fieldname))
-                except TypeError:
-                    raise ValueError(
-                        'fieldname {0!r} must be a 2-tuple of the form '
-                        '(fieldname, default_value)'.format(fieldname))
-                has_default = True
-                default = fieldname[1]
-                fieldname = fieldname[0]
+        fieldnames, defaults = cls._parse_fieldnames(fieldnames, rename)
 
-            fieldname = cls._check_fieldname(fieldname, used_names, rename, idx)
-            checked_fieldnames.append(fieldname)
-            used_names.add(fieldname)
-            if has_default:
-                defaults[fieldname] = default
-
-        return super()._maketype(typename, checked_fieldnames, defaults)
+        return super()._maketype(typename, fieldnames, defaults)
 
 
     def _update(self, *args, **kwargs):
@@ -419,6 +428,42 @@ class LongRecord(BaseRecord):
         for fieldname, value in field_values.items():
             setattr(self, fieldname, value)
 
+    @classmethod
+    def _maketype(cls, typename, fieldnames, rename=False):
+        """
+        Args:
+            typename: str
+                Name of the record-like class to create, e.g. 'MyRecord'.
+            fieldnames: iterable
+                Must be a string or sequence of fieldnames, or a mapping
+                of the form fieldname: default or a sequence of tuples of
+                the form (fieldname, default). Note that it only makes sense
+                to pass an ordered mapping (e.g. OrderedDict) since acces by
+                index or iteration is affected by the order of the fieldnames.
+                If fieldnames is a string each fieldname should be separated
+                by a space and/or comma, e.g. 'field1 field2 field3'. A
+                fieldname may be any valid Python identifier except for names
+                starting with an underscore.
+            rename: boolean
+                If rename is True, invalid fieldnames are automatically replaced
+                with positional names. For example, ('abc', 'def', 'ghi', 'abc')
+                is converted to ('abc', '_1', 'ghi', '_3'), eliminating the
+                keyword 'def' and the duplicate fieldname 'abc'.
+        Returns:
+            A custom record class.
+        """
+        cls._check_typename(typename)
+        if isinstance(fieldnames, collections.Mapping):
+            # Convert mapping to a sequence of (fieldname, value) tuples
+            fieldnames = list(fieldnames.items())
+        elif isinstance(fieldnames, str):
+            fieldnames = fieldnames.replace(',', ' ').split()
+
+        fieldnames, defaults = cls._parse_fieldnames(fieldnames, rename)
+
+        return super()._maketype(typename, fieldnames, defaults)
+
+
 
 def _get_client_module_name():
     client_module_name = None
@@ -443,3 +488,15 @@ def _get_client_module_name():
 # print(rec)
 # rec._update(b=9)
 # print(rec)
+
+# import pickle
+# Rec = Record._maketype('Rec', ['a', 'b'])
+# print(Rec.__module__)
+# rec = Rec(1, 2)
+# for protocol in 0, 1:  #, 2, 3:
+#     _ = pickle.dumps(rec, protocol)
+#     pickled_rec = pickle.loads(_)
+#     #pickled_rec = pickle.loads(pickle.dumps(rec, protocol))
+#     assert(rec == pickled_rec)
+
+
