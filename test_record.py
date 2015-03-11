@@ -276,9 +276,13 @@ class TestRecord(unittest.TestCase):
         rec = Rec(1, 2)
         with self.assertRaises(AttributeError):
             _ = rec.c
-        with self.assertRaises(AttributeError):
+#        with self.assertRaises(AttributeError):
+#        with self.assertRaises(Exception as e):
+        try:
             rec.c = 3
-
+        except Exception as e:
+            print(e)
+            print(type(e))
     def test_getitem(self):
         R = record.Record._maketype('R', ['a', 'b', 'c', 'd'])
         rec = R(1, 2, 3, 4)
