@@ -36,19 +36,13 @@ class BaseRecord(collections.Sequence):
         # environments where sys._getframe is not defined (Jython for example)
         # or sys._getframe is not defined for arguments greater than 0
         # (e.g. IronPython).
-        #record_type.__module__ = _get_client_module_name()
-        #record_type.__module__ = '__main__'
-        # try:
-        #     record_type.__module__ = sys._getframe(2).f_globals.get(
-        #         '__name__', '__main__')
-        # except (AttributeError, ValueError):
-        #     pass
-        record_type.__module__ = _get_client_module_name()
-        # This suggestion from
-        # http://stackoverflow.com/questions/13624603/python-how-to-register-dynamic-class-in-module
+        try:
+            record_type.__module__ = sys._getframe(2).f_globals.get(
+                '__name__', '__main__')
+        except (AttributeError, ValueError):
+            pass
 
         return record_type
-
 
     @classmethod
     def _check_fieldname(cls, fieldname, used_names, rename, idx):
@@ -101,6 +95,12 @@ class BaseRecord(collections.Sequence):
             if has_default:
                 defaults[fieldname] = default
         return checked_fieldnames, defaults
+
+    @classmethod
+    def _check_fieldnames_exist(cls, fieldnames):
+        for fieldname in fieldnames:
+            if fieldname not in cls._fieldnames:
+                raise ValueError('field {0!r} is not defined')
 
     @staticmethod
     def _common_name_check(name, nametype):
@@ -181,10 +181,6 @@ class BaseRecord(collections.Sequence):
             for field, v in zip(fields, value):
                 setattr(self, field, v)
 
-    # def __getnewargs__(self):
-    #     """Return self as a plain tuple. Used by copy and pickle."""
-    #     return tuple()
-
     def __getstate__(self):
         """Return self as a picklable object (a tuple).
 
@@ -249,7 +245,7 @@ class Record(BaseRecord):
         field_values.update(kwargs)
         for fieldname in self._fieldnames:
             if fieldname not in field_values:
-                raise ValueError('field {0!r} is not defined')
+                raise TypeError('field {0!r} is not defined'.format(fieldname))
 
         for fieldname, value in field_values.items():
             setattr(self, fieldname, value)
@@ -316,9 +312,7 @@ class Record(BaseRecord):
         defaults = cls._defaults.copy()
         defaults.update(dict(zip(cls._fieldnames, args)))
         defaults.update(kwargs)
-        for fieldname in defaults.keys():
-            if fieldname not in cls._fieldnames:
-                raise ValueError('field {0!r} is not defined')
+        cls._check_fieldnames_exist(defaults.keys())
         cls._defaults = defaults
 
     @classmethod
@@ -342,68 +336,6 @@ class Record(BaseRecord):
                     'got multiple values for field {0!r}'.format(fieldname))
 
 
-    # # This getter and setter is required because you can't use @property and
-    # # @setter._defaults on a class method
-    # @classmethod
-    # def _get_defaults(cls):
-    #     """Get a tuple of the default field values."""
-    #     return cls._defaults
-    #
-    # @classmethod
-    # def _set_defaults(cls, defaults):
-    #     """Set the default field values for new instances of the record class.
-    #
-    #     Args:
-    #         defaults: mapping, sequence of 2-tuples, class instance or NO_DEFAULT
-    #             Can be a {fieldname: default} mapping, a sequence of
-    #             (fieldname, default) tuples, an instance of this class,
-    #             or NO_DEFAULT. The default values are used when new instances
-    #             of the record class are instantiated without passing in field
-    #             values. If default is set to NO_DEFAULT, field values must be
-    #             passed in when a new record object is instantiated.
-    #     """
-    #     if defaults == NO_DEFAULT:
-    #         cls._defaults = defaults
-    #         return
-    #
-    #     try:
-    #         _ = iter(defaults)
-    #     except TypeError:
-    #         raise TypeError(
-    #             'defaults is not iterable or equal to record.NO_DEFAULT')
-    #
-    #     if isinstance(defaults, cls):
-    #         cls._defaults = tuple(defaults[:])
-    #         return
-    #
-    #     if isinstance(defaults, collections.Mapping):
-    #         if not all([name in defaults for name in cls._fieldnames]):
-    #             raise ValueError(
-    #                 "when defaults is a mapping its keys must contain all of "
-    #                 "the record's fieldnames")
-    #         cls._defaults = tuple([defaults[name] for name in cls._fieldnames])
-    #         return
-    #
-    #     if (not all([isinstance(v, collections.Sequence) for v in defaults])
-    #             or not all(
-    #                 [len(v) == 2 and not isinstance(v, str) for v in defaults])):
-    #         raise ValueError(
-    #             'when defaults is a sequence it must contain (fieldname, '
-    #             'default) tuples')
-    #
-    #     # Must be a sequence of 2-tuples (or other 2-element non-string sequences!)
-    #     fieldnames, default_values = zip(*defaults)
-    #     if not all([name in fieldnames for name in cls._fieldnames]):
-    #         raise ValueError("defaults must contain all of the record's fieldnames")
-    #
-    #     _defaults = []
-    #     for fieldname in cls._fieldnames:
-    #         i = fieldnames.index(fieldname)
-    #         _defaults.append(default_values[i])
-    #     cls._defaults = tuple(_defaults)
-    #     return
-
-
 class LongRecord(BaseRecord):
     """
     Base class for long record types (records that can have more than
@@ -413,16 +345,16 @@ class LongRecord(BaseRecord):
     __slots__ = ()
 
     def __init__(self, values):
-        """Initialise a new instance from positional and keyword arguments.
+        """Initialise a new instance from a sequence or mapping.
         """
-        if instance(values, collections.Sequence):
-            values = dict(zip(seld._fieldnames, values))
+        if isinstance(values, collections.Sequence):
+            values = dict(zip(self._fieldnames, values))
 
         # Check that a value has been defined for every field
         field_values = self._defaults.copy()
         field_values.update(values)
         for fieldname in self._fieldnames:
-            if fieldname not in defined_fields:
+            if fieldname not in field_values:
                 raise ValueError('field {0!r} is not defined')
 
         for fieldname, value in field_values.items():
@@ -463,40 +395,23 @@ class LongRecord(BaseRecord):
 
         return super()._maketype(typename, fieldnames, defaults)
 
+    def _update(self, values):
+        """Update the record with positional and/or keyword arguments.
 
+        Args:
+        """
+        if isinstance(values, collections.Sequence):
+            values = dict(zip(self._fieldnames, values))
 
-def _get_client_module_name():
-    client_module_name = None
-    for stack_index in range(1, 5):
-        frame = sys._getframe(stack_index)
-        module_name = frame.f_globals.get('__name__')
-        if module_name != __name__:
-            client_module_name = module_name
-            break
+        for fieldname, value in values.items():
+            setattr(self, fieldname, value)
 
-    assert client_module_name, 'Could not find name of module using Record'
-    return client_module_name
-
-# Rec = Record._maketype('Rec', ['a', 'b'])
-# rec = Rec(1, b=2)
-# print(rec)
-# rec._update(b=9)
-# print(rec)
-# print()
-# Rec = Record._maketype('Rec', collections.OrderedDict(a=None, b=None))
-# rec = Rec()
-# print(rec)
-# rec._update(b=9)
-# print(rec)
-
-# import pickle
-# Rec = Record._maketype('Rec', ['a', 'b'])
-# print(Rec.__module__)
-# rec = Rec(1, 2)
-# for protocol in 0, 1:  #, 2, 3:
-#     _ = pickle.dumps(rec, protocol)
-#     pickled_rec = pickle.loads(_)
-#     #pickled_rec = pickle.loads(pickle.dumps(rec, protocol))
-#     assert(rec == pickled_rec)
-
+    @classmethod
+    def _update_defaults(cls, values):
+        if isinstance(values, collections.Sequence):
+            values = dict(zip(self._fieldnames, values))
+        defaults = cls._defaults.copy()
+        defaults.update(values)
+        cls._check_fieldnames_exist(defaults.keys())
+        cls._defaults = defaults
 
