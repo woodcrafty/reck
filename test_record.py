@@ -1,11 +1,13 @@
 
 from collections import OrderedDict
 import pickle
+from sys import version_info
 import unittest
 
 import record
 
 Rec = record.Record._maketype('Rec', ['a', 'b'])
+
 
 class TestRecord(unittest.TestCase):
 
@@ -272,17 +274,22 @@ class TestRecord(unittest.TestCase):
         self.assertEqual(rec.a, 3)
         self.assertEqual(rec.b, 4)
 
-    def test_attribute_not_defined_in_slots(self):
+    def test_get_attribute_not_defined_in_slots(self):
         rec = Rec(1, 2)
         with self.assertRaises(AttributeError):
             _ = rec.c
-#        with self.assertRaises(AttributeError):
-#        with self.assertRaises(Exception as e):
-        try:
+
+    # Version 3.2 seems to have a bug whereby assignment to an attribute that
+    # doesn't exist does NOT throw an Exception of any kind. After the
+    # assignment rec does not contain the attribute assigned too.
+    @unittest.skipIf(
+        version_info.major == 3 and version_info.minor == 2,
+        'Python 3.2 does not throw an Exception when assigning to an attribute'
+        'that does not exist in a slots based object.')
+    def test_set_attribute_not_defined_in_slots(self):
+        with self.assertRaises(AttributeError):
             rec.c = 3
-        except Exception as e:
-            print(e)
-            print(type(e))
+
     def test_getitem(self):
         R = record.Record._maketype('R', ['a', 'b', 'c', 'd'])
         rec = R(1, 2, 3, 4)
