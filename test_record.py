@@ -287,6 +287,7 @@ class TestRecord(unittest.TestCase):
         'Python 3.2 does not throw an Exception when assigning to an attribute'
         'that does not exist in a slots based object.')
     def test_set_attribute_not_defined_in_slots(self):
+        rec = Rec(1, 2)
         with self.assertRaises(AttributeError):
             rec.c = 3
 
