@@ -11,7 +11,7 @@ setup(
     author='Mark Richards',
     author_email='mark.l.a.richardsREMOVETHIS@gmail.com',
     license='BSD 3-clause',
-    py_modules=['record'],
+    py_modules=['rectype'],
     package_data={'': ['*.rst', '*.txt']},
     classifiers=[
         'Programming Language :: Python',
