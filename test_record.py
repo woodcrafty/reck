@@ -4,9 +4,9 @@ import pickle
 from sys import version_info
 import unittest
 
-import record
+import rectype
 
-Rec = record.Record._maketype('Rec', ['a', 'b'])
+Rec = rectype.rectype('Rec', ['a', 'b'])
 
 
 class TestRecord(unittest.TestCase):
@@ -14,61 +14,62 @@ class TestRecord(unittest.TestCase):
     # ==========================================================================
     # Test record type creation
 
-    def test_maketype_with_sequence(self):
+    def test_rectype_with_sequence(self):
         # Simple sequence
-        Rec = record.Record._maketype('Rec', ['a', 'b'])
-        rec = Rec(1, 2)
+        Rec = rectype.rectype('Rec', ['a', 'b'])
+        rec = Rec([1, 2])
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
         # Sequence of 2-tuples
-        Rec = record.Record._maketype('Rec', [('a', None), ('b', None)])
-        rec = Rec(1, 2)
+        Rec = rectype.rectype('Rec', [('a', None), ('b', None)])
+        rec = Rec([1, 2])
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
         # Simple sequence with some 2-tuples
-        Rec = record.Record._maketype('Rec', ['a', ('b', None)])
-        rec = Rec(1, 2)
+        Rec = rectype.rectype('Rec', ['a', ('b', None)])
+        rec = Rec([1, 2])
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
         # String sequence
-        Rec = record.Record._maketype('Rec', 'a b,c, d')
-        rec = Rec(1, 2, 3, 4)
+        Rec = rectype.rectype('Rec', 'a b,c, d')
+        rec = Rec([1, 2, 3, 4])
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
         self.assertEqual(rec.c, 3)
         self.assertEqual(rec.d, 4)
-        Rec = record.Record._maketype('Rec', 'ab')
-        rec = Rec(1)
+        Rec = rectype.rectype('Rec', 'ab')
+        rec = Rec([1])
         self.assertEqual(rec.ab, 1)
 
-    def test_maketype_with_mapping(self):
-        # Use lots of fields to check order is preserved
+    def test_rectype_with_mapping(self):
+        # Use lots of fields to check that field order is preserved
         nfields = 50
         fieldnames = ['f{0}'.format(i) for i in range(nfields)]
         tuples = [(name, None) for name in fieldnames]
-        Rec = record.Record._maketype('Rec', OrderedDict(tuples))
-        rec = Rec(*list(range(nfields)))
+        Rec = rectype.rectype('Rec', OrderedDict(tuples))
+        rec = Rec(list(range(nfields)))
         for i in range(nfields):
             self.assertEqual(rec[i], i)
             fieldname = 'f{0}'.format(i)
             self.assertEqual(getattr(rec, fieldname), i)
 
-    def test_maketype_with_bad_sequence(self):
+
+    def test_rectype_with_bad_sequence(self):
         with self.assertRaises(ValueError):
             # 3-tuple instead of 2-tuple
-            Rec = record.Record._maketype('Rec', [('a', 1, 2)])
+            Rec = rectype.rectype('Rec', [('a', 1, 2)])
             # 1-tuple instead of 2-tuple
-            Rec = record.Record._maketype('Rec', [('a',)])
+            Rec = rectype.rectype('Rec', [('a',)])
 
-    def test_maketype_with_defaults(self):
-        Rec = record.Record._maketype('Rec', dict(a=1))
+    def test_rectype_with_defaults(self):
+        Rec = rectype.rectype('Rec', dict(a=1))
         rec = Rec()
         self.assertEqual(rec.a, 1)
 
-        Rec = record.Record._maketype('Rec', [('a', 1), 'b', ('c', 3)])
+        Rec = rectype.rectype('Rec', [('a', 1), 'b', ('c', 3)])
         rec = Rec(b=2)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
@@ -77,63 +78,63 @@ class TestRecord(unittest.TestCase):
     def test_bad_typename(self):
         with self.assertRaises(ValueError):
             # Typename is a keyword
-            R = record.Record._maketype('for', ['a', 'b'])
+            R = rectype.rectype('for', ['a', 'b'])
 
             # Typename with a leading digit
-            R = record.Record._maketype('1R', ['a', 'b'])
+            R = rectype.rectype('1R', ['a', 'b'])
 
             # Typename contains a non alpha-numeric/underscore character
-            R = record.Record._maketype('R-', ['a', 'b'])
+            R = rectype.rectype('R-', ['a', 'b'])
 
     def test_bad_fieldname(self):
         with self.assertRaises(ValueError):
             # Duplicate fieldname
-            R = record.Record._maketype('R', ('a', 'a', 'b', 'a'))
+            R = rectype.rectype('R', ('a', 'a', 'b', 'a'))
 
             # Fieldname with leading underscore
-            R = record.Record._maketype('R', ('a', '_b'))
+            R = rectype.rectype('R', ('a', '_b'))
 
             # Fieldname is a keyword
-            R = record.Record._maketype('R', ('a', 'for'))
+            R = rectype.rectype('R', ('a', 'for'))
 
             # Fieldname with a leading digit
-            R = record.Record._maketype('R', ('a', '1b'))
+            R = rectype.rectype('R', ('a', '1b'))
 
             # Fieldname contains a non alpha-numeric character/underscore char
-            R = record.Record._maketype('R', ('a', 'b!'))
+            R = rectype.rectype('R', ('a', 'b!'))
 
     def test_rename(self):
         # Duplicate fieldname
-        R = record.Record._maketype('R', ('a', 'a', 'b', 'a'), rename=True)
+        R = rectype.rectype('R', ('a', 'a', 'b', 'a'), rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1', 'b', '_3'))
 
         # Fieldname with leading underscore
-        R = record.Record._maketype('R', ('a', '_b'), rename=True)
+        R = rectype.rectype('R', ('a', '_b'), rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1'))
 
         # Fieldname is a keyword
-        R = record.Record._maketype('R', ('a', 'for'), rename=True)
+        R = rectype.rectype('R', ('a', 'for'), rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1'))
 
         # Fieldname with a leading digit
-        R = record.Record._maketype('R', ('a', '1b'), rename=True)
+        R = rectype.rectype('R', ('a', '1b'), rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1'))
 
         # Fieldname contains a non alpha-numeric chanacter/underscore char
-        R = record.Record._maketype('R', ('a', 'b!'), rename=True)
+        R = rectype.rectype('R', ('a', 'b!'), rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1'))
 
         # Multiple rename required
-        R = record.Record._maketype(
+        R = rectype.rectype(
             'R', ('a', 'a', 'b!', 'c', 'for'), rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1', '_2', 'c', '_4'))
 
         # Rename should not break anything when all fieldnames are valid
-        R = record.Record._maketype('R', ('a', 'b', 'c'), rename=True)
+        R = rectype.rectype('R', ('a', 'b', 'c'), rename=True)
         self.assertEqual(R._fieldnames, ('a', 'b', 'c'))
 
         # Rename with defaults
-        R = record.Record._maketype('R', [('_a', 1), ('b!', 2)], rename=True)
+        R = rectype.rectype('R', [('_a', 1), ('b!', 2)], rename=True)
         r = R()
         self.assertEqual(r._0, 1)
         self.assertEqual(r._1, 2)
@@ -143,8 +144,8 @@ class TestRecord(unittest.TestCase):
         # fields argument of the constructor are preserved in __slots__
         fields = (
             ['field_b', 'field_d', 'field_c', 'field_f', 'field_e', 'field_a'])
-        Rec = record.Record._maketype('Rec', fields)
-        rec = Rec(*list(range(len(fields))))
+        Rec = rectype.rectype('Rec', fields)
+        rec = Rec(list(range(len(fields))))
         self.assertEqual(rec.field_b, 0)
         self.assertEqual(rec.field_d, 1)
         self.assertEqual(rec.field_c, 2)
@@ -155,9 +156,15 @@ class TestRecord(unittest.TestCase):
     # ==========================================================================
     # Test intialisation
 
-    def test_init_with_args(self):
-        rec = Rec(1, 2)
-        self.assertTrue(isinstance(rec, Rec))
+    def test_init_with_mapping(self):
+        rec = Rec(dict(a=1, b=2))
+        self.assertTrue(isinstance(rec, rectype.Record))
+        self.assertEqual(rec.a, 1)
+        self.assertEqual(rec.b, 2)
+
+    def test_init_with_sequence(self):
+        rec = Rec([1, 2])
+        self.assertTrue(isinstance(rec, rectype.Record))
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
@@ -166,64 +173,116 @@ class TestRecord(unittest.TestCase):
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
-    def test_init_with_args_and_kwargs(self):
-        rec = Rec(1, b=2)
+    def test_init_with_sequence_and_kwargs(self):
+        rec = Rec([1], b=2)
+        self.assertEqual(rec.a, 1)
+        self.assertEqual(rec.b, 2)
+
+    def test_init_with_mapping_and_kwargs(self):
+        rec = Rec(dict(a=1), b=2)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
     def test_init_with_bad_values(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             # Initialisation without a value when there are no defaults
             rec = Rec()
-            # Initialisation with 1 value when 2 are required
+
+        with self.assertRaises(TypeError):
+            # Initialisation with non mapping/sequence positional arg
             rec = Rec(1)
 
             # Initialisation with a non-existent named field
-            rec = Rec(1, c=2)
+            rec = Rec([1], c=2)
 
-            # Initialisation with multiple values for a field
-            rec = Rec(1, 2, a=1)
 
-        # Rec = record.Record._maketype('Rec', [('a', 1), 'b'])
-        # with self.assertRaises(ValueError):
+    def initialisation_with_duplicate_fields(self):
+        # The last field value is the one that the field gets initialised too
+
+        # With sequence and kwargs
+        rec = Rec([1, 2], a=5)
+        self.assertEqual(rec.a, 5)
+
+        # With mapping and kwargs
+        rec = Rec(dict(a=1, b=2), a=5)
+        self.assertEqual(rec.a, 5)
 
     # ==========================================================================
     # Test updating and deletion of defaults
 
     def test_update_defaults(self):
-        Rec = record.Record._maketype('Rec', ['a', ('b', 2), ('c', 3)])
-        # By position
-        Rec._update_defaults(1)
+
+        # Add a new default value
+        # -----------------------
+        Rec = rectype.rectype('Rec', ['a', ('b', 2), ('c', 3)])
+
+        # With positional sequence arg
+        Rec._update_defaults([1])
         rec = Rec()
         self.assertEqual(rec.a, 1)
+        self.assertEqual(rec.b, 2)
+        self.assertEqual(rec.c, 3)
 
-        # By name
+        # With positional sequence arg
+        Rec._update_defaults(dict(a=1))
+        rec = Rec()
+        self.assertEqual(rec.a, 1)
+        self.assertEqual(rec.b, 2)
+        self.assertEqual(rec.c, 3)
+
+        # With keyword argument
+        Rec._update_defaults(a=1)
+        rec = Rec()
+        self.assertEqual(rec.a, 1)
+        self.assertEqual(rec.b, 2)
+        self.assertEqual(rec.c, 3)
+
+        # Change existing default values
+        # ------------------------------
+        Rec = rectype.rectype('Rec', [('a', 1), ('b', 2)])
+
+        # With positional sequence arg
+        Rec._update_defaults([3, 4])
+        rec = Rec()
+        self.assertEqual(rec.a, 3)
+        self.assertEqual(rec.b, 4)
+
+        # With positional mapping arg
+        Rec._update_defaults(dict(a=3, b=4))
+        rec = Rec()
+        self.assertEqual(rec.a, 3)
+        self.assertEqual(rec.b, 4)
+
+        # With keyword arg
         Rec._update_defaults(b=22)
         rec = Rec()
+        self.assertEqual(rec.a, 3)
         self.assertEqual(rec.b, 22)
 
-        # By position and name
-        Rec._update_defaults(0, c=4)
+        # With positional arg and keyword args
+        Rec._update_defaults([0], b=4)
         rec = Rec()
         self.assertEqual(rec.a, 0)
-        self.assertEqual(rec.b, 22)
-        self.assertEqual(rec.c, 4)
+        self.assertEqual(rec.b, 4)
 
     def test_update_with_bad_defaults(self):
-        rec = Rec(1, 2)
-        with self.assertRaises(ValueError):
-            # Non-existent field by name
+        # Note that a postional mapping arg is allowed to contain keys that
+        # do not match fields and a positional sequence arg is allowed to
+        # contain more values than there are fields.
+        rec = Rec([1, 2])
+        with self.assertRaises(TypeError):
+            # Non-existent field by keyword argument
             rec._update_defaults(c=3)
-            # More default values than there are fields
-            rec._update_defaults(1, 2, 3)
 
     def test_del_defaults(self):
-        Rec = record.Record._maketype('Rec', dict(a=1, b=2, c=3))
+        Rec = rectype.rectype('Rec', dict(a=1, b=2, c=3))
 
         # Delete default for single fieldname
         self.assertTrue('b' in Rec._defaults)
         Rec._del_defaults('b')
         self.assertTrue('b' not in Rec._defaults)
+        with self.assertRaises(ValueError):
+            rec = Rec()
 
         # Delete default for multiple fieldnames
         self.assertTrue('a' in Rec._defaults)
@@ -231,41 +290,43 @@ class TestRecord(unittest.TestCase):
         Rec._del_defaults(['a', 'c'])
         self.assertTrue('a' not in Rec._defaults)
         self.assertTrue('c' not in Rec._defaults)
+        with self.assertRaises(ValueError):
+            rec = Rec()
 
     # ==========================================================================
     # Test sequence features
 
     def test_contains(self):
-        rec = Rec(1, 2)
+        rec = Rec([1, 2])
         self.assertTrue(1 in rec)
         self.assertTrue(2 in rec)
         self.assertFalse(3 in rec)
 
     def test_index(self):
-        rec = Rec(1, 2)
+        rec = Rec([1, 2])
         self.assertEqual(rec.index(2), 1)
 
     def test_count(self):
-        R = record.Record._maketype('R', ['a', 'b', 'c'])
-        rec = R(1, 2, 2)
+        R = rectype.rectype('R', ['a', 'b', 'c'])
+        rec = R([1, 2, 2])
         self.assertEqual(rec.count(1), 1)
         self.assertEqual(rec.count(2), 2)
 
     def test_reverse_iteration(self):
-        rec = Rec(1, 2)
+        rec = Rec([1, 2])
         reverse_iterator = reversed(rec)
         self.assertEqual(next(reverse_iterator), 2)
         self.assertEqual(next(reverse_iterator), 1)
 
     def test_iteration(self):
-        rec = Rec(1, 2)
+        rec = Rec([1, 2])
         self.assertEqual([value for value in rec], [1, 2])
 
     # ==========================================================================
     # Test getting and setting field values
 
     def test_set_value_by_attribute(self):
-        rec = Rec(1, 2)
+        rec = Rec([1, 2])
         rec.a = 'a'
         self.assertEqual(rec.a, 'a')
         self.assertEqual(rec.b, 2)
@@ -275,7 +336,7 @@ class TestRecord(unittest.TestCase):
         self.assertEqual(rec.b, 4)
 
     def test_get_attribute_not_defined_in_slots(self):
-        rec = Rec(1, 2)
+        rec = Rec([1, 2])
         with self.assertRaises(AttributeError):
             _ = rec.c
 
@@ -287,13 +348,13 @@ class TestRecord(unittest.TestCase):
         'Python 3.2 does not throw an Exception when assigning to an attribute'
         'that does not exist in a slots based object.')
     def test_set_attribute_not_defined_in_slots(self):
-        rec = Rec(1, 2)
+        rec = Rec([1, 2])
         with self.assertRaises(AttributeError):
             rec.c = 3
 
     def test_getitem(self):
-        R = record.Record._maketype('R', ['a', 'b', 'c', 'd'])
-        rec = R(1, 2, 3, 4)
+        R = rectype.rectype('R', ['a', 'b', 'c', 'd'])
+        rec = R([1, 2, 3, 4])
 
         # Test access by numerical index
         self.assertEqual(rec[0], 1)
@@ -312,8 +373,8 @@ class TestRecord(unittest.TestCase):
             _ = rec[99999]
 
     def test_setitem(self):
-        R = record.Record._maketype('R', ['a', 'b', 'c', 'd', 'e'])
-        rec = R(1, 2, 3, 4, 5)
+        R = rectype.rectype('R', ['a', 'b', 'c', 'd', 'e'])
+        rec = R([1, 2, 3, 4, 5])
 
         # Test __setitem__ by numerical index
         rec[0] = 99
@@ -338,20 +399,32 @@ class TestRecord(unittest.TestCase):
         self.assertEqual(rec.c, 101)  # Should remain unchanged
 
     def test_update(self):
-        rec = Rec(1, 2)
-        # By position
-        rec._update(3)
+        rec = Rec([1, 2])
+
+        # With positional sequence
+        rec._update([3])
         self.assertEqual(rec.a, 3)
-        # By name
-        rec._update(a=4)
+
+        # With positional mapping
+        rec._update(dict(a=4))
         self.assertEqual(rec.a, 4)
-        # By position and name
-        rec._update(5, b=6)
+
+        # With keyword arg
+        rec._update(a=5)
         self.assertEqual(rec.a, 5)
-        self.assertEqual(rec.b, 6)
+
+        # With positional seq and keyword arg
+        rec._update([6], b=7)
+        self.assertEqual(rec.a, 6)
+        self.assertEqual(rec.b, 7)
+
+        # With positional mapping and keyword arg
+        rec._update(a=8, b=9)
+        self.assertEqual(rec.a, 8)
+        self.assertEqual(rec.b, 9)
 
     def test_asdict(self):
-        rec = Rec(1, 2)
+        rec = Rec([1, 2])
         self.assertEqual(rec._asdict(), OrderedDict([('a', 1), ('b', 2)]))
 
     def test__dict__(self):
@@ -360,9 +433,11 @@ class TestRecord(unittest.TestCase):
         # allow __dict__ to reflect the record attributes a class
         # __dict__ property which calls record._asdict() when it is
         # accessed.
-        rec = Rec(1, 2)
+        rec = Rec([1, 2])
         self.assertIsInstance(rec.__dict__, OrderedDict)
         self.assertEqual(rec.__dict__, {'a': 1, 'b': 2})
+
+        # Test that vars() works
         self.assertEqual(vars(rec), {'a': 1, 'b': 2})
 
     # ==========================================================================
@@ -371,32 +446,34 @@ class TestRecord(unittest.TestCase):
     def test_pickle(self):
         # Note: Only classes defined at the top level of a module can be
         # pickled, hence the use of Rec here.
-        rec = Rec(1, 2)
+        rec = Rec([1, 2])
         for protocol in 0, 1, 2, 3:
             pickled_rec = pickle.loads(pickle.dumps(rec, protocol))
             self.assertEqual(rec, pickled_rec)
             self.assertEqual(rec._fieldnames, pickled_rec._fieldnames)
 
     def test_equality(self):
-        rec1 = Rec(1, 2)
-        rec2 = Rec(1, 2)
+        rec1 = Rec([1, 2])
+        rec2 = Rec([1, 2])
         self.assertEqual(rec1, rec2)
-        rec3 = Rec(b=2, a=1)
+        rec3 = Rec(dict(b=2, a=1))
         self.assertEqual(rec1, rec3)
+        rec4 = Rec(b=2, a=1)
+        self.assertEqual(rec1, rec4)
 
     def test_inequality(self):
-        rec1 = Rec(1, 2)
-        rec2 = Rec(2, 1)
-        rec3 = Rec(1, 3)
+        rec1 = Rec([1, 2])
+        rec2 = Rec([2, 1])
+        rec3 = Rec([1, 3])
         self.assertNotEqual(rec1, rec2)
         self.assertNotEqual(rec1, rec3)
 
     def test_repr(self):
-        rec = Rec('1', 2)
+        rec = Rec(['1', 2])
         self.assertEqual(repr(rec), "Rec(a='1', b=2)")
 
     def test_str(self):
-        rec = Rec('1', 2)
+        rec = Rec(['1', 2])
         self.assertEqual(str(rec), "Rec(a=1, b=2)")
 
 # Long Record test
@@ -452,7 +529,6 @@ class TestRecord(unittest.TestCase):
     #     fieldnames = ['a', 'a']
     #     R = record.make_type('R', fieldnames, rename=True)
     #     self.assertEqual(R._fieldnames[1], '_1')
-
 
 
 if __name__ == '__main__':
