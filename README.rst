@@ -1,103 +1,189 @@
-record
-======
+=======
+rectype
+=======
 
-``record`` is a Python module for creating lightweight custom record classes.
+:Author: `Mark Richards <http://www.abdn.ac.uk/staffnet/profiles/m.richards/>`
+:License: BSD 3-clause
+:Status: Pre-alpha
 
-A records class is similar to a ``collections.namedtuple`` except that it has
-mutable (i.e. writable) fields and is are not limited to 255 fields. Records
-are based on slots (they do not have a per-instance dictionary), so are
-lightweight, requiring slightly less memory than a ``namedtuple`` and much less
-than a ``dict``.
+**THIS README IS A WORK IN PROGRESS!!**
 
-Like namedtuples, ``record`` classes have fields accessible by attribute lookup
-as well as being indexable and iterable.
+Overview
+========
+``rectype`` is a Python package for creating lightweight custom
+`record <http://en.wikipedia.org/wiki/Record_(computer_science)>` types.
 
-+------------------------+---------+------------+------------+
-| Type                   | Mutable | Max fields | Defaults   |
-|                        | fields? |            | supported? |
-+------------------------+---------+------------+------------+
-| record                 |    Y    | unlimited  |      Y     |
-+------------------------+---------+------------+------------+
-| collections.namedtuple |    N    |     256    |      N     |
-+------------------------+---------+------------+------------+
-| recordtype             |    Y    |     256    |      Y     |
-+------------------------+---------+------------+------------+
+``rectype`` provides a factory function ``rectype.rectype`` which is similar
+to ``collections.namedtuple``, with the following differences:
 
+* ``rectype`` field values are mutable.
+* ``rectype`` supports optional per-field default values.
+* ``rectype`` classes can have more than 255 fields.
+* ``rectype`` instances are based on slots so require slightly less memory
+
+Like namedtuples, classes created by ``rectype`` have fields accessible by
+attribute lookup as well as being indexable and iterable.
 
 Typical usage
--------------
-First, create a ``record`` type like you would create a ``namedtuple`` type::
+=============
+First, create a ``rectype`` like you would create a ``namedtuple`` type::
 
-    >>> import record
-    >>> Person =  record.make_type('Person', ['name', 'age'])
+    >>> from rectype import rectype
+    >>> Person = rectype('Person', ['name', 'age'])
 
 Next, create an instance of ``Person`` with values for ``name`` and ``age``::
 
-    >>> p = Person(['Arthur', 42])
-
-You can also initialise the instance using a mapping instead of a sequence::
-
-    >>> p = Person(dict(name='Arthur', age=42))
+    >>> p = Person(name='Eric', age=42)
     >>> p
-    Person(name='Arthur', age=42)
+    Person(name='Eric', age=42)
 
-You can retrieve field values as you would with a ``namedtuple``::
+You can specify per-field default values::
 
-    >>>  p.name
-    'Arthur'
-    >>> p.age
-    42
+    >>> Person = rectype('Person', [('name', None), ('age', None)])
+    >>> p = Person(name='Eric')
+    >>> p
+    Person(name='Eric', age=None)
+
+You can also specify the per-field defaults with a mapping. Note that it
+usually only makes sense to use an ordered mapping such as an OrderedDict::
+
+    >>> from collections import OrderedDict
+    >>> Person = rectype('Person', OrderedDict([('name', None), ('age', None)]))
+    >>> p = Person()
+    >>> p
+    Person(name=None, age=None)
+
+
+API
+===
+
+
+Creating types
+==============
+
+Specifying fields
+-----------------
+
+Fields can be specified using a non-string sequence or a string of space and/or
+comma separated fieldnames. These 3 examples are equivalent::
+
+    >>> Rec = rectype('Rec', ['a',  'b'])
+    >>> Rec = rectype('Rec', 'a b')
+    >>> Rec = rectype('Rec', 'a,b')
+
+Specifying fields with defaults
+-------------------------------
+
+Per-field defaults can be specified by supplying a sequence of
+(fieldname, default_value) 2-tuples::
+
+    >>> Rec = rectype('Rec', [('a', None), ('b', None)])
+    >>> rec = Rec()
+    >>> rec
+    Rec(a=None, b=None)
+
+A default does not have to be supplied for every field::
+
+    >>> Rec = rectype('Rec', ['a', ('b', None)])
+    >>> rec = Rec(a=1)
+    >>> rec
+    Rec(a=1, b=None)
+
+Per-field defaults can also be specified using an ordered mapping such as
+an ``OrderedDict``::
+
+    >>> from collections import OrderedDict
+    >>> Rec = rectype('Rec', OrderedDict([
+    ...     ('a', None),
+    ...     ('b', None)]))
+    >>> rec = Rec(b=99)
+    >>> rec
+    Rec(a=None, b=99)
+
+
+Initialising rectypes
+=====================
+
+A ``rectype`` instance can be initialised in the same way as a dict: using a
+mapping, an iterable, keyword arguments, or a combination of a mapping/
+iterable and keyword arguments::
+
+    >>> rec = Rec(dict(a=1, b=2))   # using a mapping
+    >>> rec = Rec([1, 2])           # using a sequence
+    >>> rec = Rec(a=1, b=2)         # using keyword args
+    >>> rec = Rec(dict(a=1), b=2)   # using a mapping and keyword args
+
+Accessing fields
+================
+
+Fields are accessible by attribute lookup::
+
+    >>> rec.a
+    1
+    >>> rec.b
+    2
    
-Unlike the tuple-based objects created by ``collections.namedtuple``, the
-fields of an object created by ``record.make_type`` are mutable, meaning they
-can be modified after creation::
+The fields of ``rectype`` instances are are mutable, meaning they can be
+modified after creation::
 
-    >>> p.age = 31
-    >>> p.age
-    31
+    >>> rec.a = 2
+    >>> rec.a
+    2
 
-However, because classes created by ``record.make_type()`` are based on slots,
+However, because classes created by ``rectype.rectype`` are based on slots,
 you cannot add new fields to an instance::
 
-    >>> p.height = 1.71
+    >>> rec.c = 3
     AttributeError                  Traceback (most recent call last)
     <ipython-input-8-55738ba62948> in <module>()
-    ----> 1 p.height = 1.71
+    ----> 1 rec.c = 3
 
-    AttributeError: 'Person' object has no attribute 'height'
+    AttributeError: 'Rec' object has no attribute 'c'
 
 Fields are also indexable and iterable::
 
-    >>> p[1]
-    42
-    >>> p[1] = 29
-    >>> p[1]
-    29
+    >>> rec[1]
+    2
+    >>> rec[1] = 3
+    >>> rec[1]
+    3
 
-    >>> for field in p:
+    >>> for field in rec:
     ...     print(field)
-    Arthur
-    29
+    2
+    3
 
-Instances of classes created by ``record.make_type`` can be pickled::
+Instances of classes created by ``rectype.rectype`` can be pickled::
 
     >>> import pickle
-    >>> pickled_rec = pickle.loads(pickle.dumps(p))
-    >>> pickled_rec == p
+    >>> pickled_rec = pickle.loads(pickle.dumps(rec))
+    >>> pickled_rec == rec
     True
 
+Updating defaults
+=================
+
+Default field values can be altered using _update_defaults() which is similar
+to dict.update(). These are all equivalent::
+
+    >>> Rec._update_defaults(dict(a=1, b=2))   # using a mapping
+    >>> Rec._update_defaults([1, 2])           # using a sequence
+    >>> Rec._update_defaults(a=1, b=2)         # using keyword args
+    >>> Rec._update_defaults(dict(a=1), b=2)   # using a mapping and keyword args
+
+Defaults values can also be removed for specific fields using _del_defaults()
+
 TODO:
-demo type creation with defaults
 demo get and set defsults
 demo _fieldnames
 demo _make
 
 
 API
----
-record.\ **make_type**\ (*typename, fieldnames, rename=False*)
+===
+rectype.\ **rectype**\ (*typename, fieldnames, rename=False*)
 
-    Returns a new custom record class named *typename*. The new class is used
+    Return a new record class named *typename*. The new class is used
     to create record objects that have fields accessible by attribute
     lookup as well as being indexable and iterable.
 
@@ -107,9 +193,10 @@ record.\ **make_type**\ (*typename, fieldnames, rename=False*)
     ``['x', 'y']``.
 
     Default values can also be specified along with the fieldnames if
-    *fieldnames* is a mapping for the form ``{fieldname: default}`` such as
-    ``{'x': 1, 'y': 2}`` or a sequence of tuples of the form
-    ``[(x, 1), (y, 2)]``.
+    *fieldnames* is a mapping of fieldname-default_value pairs such as
+    ``{'x': 1, 'y': 2}`` or a sequence of 2-tuples of the form
+    ``[('x', 1), ('y', 2)]``. In the latter case, not all fieldnames need
+    to have a default provided, e.g. ``['x', ('y', 2)]``.
 
     Any valid Python identifier may be used for a fieldname except for names
     starting with an underscore. Valid identifiers consist of letters, digits,
@@ -126,7 +213,123 @@ In addition to the usual sequence methods, records support four additional
 methods and one attribute. To prevent conflicts with fieldnames, the method
 and attribute names start with an underscore.
 
-*classmethod* somerecord.\ **_make**\ (*\*args, \*\*kwargs*)
+*class* **SomeRecType**\ (*\*\*kwargs*)
+*class* **SomeRecType**\ (*mapping, \*\*kwargs*)
+*class* **SomeRecType**\ (*iterable, \*\*kwargs*)
+
+    Return a new record initialised from an optional positional argument and
+    optional keyword arguments.
+
+    If a positional argument is given and it is a mapping object, a
+    record is created with values assigned to fields identified by
+    keys of the mapping. Keys pairs that do not match a fieldname are
+    ignored.
+
+    The positional argument can also be an iterable object whose items
+    are in the same order as the fieldnames of the record type. If the
+    iterable provides too many values for the field the excess values
+    are ignored.
+
+    Keyword arguments can also be given to provide field values by
+    name. If a keyword argument provides a value for a field that
+    has already received a value, the value from the keyword argument
+    replaces the value from the positional argument. Keywords that
+    do not match a filename are ignored.
+
+    Any fields that do not have values defined by the positional or
+    keyword arguments will be assigned a field-specific default value,
+    provided one has been defined.
+
+    If a default value is not available for a field that has not been
+    defined by the positional or keyword arguments a ValueError is
+    raised.
+
+    To illustrate, the following examples all return a record equal to
+    Rec(a=1, b=2, c=3)::
+
+        >>> from rectype import rectype
+        >>> Rec = rectype('Rec', ['a', 'b', 'c'])
+        >>> rec = Rec(dict(a=1, b=2, c=3))  # using a mapping
+        >>> rec = Rec([1, 2, 3])            # using a sequence
+        >>> rec = Rec(a=1, b=2, c=3)        # using keyword args
+        >>> rec = Rec([1, 2], c=2)          # using a sequence and keyword args
+
+These are the operations that rectypes support:
+
+**len(rec)**
+    Return the number of fields in the rectype *rec*.
+
+**rec[index]**
+**rec[slice]**
+    Return the value of the field in *rec* corresponding to *index*, or the
+    fields in *rec* corresponding to *slice*. The index of a each field value
+    corresponds to the index of the fieldname in the _fieldnames class
+    attribute::
+
+        >>> Rec = rectype('Rec', [('a', 0) ('b', 1), ('c', 2)])
+        >>> Rec._fieldnames
+        ('a', 'b', 'c')
+        >>> rec[0]          # get the value of field 'a'
+        0
+
+    All slice operations return a list containing the requested field values::
+
+        >>> rec[:2]
+        [0, 1]
+
+**rec[index] = value**
+**rec[slice] = values**
+    Set ``rec[index]`` to value or ``rec[slice]`` to values.
+    Sert the field of *rec* corresponding to *index* to *value* or set the
+    fields of *rec* corresponding to *slice* to *values*.
+
+    Please note* that the behaviour of setting field values using *slicing*
+    is different from that of lists. If *values* contains more items than
+    *slice* then the surplus values are discarded, whereas with lists the
+    surplus items are inserted into the list. Similarly, if *values* contains
+    fewer items than *slice*, the surplus fields remain unaffected, whereas
+    with a list the surplus list items are removed. This behaviour is necessary
+    because the structure of a ``rectype`` is immutable since it is based on
+    *slots*.
+
+**value in rec**
+    Return ``True`` if *value* matches any of the field values in *rec*, else
+    ``False``.
+
+**iter(rec)**
+    Return an iterator over the field values of *rec*.
+
+**_asdict()**
+    Return a new ``collections.OrderedDict`` which maps fieldnames to their
+    values.
+
+**_del_defaults(fieldnames)**
+    Remove the default values for one or more fields. If *fieldnames*
+    is a single string then the default value is removed for that field.
+    If *fieldnames* is an iterable of strings then the default values are
+    removed for each fieldname.
+
+**_update(kwargs)**
+**_update(mapping, kwargs)**
+**_update(iterable, kwargs)**
+    Update the field values of the record. ``_update()`` accepts either:
+    keyword arguments in which each keyword must match a fieldname of the
+    record; a mapping of fieldname/field_value pairs; an iterable whose
+    items are in the same order as the fields in the ``_fieldnames`` class
+    attribute; or a combination of mapping/iterable and kwargs.
+
+*classmethod* **_update_defaults(kwargs)**
+*classmethod* **_update_defaults(mapping, kwargs)**
+*classmethod* **_update_defaults(iterable, kwargs)**
+    Update the default field values of the record. ``_update_defaults()``
+    accepts either keyword arguments in which each keyword must match a
+    fieldname of the record; a mapping of fieldname/default_value pairs;
+    an iterable whose default values are in the same order as the fields
+    in the ``_fieldnames`` class attribute; or a combination of
+    mapping/iterable and kwargs.
+
+
+*classmethod* somerectype.\ **_update**\ (*\*args, \*\*kwargs*)
 
     Convenience function for making a new instance from positional and/or
     keyword arguments::
@@ -145,15 +348,15 @@ and attribute names start with an underscore.
 
 *classmethod* somerecord.\ **_set_defaults**\ (*defaults*)
 
-    Class method that sets new defaults from an existing mapping of the form
-    {fieldname: default}, sequence of (fieldname, default) tuples, or
-    instance of the class. Alternatively, defaults can be disabled by
-    passing ``record.NO_DEFAULT``.
+    Class method that sets new defaults from an existing mapping of
+    fieldname-default_value pairs, or sequence of (fieldname, default)
+    tuples, or instance of the class. Alternatively, defaults can be
+    disabled by passing ``record.NO_DEFAULT``.
 
 somerecord.\ **_asdict**\ ()
 
-    Return a new ``OrderedDict`` which maps fieldnames to their corresponding
-    values.
+    Return a new ``collections.OrderedDict`` which maps fieldnames to their
+    corresponding values.
 
 somerecord.\ **_fieldnames**
 
