@@ -6,7 +6,10 @@ rectype
 :License: BSD 3-clause
 :Status: Pre-alpha
 
-**THIS README IS A WORK IN PROGRESS!!**
+..  warning:: **THIS README IS A WORK IN PROGRESS!!**
+
+.. currentmodule:: rectype
+.. autofunction:: rectype
 
 Overview
 ========
