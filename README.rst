@@ -2,7 +2,7 @@
 rectype
 =======
 
-:Author: `Mark Richards <http://www.abdn.ac.uk/staffnet/profiles/m.richards/>`
+:Author: `Mark Richards <http://www.abdn.ac.uk/staffnet/profiles/m.richards/>`_
 :License: BSD 3-clause
 :Status: Pre-alpha
 
@@ -11,7 +11,7 @@ rectype
 Overview
 ========
 ``rectype`` is a Python package for creating lightweight custom
-`record <http://en.wikipedia.org/wiki/Record_(computer_science)>` types.
+`record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_ types.
 
 ``rectype`` provides a factory function ``rectype.rectype`` which is similar
 to ``collections.namedtuple``, with the following differences:
@@ -182,7 +182,7 @@ demo _make
 API
 ===
 rectype.\ **rectype**\ (*typename, fieldnames, rename=False*)
-
+.............................................................
     Return a new record class named *typename*. The new class is used
     to create record objects that have fields accessible by attribute
     lookup as well as being indexable and iterable.
@@ -214,8 +214,11 @@ methods and one attribute. To prevent conflicts with fieldnames, the method
 and attribute names start with an underscore.
 
 *class* **SomeRecType**\ (*\*\*kwargs*)
+.............................................................
 *class* **SomeRecType**\ (*mapping, \*\*kwargs*)
+.............................................................
 *class* **SomeRecType**\ (*iterable, \*\*kwargs*)
+.............................................................
 
     Return a new record initialised from an optional positional argument and
     optional keyword arguments.
