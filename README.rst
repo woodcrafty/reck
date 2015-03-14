@@ -182,80 +182,76 @@ demo _make
 API
 ===
 rectype.\ **rectype**\ (*typename, fieldnames, rename=False*)
-.............................................................
-    Return a new record class named *typename*. The new class is used
-    to create record objects that have fields accessible by attribute
-    lookup as well as being indexable and iterable.
+  Return a new record class named *typename*. The new class is used
+  to create record objects that have fields accessible by attribute
+  lookup as well as being indexable and iterable.
 
-    The *fieldnames* are a single string with each fieldname separated by
-    whitespace and/or commas, for example ``'x y'`` or ``'x, y'``.
-    Alternatively, *fieldnames* can be a sequence of strings such as
-    ``['x', 'y']``.
+  The *fieldnames* are a single string with each fieldname separated by
+  whitespace and/or commas, for example ``'x y'`` or ``'x, y'``.
+  Alternatively, *fieldnames* can be a sequence of strings such as
+  ``['x', 'y']``.
 
-    Default values can also be specified along with the fieldnames if
-    *fieldnames* is a mapping of fieldname-default_value pairs such as
-    ``{'x': 1, 'y': 2}`` or a sequence of 2-tuples of the form
-    ``[('x', 1), ('y', 2)]``. In the latter case, not all fieldnames need
-    to have a default provided, e.g. ``['x', ('y', 2)]``.
+  Default values can also be specified along with the fieldnames if
+  *fieldnames* is a mapping of fieldname-default_value pairs such as
+  ``{'x': 1, 'y': 2}`` or a sequence of 2-tuples of the form
+  ``[('x', 1), ('y', 2)]``. In the latter case, not all fieldnames need
+  to have a default provided, e.g. ``['x', ('y', 2)]``.
 
-    Any valid Python identifier may be used for a fieldname except for names
-    starting with an underscore. Valid identifiers consist of letters, digits,
-    and underscores but do not start with a digit or underscore and cannot be
-    a ``keyword`` such as *class*, *for*, *return*, *global*, *pass*, or
-    *raise*.
+  Any valid Python identifier may be used for a fieldname except for names
+  starting with an underscore. Valid identifiers consist of letters, digits,
+  and underscores but do not start with a digit or underscore and cannot be
+  a ``keyword`` such as *class*, *for*, *return*, *global*, *pass*, or
+  *raise*.
 
-    If *rename* is true, invalid fieldnames are automatically replaced with
-    positional names. For example, ``['abc', 'def', 'ghi', 'abc']``
-    is converted to ``['abc', '_1', 'ghi', '_3']``, eliminating the keyword
-    ``def`` and the duplicate fieldname ``abc``.
+  If *rename* is true, invalid fieldnames are automatically replaced with
+  positional names. For example, ``['abc', 'def', 'ghi', 'abc']``
+  is converted to ``['abc', '_1', 'ghi', '_3']``, eliminating the keyword
+  ``def`` and the duplicate fieldname ``abc``.
 
 In addition to the usual sequence methods, records support four additional
 methods and one attribute. To prevent conflicts with fieldnames, the method
 and attribute names start with an underscore.
 
 *class* **SomeRecType**\ (*\*\*kwargs*)
-.............................................................
 *class* **SomeRecType**\ (*mapping, \*\*kwargs*)
-.............................................................
 *class* **SomeRecType**\ (*iterable, \*\*kwargs*)
-.............................................................
 
-    Return a new record initialised from an optional positional argument and
-    optional keyword arguments.
+  Return a new record initialised from an optional positional argument and
+  optional keyword arguments.
 
-    If a positional argument is given and it is a mapping object, a
-    record is created with values assigned to fields identified by
-    keys of the mapping. Keys pairs that do not match a fieldname are
-    ignored.
+  If a positional argument is given and it is a mapping object, a
+  record is created with values assigned to fields identified by
+  keys of the mapping. Keys pairs that do not match a fieldname are
+  ignored.
 
-    The positional argument can also be an iterable object whose items
-    are in the same order as the fieldnames of the record type. If the
-    iterable provides too many values for the field the excess values
-    are ignored.
+  The positional argument can also be an iterable object whose items
+  are in the same order as the fieldnames of the record type. If the
+  iterable provides too many values for the field the excess values
+  are ignored.
 
-    Keyword arguments can also be given to provide field values by
-    name. If a keyword argument provides a value for a field that
-    has already received a value, the value from the keyword argument
-    replaces the value from the positional argument. Keywords that
-    do not match a filename are ignored.
+  Keyword arguments can also be given to provide field values by
+  name. If a keyword argument provides a value for a field that
+  has already received a value, the value from the keyword argument
+  replaces the value from the positional argument. Keywords that
+  do not match a filename are ignored.
 
-    Any fields that do not have values defined by the positional or
-    keyword arguments will be assigned a field-specific default value,
-    provided one has been defined.
+  Any fields that do not have values defined by the positional or
+  keyword arguments will be assigned a field-specific default value,
+  provided one has been defined.
 
-    If a default value is not available for a field that has not been
-    defined by the positional or keyword arguments a ValueError is
-    raised.
+  If a default value is not available for a field that has not been
+  defined by the positional or keyword arguments a ValueError is
+  raised.
 
-    To illustrate, the following examples all return a record equal to
-    Rec(a=1, b=2, c=3)::
+  To illustrate, the following examples all return a record equal to
+  Rec(a=1, b=2, c=3)::
 
-        >>> from rectype import rectype
-        >>> Rec = rectype('Rec', ['a', 'b', 'c'])
-        >>> rec = Rec(dict(a=1, b=2, c=3))  # using a mapping
-        >>> rec = Rec([1, 2, 3])            # using a sequence
-        >>> rec = Rec(a=1, b=2, c=3)        # using keyword args
-        >>> rec = Rec([1, 2], c=2)          # using a sequence and keyword args
+      >>> from rectype import rectype
+      >>> Rec = rectype('Rec', ['a', 'b', 'c'])
+      >>> rec = Rec(dict(a=1, b=2, c=3))  # using a mapping
+      >>> rec = Rec([1, 2, 3])            # using a sequence
+      >>> rec = Rec(a=1, b=2, c=3)        # using keyword args
+      >>> rec = Rec([1, 2], c=2)          # using a sequence and keyword args
 
 These are the operations that rectypes support:
 
