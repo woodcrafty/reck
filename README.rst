@@ -3,10 +3,11 @@ rectype
 =======
 
 :Author: `Mark Richards <http://www.abdn.ac.uk/staffnet/profiles/m.richards/>`_
-:License: BSD 3-clause
+:Email: mark.l.a.richardsREMOVETHIS@gmail.com
+:License: `BSD 3-Clause <http://opensource.org/licenses/BSD-3-Clause>`_
 :Status: Pre-alpha
 
-..  warning:: **THIS README IS A WORK IN PROGRESS!!**
+..  warning:: THIS README IS A WORK IN PROGRESS!!
 
 .. currentmodule:: rectype
 .. autofunction:: rectype
@@ -279,8 +280,8 @@ These are the operations that rectypes support:
         >>> rec[:2]
         [0, 1]
 
-**rec[index] = value**
-**rec[slice] = values**
+``**rec[index] = value**``
+**``rec[slice] = values``**
     Set ``rec[index]`` to value or ``rec[slice]`` to values.
     Sert the field of *rec* corresponding to *index* to *value* or set the
     fields of *rec* corresponding to *slice* to *values*.
