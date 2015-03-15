@@ -9,6 +9,9 @@ rectype
 
 ..  warning:: THIS README IS A WORK IN PROGRESS!!
 
+.. contents:: `Table of contents`
+   :depth: ‹number›
+
 Overview
 ========
 ``rectype`` is a Python package for creating lightweight custom
@@ -339,35 +342,35 @@ and attribute names start with an underscore.
 | *class* **SomeRecType**\ (*mapping, \*\*kwargs*)
 | *class* **SomeRecType**\ (*iterable, \*\*kwargs*)
 
-  Return a new record initialised from an optional positional argument and
-  optional keyword arguments.
+    Return a new record initialised from an optional positional argument and
+    optional keyword arguments.
 
-  If a positional argument is given and it is a mapping object, a
-  record is created with values assigned to fields identified by
-  keys of the mapping. Keys pairs that do not match a fieldname are
-  ignored.
+    If a positional argument is given and it is a mapping object, a
+    record is created with values assigned to fields identified by
+    keys of the mapping. Keys pairs that do not match a fieldname are
+    ignored.
 
-  The positional argument can also be an iterable object whose items
-  are in the same order as the fieldnames of the record type. If the
-  iterable provides too many values for the field the excess values
-  are ignored.
+    The positional argument can also be an iterable object whose items
+    are in the same order as the fieldnames of the record type. If the
+    iterable provides too many values for the field the excess values
+    are ignored.
 
-  Keyword arguments can also be given to provide field values by
-  name. If a keyword argument provides a value for a field that
-  has already received a value, the value from the keyword argument
-  replaces the value from the positional argument. Keywords that
-  do not match a filename are ignored.
+    Keyword arguments can also be given to provide field values by
+    name. If a keyword argument provides a value for a field that
+    has already received a value, the value from the keyword argument
+    replaces the value from the positional argument. Keywords that
+    do not match a filename are ignored.
 
-  Any fields that do not have values defined by the positional or
-  keyword arguments will be assigned a field-specific default value,
-  provided one has been defined.
+    Any fields that do not have values defined by the positional or
+    keyword arguments will be assigned a field-specific default value,
+    provided one has been defined.
 
-  If a default value is not available for a field that has not been
-  defined by the positional or keyword arguments a ValueError is
-  raised.
+    If a default value is not available for a field that has not been
+    defined by the positional or keyword arguments a ValueError is
+    raised.
 
-  To illustrate, the following examples all return a record equal to
-  Rec(a=1, b=2, c=3)::
+    To illustrate, the following examples all return a record equal to
+    Rec(a=1, b=2, c=3)::
 
       >>> from rectype import rectype
       >>> Rec = rectype('Rec', ['a', 'b', 'c'])
