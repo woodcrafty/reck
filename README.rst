@@ -334,6 +334,12 @@ In addition to the usual sequence methods, records support four additional
 methods and one attribute. To prevent conflicts with fieldnames, the method
 and attribute names start with an underscore.
 
+.. py::function:: enumerate(kwargs)
+
+    Blah blah balh.
+
+    Second para.
+
 .. py:class:: SomeRecType(kwargs)
 
     Return a new record initialised from an optional positional argument and
