@@ -363,7 +363,8 @@ class Record(collections.Sequence):
                 Fieldname(s) whose default value is to be removed.
         """
         if isinstance(fieldnames, str):
-            fieldnames = [fieldnames]
+            fieldnames = fieldnames.replace(',', ' ').split()
+
         for fieldname in fieldnames:
             try:
                 cls._defaults.pop(fieldname)
