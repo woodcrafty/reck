@@ -125,8 +125,7 @@ class Record(collections.Sequence):
 
         Any fields that do not have values defined by the positional or
         keyword arguments will be assigned a field-specific default value,
-        if one has been defined in the _defaults class attribute of the
-        record-type.
+        if one has been defined.
 
         If a default value is not available for a field that has not been
         defined by the positional or keyword arguments a ValueError is
@@ -147,11 +146,14 @@ class Record(collections.Sequence):
         # the field defaults, the positional arg and the keyword args.
         field_values = self._defaults.copy()
         if args:
-            if isinstance(args[0], collections.Mapping):
-                field_values.update(args[0])
+            arg = args[0]
+            if isinstance(arg, collections.Mapping):
+                # Can't use update() here because it may not be implemented
+                for key in arg:
+                    field_values[key] = arg[key]
             else:
-                # args[0] should be an iterable so convert it to a mapping
-                field_values.update(dict(zip(self._fieldnames, args[0])))
+                # args should be an iterable so convert it to a mapping
+                field_values.update(dict(zip(self._fieldnames, arg)))
         field_values.update(kwargs)
 
         self._check_all_fields_defined(field_values)
@@ -183,11 +185,14 @@ class Record(collections.Sequence):
         # from the positional arg and the keyword args.
         field_values = {}
         if args:
-            if isinstance(args[0], collections.Mapping):
-                field_values.update(args[0])
+            arg = args[0]
+            if isinstance(arg, collections.Mapping):
+               # Can't use update() here because it may not be implemented
+                for key in arg:
+                    field_values[key] = arg[key]
             else:
-                # args[0] should be an iterable
-                field_values.update(zip(self._fieldnames, args[0]))
+                # arg should be an iterable
+                field_values.update(zip(self._fieldnames, arg))
         field_values.update(kwargs)
 
         for fieldname, value in field_values.items():
@@ -212,11 +217,13 @@ class Record(collections.Sequence):
         # from the positional arg and the keyword args.
         defaults = {}
         if args:
-            if isinstance(args[0], collections.Mapping):
-                defaults.update(args[0])
+            arg = args[0]
+            if isinstance(arg, collections.Mapping):
+                for key in arg:
+                    defaults[key] = arg[key]
             else:
-                # args[0] should be an iterable
-                defaults.update(zip(cls._fieldnames, args[0]))
+                # arg should be an iterable
+                defaults.update(zip(cls._fieldnames, arg))
         defaults.update(kwargs)
         cls._check_fieldnames_exist(defaults)
 
@@ -375,7 +382,7 @@ class Record(collections.Sequence):
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__)
-            and self.__dict__ == other.__dict__)
+            and self._asdict() == other._asdict())
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -458,8 +465,3 @@ class Record(collections.Sequence):
         """
         return collections.OrderedDict(
             [(k, getattr(self, k)) for k in self.__slots__])
-
-
-Rec = rectype('Rec', ['a', 'b', ('c', 3)])
-rec = Rec([0], a=1, b=2)
-print(rec)
