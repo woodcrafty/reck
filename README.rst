@@ -337,16 +337,16 @@ and attribute names start with an underscore.
 | *class* **SomeRecType**\ (*\*\*kwargs*)
 | *class* **SomeRecType**\ (*mapping, \*\*kwargs*)
 | *class* **SomeRecType**\ (*iterable, \*\*kwargs*)
-
+|
 |     Return a new record initialised from an optional positional argument and
 |     optional keyword arguments.
-
-    If a positional argument is given and it is a mapping object, a
+|
+|    If a positional argument is given and it is a mapping object, a
     record is created with values assigned to fields identified by
     keys of the mapping. Keys pairs that do not match a fieldname are
     ignored.
 
-    The positional argument can also be an iterable object whose items
+|    The positional argument can also be an iterable object whose items
     are in the same order as the fieldnames of the record type. If the
     iterable provides too many values for the field the excess values
     are ignored.
