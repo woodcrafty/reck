@@ -334,13 +334,23 @@ In addition to the usual sequence methods, records support four additional
 methods and one attribute. To prevent conflicts with fieldnames, the method
 and attribute names start with an underscore.
 
+.. py:class:: SomeRecType(kwargs)
+
+    Return a new record initialised from an optional positional argument and
+    optional keyword arguments.
+
+    If a positional argument is given and it is a mapping object, a
+    record is created with values assigned to fields identified by
+    keys of the mapping. Keys pairs that do not match a fieldname are
+    ignored.
+
 | *class* **SomeRecType**\ (*\*\*kwargs*)
 | *class* **SomeRecType**\ (*mapping, \*\*kwargs*)
 | *class* **SomeRecType**\ (*iterable, \*\*kwargs*)
-|
+
 |     Return a new record initialised from an optional positional argument and
 |     optional keyword arguments.
-|
+
 |    If a positional argument is given and it is a mapping object, a
     record is created with values assigned to fields identified by
     keys of the mapping. Keys pairs that do not match a fieldname are
