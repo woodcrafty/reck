@@ -337,7 +337,8 @@ and attribute names start with an underscore.
 | *class* **SomeRecType**\ (*\*\*kwargs*)
 | *class* **SomeRecType**\ (*mapping, \*\*kwargs*)
 | *class* **SomeRecType**\ (*iterable, \*\*kwargs*)
-    Return a new record initialised from an optional positional argument and
+
+    "Return a new record initialised from an optional positional argument and
     optional keyword arguments.
 
     If a positional argument is given and it is a mapping object, a
@@ -365,7 +366,7 @@ and attribute names start with an underscore.
     raised.
 
     To illustrate, the following examples all return a record equal to
-    Rec(a=1, b=2, c=3)::
+    Rec(a=1, b=2, c=3)"::
 
       >>> from rectype import rectype
       >>> Rec = rectype('Rec', ['a', 'b', 'c'])
