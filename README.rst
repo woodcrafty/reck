@@ -9,9 +9,6 @@ rectype
 
 ..  warning:: THIS README IS A WORK IN PROGRESS!!
 
-.. currentmodule:: rectype
-.. autofunction:: rectype
-
 Overview
 ========
 ``rectype`` is a Python package for creating lightweight custom
@@ -28,8 +25,8 @@ to ``collections.namedtuple``, with the following differences:
 Like namedtuples, classes created by ``rectype`` have fields accessible by
 attribute lookup as well as being indexable and iterable.
 
-Typical usage
-=============
+Quick Start
+===========
 First, create a ``rectype`` like you would create a ``namedtuple`` type::
 
     >>> from rectype import rectype
@@ -41,146 +38,264 @@ Next, create an instance of ``Person`` with values for ``name`` and ``age``::
     >>> p
     Person(name='Eric', age=42)
 
-You can specify per-field default values::
+Fields are accessible by attribute lookup and by index::
+
+    >>> p.name
+    'Eric'
+    >>> p[0]
+    'Eric'
+
+Field values are mutable::
+
+    >>> p.name = 'Idle'
+    >>> p
+    Rec(name='Idle', age=42)
+
+You can specify per-field default values when creating the type::
 
     >>> Person = rectype('Person', [('name', None), ('age', None)])
     >>> p = Person(name='Eric')
     >>> p
     Person(name='Eric', age=None)
 
-You can also specify the per-field defaults with a mapping. Note that it
-usually only makes sense to use an ordered mapping such as an OrderedDict::
+Multiple field values can be changed with the ``_update()`` method::
 
-    >>> from collections import OrderedDict
-    >>> Person = rectype('Person', OrderedDict([('name', None), ('age', None)]))
-    >>> p = Person()
+    >>> p._update(name='John', age=43)
     >>> p
-    Person(name=None, age=None)
+    Person(name='John', age=43)
 
+Fieldnames and field values can be iterated over::
 
-API
-===
+    >>> for fieldname, field_value in zip(p._fieldnames, p):
+    ...     print(fieldname, field_value)
+    name John
+    age 43
 
+Type creation
+=============
 
-Creating types
-==============
-
-Specifying fields
------------------
-
-Fields can be specified using a non-string sequence or a string of space and/or
-comma separated fieldnames. These 3 examples are equivalent::
+Fieldnames
+----------
+Fieldnames can be specified using a non-string sequence or a string of space
+and/or comma separated fieldnames. These 3 examples are equivalent::
 
     >>> Rec = rectype('Rec', ['a',  'b'])
     >>> Rec = rectype('Rec', 'a b')
     >>> Rec = rectype('Rec', 'a,b')
 
-Specifying fields with defaults
--------------------------------
+Any valid Python identifier may be used for a fieldname except for names
+starting with an underscore.
 
+You can set the *rename* argument to True to automatically replace invalid
+fieldnames with position names::
+
+    >>> Rec = rectype('Rec', ['abc', 'def', 'ghi', 'abc'], rename=True)
+    >>> Rec._fieldnames
+    ('abc', '_1', 'ghi', '_3')
+
+The keyword ``def`` and and duplicate fieldname ``abc`` were renamed.
+
+Setting default field values
+----------------------------
 Per-field defaults can be specified by supplying a sequence of
 (fieldname, default_value) 2-tuples::
 
-    >>> Rec = rectype('Rec', [('a', None), ('b', None)])
+    >>> Rec = rectype('Rec', [('a', None), ('b', None), ('c', None])
     >>> rec = Rec()
     >>> rec
-    Rec(a=None, b=None)
+    Rec(a=None, b=None, c=None)
 
 A default does not have to be supplied for every field::
 
-    >>> Rec = rectype('Rec', ['a', ('b', None)])
-    >>> rec = Rec(a=1)
+    >>> Rec = rectype('Rec', ['a', ('b', None), 'c'])
+    >>> rec = Rec(a=1, c=3)
     >>> rec
-    Rec(a=1, b=None)
+    Rec(a=1, b=None, c=3)
+
+All fields without a default value must be given a value during object
+creation otherwise a ValueError will be raised::
+
+    >>> rec = Rec(a=1)
+    ValueError: field 'c' is not defined
 
 Per-field defaults can also be specified using an ordered mapping such as
-an ``OrderedDict``::
+an ``collections.OrderedDict``::
 
     >>> from collections import OrderedDict
     >>> Rec = rectype('Rec', OrderedDict([
     ...     ('a', None),
-    ...     ('b', None)]))
+    ...     ('b', None),
+    ...     ('c', None)]))
     >>> rec = Rec(b=99)
     >>> rec
-    Rec(a=None, b=99)
+    Rec(a=None, b=99, c=None)
 
+Object creation
+===============
 
-Initialising rectypes
-=====================
-
-A ``rectype`` instance can be initialised in the same way as a dict: using a
+A ``rectype`` instance can be initialised in the same way as a dict, by using a
 mapping, an iterable, keyword arguments, or a combination of a mapping/
-iterable and keyword arguments::
+iterable and keyword arguments. The following examples all return a ``rectype``
+equivalent to ``Rec(a=1, b=2, c=3)``::
 
-    >>> rec = Rec(dict(a=1, b=2))   # using a mapping
-    >>> rec = Rec([1, 2])           # using a sequence
-    >>> rec = Rec(a=1, b=2)         # using keyword args
-    >>> rec = Rec(dict(a=1), b=2)   # using a mapping and keyword args
+    >>> rec = Rec(dict(a=1, b=2, c=3))   # using a mapping
+    >>> rec = Rec([1, 2, 3])             # using a sequence
+    >>> rec = Rec(a=1, b=2, c=3)         # using keyword args
+    >>> rec = Rec([1, 2], c=3)           # using a sequence and keyword args
 
-Accessing fields
-================
+``rectype`` instances are iterable so they can be used to initialise
+other ``recrype`` instances::
 
+    >>> rec2 = Rec(rec)
+    >>> rec2 == rec
+    True
+
+Note that when this happens, values are matched by position rather than
+fieldname, a record of one type can be used to initialise a record of another
+type, even of the fields have different names and meanings.
+
+Field selection
+===============
+Selection by attribute lookup
+-----------------------------
 Fields are accessible by attribute lookup::
 
-    >>> rec.a
-    1
-    >>> rec.b
-    2
-   
+    >>> Rec = rectype('Rec', 'a b c')
+    >>> rec = Rec(a=1, b=2, c=3)
+    >>> rec.c
+    3
+
 The fields of ``rectype`` instances are are mutable, meaning they can be
 modified after creation::
 
-    >>> rec.a = 2
-    >>> rec.a
-    2
+    >>> rec.c = 33
+    >>> rec.c
+    33
 
-However, because classes created by ``rectype.rectype`` are based on slots,
-you cannot add new fields to an instance::
-
-    >>> rec.c = 3
-    AttributeError                  Traceback (most recent call last)
-    <ipython-input-8-55738ba62948> in <module>()
-    ----> 1 rec.c = 3
-
-    AttributeError: 'Rec' object has no attribute 'c'
-
-Fields are also indexable and iterable::
+Selection by position
+---------------------
+Fields are also accessible by integer based indexing and slicing::
 
     >>> rec[1]
     2
-    >>> rec[1] = 3
+    >>> rec[:2]   # Slicing returns a list of field values
+    [1, 2]
+
+Setting works as well::
+
+    >>> rec[1] = 22
     >>> rec[1]
-    3
+    22
+    >>> rec[:2] = [10, 11]
+    >>> rec
+    Rec(a=10, b=11, c=333)
 
-    >>> for field in rec:
-    ...     print(field)
-    2
-    3
+If the iterable being assigned to the slice is longer than the slice, the
+excess iterable items are ignored::
 
-Instances of classes created by ``rectype.rectype`` can be pickled::
+    >>> rec[:3] = [1, 2, 3, 4, 5]   # Slice has 3 items, the iterable has 5
+    >>> rec
+    Rec(a=1, b=2, c=3)
+
+Likewise, if the iterable contains fewer items than the slice, the surplus
+fields in the slice remain unaffected::
+
+    >>> rec[:3] = [None, None]   # Slice has 3 items, the iterable only 2
+    >>> rec
+    Rec(a=None, b=None, c=3)
+
+Setting multiple field values
+-----------------------------
+Multiple field values can be changed using the ``_update()`` method which
+works in the same way as the object constructor. The following examples all
+result in a record equivalent to ``Rec(a=1, b=2, c=3)``::
+
+    >>> rec._update(a=1, b=2, c=3)        # using keyword arguments
+    >>> rec._update([1, 2, 3])            # using an iterable
+    >>> rec._update(dict(a=1, b=2, c=3))  # using a mapping
+    >>> rec._update([1, 2], c=3)          # using an iterable and keyword args
+
+Changing default values
+=======================
+A dictionary of fieldname/default_value pairs can be obtained with the
+``_get_defaults()`` class method::
+
+    >>> Rec = rectype('Rec', [('a', 1), ('b', 2), 'c')
+    >>> Rec._get_defaults()
+    {'a': 1, 'b': 2}
+
+Default field values can be updated using ``_update_defaults()``, which is similar
+to ``dict.update()``. These are all equivalent::
+
+    >>> Rec._update_defaults(dict(a=1, b=2))  # using a mapping
+    >>> Rec._update_defaults([1, 2])          # using a sequence
+    >>> Rec._update_defaults(a=1, b=2)        # using keyword args
+    >>> Rec._update_defaults(dict(a=1), b=2)  # using a mapping and keyword args
+
+The default value for a field or fields can be removed by passing the name of
+a field or an iterable of fieldnames to the ``_del_defaults()`` class method::
+
+    >>> Rec._del_defaults('a')         # Remove default for field 'a'
+    >>> Rec._del_defaults('a b'])      # Remove defaults for fields 'a' and 'b'
+    >>> Rec._del_defaults(['a', 'b'])  # Remove defaults for fields 'a' and 'b'
+
+Iteration
+---------
+Fieldnames and field values can be iterated over::
+
+    >>> Rec = rectype('Rec', 'a b c')
+    >>> rec = Rec(a=1, b=2, c=3)
+    >>> for fieldname, field_value in zip(rec._fieldnames, rec):
+    ...     print(fieldname, field_value)
+    a 1
+    b 2
+    c 3
+
+Pickling
+--------
+Instances of classes created by ``rectype.rectype()`` can be pickled::
 
     >>> import pickle
     >>> pickled_rec = pickle.loads(pickle.dumps(rec))
     >>> pickled_rec == rec
     True
 
-Updating defaults
-=================
+Immutable structure
+===================
+Objects of ``rectype`` classes are based on slots, so new fields cannot be
+added after object creation::
 
-Default field values can be altered using _update_defaults() which is similar
-to dict.update(). These are all equivalent::
+    >>> Rec = rectype('Rec', 'a b')
+    >>> rec = Rec(a=1, b=2)
+    >>> rec.c = 3   # Can't do this!
+    AttributeError                  Traceback (most recent call last)
+    <ipython-input-8-55738ba62948> in <module>()
+    ----> 1 rec.c = 3
 
-    >>> Rec._update_defaults(dict(a=1, b=2))   # using a mapping
-    >>> Rec._update_defaults([1, 2])           # using a sequence
-    >>> Rec._update_defaults(a=1, b=2)         # using keyword args
-    >>> Rec._update_defaults(dict(a=1), b=2)   # using a mapping and keyword args
+    AttributeError: 'Rec' object has no attribute 'c'
 
-Defaults values can also be removed for specific fields using _del_defaults()
+Memory usage
+============
+``rectype`` objects have a low memory footprint because they use slots
+rather than a per-instance dictionary to store attributes::
 
-TODO:
-demo get and set defsults
-demo _fieldnames
-demo _make
+    >>> from rectype import rectype
+    >>> from collections import namedtuple
+    >>> import sys
+    >>> Rec = rectype('Rec', ['a', 'b'])
+    >>> rec = Rec(a=1, b=2)
+    >>> NT = namedtuple('NT', ['a', 'b'])
+    >>> nt = NT(a=1, b=2)
+    >>> dct = dict(a=1, b=2)
+    >>> sys.getsizeof(rec)    # Number of bytes used by a rectype
+    56
+    >>> sys.getsizeof(nt)     # Number of bytes used by a namedtuple
+    64
+    >>> sys.getsizeof(dct)    # Number of bytes used by a dict
+    288
+
+They use much less memory than an equivalent ``dict`` and slightly less than
+an equivalent ``namedtuple``.
 
 
 API
@@ -220,6 +335,10 @@ and attribute names start with an underscore.
 *class* **SomeRecType**\ (*mapping, \*\*kwargs*)
 *class* **SomeRecType**\ (*iterable, \*\*kwargs*)
 
+| *class* **SomeRecType**\ (*\*\*kwargs*)
+| *class* **SomeRecType**\ (*mapping, \*\*kwargs*)
+| *class* **SomeRecType**\ (*iterable, \*\*kwargs*)
+
   Return a new record initialised from an optional positional argument and
   optional keyword arguments.
 
@@ -255,7 +374,7 @@ and attribute names start with an underscore.
       >>> rec = Rec(dict(a=1, b=2, c=3))  # using a mapping
       >>> rec = Rec([1, 2, 3])            # using a sequence
       >>> rec = Rec(a=1, b=2, c=3)        # using keyword args
-      >>> rec = Rec([1, 2], c=2)          # using a sequence and keyword args
+      >>> rec = Rec([1, 2], c=3)          # using a sequence and keyword args
 
 These are the operations that rectypes support:
 
@@ -283,10 +402,10 @@ These are the operations that rectypes support:
 ``**rec[index] = value**``
 **``rec[slice] = values``**
     Set ``rec[index]`` to value or ``rec[slice]`` to values.
-    Sert the field of *rec* corresponding to *index* to *value* or set the
+    Set the field of *rec* corresponding to *index* to *value* or set the
     fields of *rec* corresponding to *slice* to *values*.
 
-    Please note* that the behaviour of setting field values using *slicing*
+    Please note that the behaviour of setting field values using *slicing*
     is different from that of lists. If *values* contains more items than
     *slice* then the surplus values are discarded, whereas with lists the
     surplus items are inserted into the list. Similarly, if *values* contains
@@ -367,29 +486,8 @@ somerecord.\ **_fieldnames**
     creating new record types from existing record types.
 
 
-Memory usage and speed benchmarks
----------------------------------
-Instances of ``record`` classes have a low memory footprint because they use
-``__slots__`` rather than a per-instance ``__dict__`` to store attributes::
-
-    >>> from collections import namedtuple
-    >>> import sys
-    >>> import record
-    >>> RecordPerson =  record.make_type('Person', ['name', 'age'])
-    >>> record_p = RecordPerson(['Brian', 20])
-    >>> NamedTuplePerson = namedtuple('NamedTuplePerson', ['name', 'age'])
-    >>> namedtuple_p = NamedTuplePerson(name='Brian', age=20)
-    >>> dict_p = dict(name='Brian', age=20)
-    >>> sys.getsizeof(record_p)
-    56
-    >>> sys.getsizeof(namedtuple_p)
-    64
-    >>> sys.getsizeof(dict_p)
-    288
-
-They are therefore much smaller than an equivalent ``dict`` and slightly smaller
-than an equivalent ``namedtuple``.
-
+Speed benchmarks
+----------------
 The following benchmarks show the relative speed of various operations on
 records and namedtuples in Python 3.4. They are intended to give the user a
 rough idea of the speed gains and penalties involved with the use of ``record``
@@ -403,8 +501,8 @@ slower.
 
 Choosing a data type
 --------------------
-Believe it or not, records are not always the best data type to use. Depending
-on your use-case other data types may be more appropriate:
+Believe it or not, ``rectypes`` are not always the best data type to use.
+Depending on your use-case other data types may be more appropriate:
 
 * records may be a good choice when one or more of the following are true:
     - the data has a static structure but dynamic values
@@ -418,13 +516,15 @@ on your use-case other data types may be more appropriate:
 Installation
 ------------
 
+TODO: complete this section
 
 Versions tested
 ---------------
 * Python 3.2
 * Python 3.3
 * Python 3.4
+* PyPy3
 
 License
 -------
-BSD 3-clause "New" or "Revised" License
+BSD 3-Clause "New" or "Revised" License
