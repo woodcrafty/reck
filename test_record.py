@@ -158,13 +158,12 @@ class TestRecord(unittest.TestCase):
 
     def test_init_with_mapping(self):
         rec = Rec(dict(a=1, b=2))
-        self.assertTrue(isinstance(rec, rectype.Record))
+        self.assertTrue(isinstance(rec, rectype.RecType))
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
     def test_init_with_sequence(self):
         rec = Rec([1, 2])
-        self.assertTrue(isinstance(rec, rectype.Record))
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
