@@ -6,4 +6,4 @@ python:
   - pypy3
 install: true
 script:
-  - python -m test_record
+  - python -m test_rectype
