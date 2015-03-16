@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(
-    name='record',
+    name='rectype',
     version='0.1',
     description=(
         'Easily create lightweight custom record classes'
@@ -10,7 +10,7 @@ setup(
     long_description=open('README.rst').read(),
     author='Mark Richards',
     author_email='mark.l.a.richardsREMOVETHIS@gmail.com',
-    license='BSD 3-clause',
+    license='BSD 3-Clause',
     py_modules=['rectype'],
     package_data={'': ['*.rst', '*.txt']},
     classifiers=[
