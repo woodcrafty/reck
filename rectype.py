@@ -136,7 +136,7 @@ class RecType(collections.Sequence):
     #:     >>> Point3D = rectype('Point3D', Point._fieldnames + ['z'])
     #:     >>> Point3D(x=1, y=2, z=3)
     #:     Point3D(x=1, y=2, z=3)
-    _fieldnames = None
+    _fieldnames = ()
 
     def __init__(self, *args, **kwargs):
         """
