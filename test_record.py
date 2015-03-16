@@ -207,7 +207,11 @@ class TestRecord(unittest.TestCase):
         self.assertEqual(rec.a, 5)
 
     # ==========================================================================
-    # Test updating and deletion of defaults
+    # Test manipulation of defaults
+
+    def test_get_defaults(self):
+        Rec = rectype.rectype('Rec', ['a', ('b', 2), ('c', 3)])
+        self.assertEqual(Rec._get_defaults(), dict(b=2, c=3))
 
     def test_update_defaults(self):
 
@@ -274,21 +278,30 @@ class TestRecord(unittest.TestCase):
             rec._update_defaults(c=3)
 
     def test_del_defaults(self):
-        Rec = rectype.rectype('Rec', dict(a=1, b=2, c=3))
 
         # Delete default for single fieldname
+        Rec = rectype.rectype('Rec', [('a', 1), ('b', 2), ('c', 3)])
         self.assertTrue('b' in Rec._defaults)
         Rec._del_defaults('b')
-        self.assertTrue('b' not in Rec._defaults)
+        self.assertEqual(Rec._defaults, dict(a=1, c=3))
         with self.assertRaises(ValueError):
             rec = Rec()
 
-        # Delete default for multiple fieldnames
+        # Delete default for string of space/comma separated fieldnames
+        Rec = rectype.rectype('Rec', [('a', 1), ('b', 2), ('c', 3)])
         self.assertTrue('a' in Rec._defaults)
+        self.assertTrue('b' in Rec._defaults)
         self.assertTrue('c' in Rec._defaults)
+        Rec._del_defaults('a b, c')
+        self.assertEqual(Rec._defaults, dict())
+        with self.assertRaises(ValueError):
+            rec = Rec()
+
+        # Delete default for multiple fieldnames using iterable
+        Rec = rectype.rectype('Rec', [('a', 1), ('b', 2), ('c', 3)])
+        self.assertEqual(Rec._defaults, dict(a=1, b=2, c=3))
         Rec._del_defaults(['a', 'c'])
-        self.assertTrue('a' not in Rec._defaults)
-        self.assertTrue('c' not in Rec._defaults)
+        self.assertEqual(Rec._defaults, dict(b=2))
         with self.assertRaises(ValueError):
             rec = Rec()
 

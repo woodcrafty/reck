@@ -87,6 +87,10 @@ with an underscore.
     creating new record types from existing record types. Should not
     be changed directly.
 
+.. py:classmethod:: _get_defaults()
+
+    Return a dict fieldname/default_value pairs.
+
 .. py:function:: somerecord._update(*args, **kwargs)
 
     Update the field values of the record with values from an optional
@@ -98,8 +102,7 @@ with an underscore.
         class attribute.
     :param **kwargs: Keyword arguments in which each keyword must match a
         fieldname of the record. Keyword arguments can be supplied on their
-        own without the positional argument, or together with the positional
-        argument.
+        own, or together with the positional argument.
 
     Example::
 
@@ -111,6 +114,31 @@ with an underscore.
         >>> r._update([2, 3], c=4)  # using an iterable and keyword arguments
         >>> r
         Rec(a=2, b=3, c=4)
+
+.. py:function:: somerecord._update_defaults(*args, **kwargs)
+
+    Update default field values of the record with values from an optional
+    positional argument and a possibly empty set of keyword arguments.
+
+    :param *args: Optional positional argument which can be a mapping of
+        fieldname/default_value pairs or an iterable of default values which
+        are in the same order as the fieldnames in the ``_fieldnames``
+        class attribute.
+    :param **kwargs: Keyword arguments in which each keyword must match a
+        fieldname of the record. Keyword arguments can be supplied on their
+        own, or together with the positional argument.
+
+    Example::
+
+        >>> Rec = rectype('Rec', [('a', 1), ('b', 2), 'c')
+        >>> Rec._get_defaults()
+        {'a': 1, 'b': 2}
+        >>> Rec._update_defaults([3, 4], c=5)
+        >>> # the default for field 'a' and 'b' is replaced and a new default
+        >>> # for field 'c' is added
+        >>> Rec._get_defaults()
+        {'a': 3, 'b': 4, 'c': 5}
+
 """
 
 import collections
@@ -312,6 +340,13 @@ class RecType(collections.Sequence):
 
         for fieldname, value in field_values.items():
             setattr(self, fieldname, value)
+
+    @classmethod
+    def _get_defaults(cls):
+        """
+        Return a dict fieldname/default_value pairs.
+        """
+        return cls._defaults
 
     @classmethod
     def _update_defaults(cls, *args, **kwargs):
