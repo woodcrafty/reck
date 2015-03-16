@@ -124,8 +124,10 @@ class RecType(collections.Sequence):
     __slots__ = ()
 
     #: Tuple of strings listing the fieldnames. Useful for introspection and
-    #: creating new record types from existing record types. Should not
-    #: be changed directly.
+    #: creating new record types from existing record types. This class
+    #: attribute is set when a RecType subclass is created by the
+    #: :py:func:`rectype.rectype()` factory function. Should not be
+    #: changed directly.
     #:
     #: Example usage::
     #:
@@ -200,8 +202,8 @@ class RecType(collections.Sequence):
 
     def _update(self, *args, **kwargs):
         """
-        Update the field values of the record with values from an optional
-        positional argument and a possibly empty set of keyword arguments.
+        Update the field values with values from an optional positional
+        argument and a possibly empty set of keyword arguments.
 
         :param *args: Optional positional argument which can be a mapping of
             fieldname/field_value pairs or an iterable of field values which
@@ -252,8 +254,9 @@ class RecType(collections.Sequence):
     @classmethod
     def _get_defaults(cls):
         """
-        Return a dict which maps fieldname to their corresponding
-        default_values. If no default values are set an empty dict is returned.
+        Return a dict which maps fieldnames to their corresponding
+        default value (if any). If no default values are set an empty dict
+        is returned.
         """
         return cls._defaults
 
@@ -431,7 +434,11 @@ class RecType(collections.Sequence):
     @classmethod
     def _del_defaults(cls, fieldnames):
         """
-        Remove the default values for one or more fields.
+        Remove the default value for one or more fields.
+
+        Once the default value for a field has been removed, it will become
+        mandatory to supply a value for that field when making new
+        instances of the class.
 
         :param fieldnames: Fieldnames of the default values to be removed. Can
             be a single string with each fieldname separated by whitespace
