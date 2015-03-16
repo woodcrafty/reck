@@ -3,18 +3,23 @@
 # are added dynamically to a subclass of RecType so is not possible to get
 # a reasonable Sphinx generated API doc.
 """
---------------------------------------------------------------------------------
-:py:func:`rectype` factory function for record classes with mutable field values
---------------------------------------------------------------------------------
+"""
 
-Record types allow fields to be accessed by name as well as position index
-allowing for more readable, self-documenting code. They are similar to
-``collections.namedtuple`` types except that field values are mutable,
-per-field default values are supported and they consume slightly less memory.
+import abc
+import collections
+import keyword
+import operator
+import sys
 
-.. py:function:: rectype(typename, fieldnames, rename=False)
+__license__ = 'BSD 3-clause'
+__version__ = '0.0.0'
+__author__ = 'Mark Richards'
+__email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
 
-    Return a new ``RecType`` subclass named *typename*.
+
+def rectype(typename, fieldnames, rename=False):
+    """
+    Return a new ``RecType`` subclass named typename.
 
     The new subclass is used to create ``RecType`` objects that have
     fields accessible by attribute lookup as well as being indexable
@@ -24,20 +29,15 @@ per-field default values are supported and they consume slightly less memory.
 
     :param typename: Name of the ``RecType`` subclass to create,
         e.g. ``'MyRecord'``.
-    :param fieldnames: Can be any of the following:
-
-        * Single string with each fieldname separated by whitespace
-          and/or commas such as ``'x, y'``.
-        * A sequence of strings such as ``['x', 'y']`` and/or 2-tuples
-          of the form ``(fieldname, default-value)`` such as
-          ``[('x', None), ('y', None)]``.
-        * A mapping of fieldname-default value pairs such as
-          ``collections.OrderedDict([('x', None), ('y', None)])``.
-          Note that it only makes sense
-          to use an ordered mapping (e.g. ``OrderedDict``) since
-          access by index or iteration is affected by the order of
-          the fieldnames.
-        A fieldname may be any valid Python identifier except for
+    :param fieldnames: Can be a single string with each fieldname separated by
+        whitespace and/or commas such as ``'x, y'``; a sequence of strings such
+        as ``['x', 'y']`` and/or 2-tuples of the form ``(fieldname,
+        default-value)`` such as ``[('x', None), ('y', None)]``; a mapping of
+        fieldname-default_value pairs such as
+        ``collections.OrderedDict([('x', None), ('y', None)])``. Note, it
+        only makes sense to use an ordered mapping (e.g. ``OrderedDict``) since
+        access by index or iteration is affected by the order of the
+        fieldnames. A fieldname may be any valid Python identifier except for
         names starting with an underscore.
     :param rename: If set to ``True``, invalid fieldnames are automatically
         replaced with positional names. For example,
@@ -63,140 +63,6 @@ per-field default values are supported and they consume slightly less memory.
         >>> p = Point(x=1)                   # fields with defaults do not need to be specified
         >>> p                                # y has been assigned a default value
         Point(x=1, y=None)
-
-Subclasses of ``Rectype`` also support the following methods and attributes.
-To prevent conflicts with fieldnames, the method and attribute names start
-with an underscore.
-
-.. py:function:: somerecord._asdict()
-
-    Return a new ``collections.OrderedDict`` which maps fieldnames to their
-    corresponding values. Note, the same result can be obtained using the
-    built-in ``vars()`` function::
-
-        >>> vars(p)
-        OrderedDict([('x', 1), ('y', None)])
-
-.. py:classmethod:: somerecord._del_defaults(fieldnames)
-
-    Remove the default values for one or more fields.
-
-    :param fieldnames: Fieldnames of the default values to be removed. Can
-        be a single string with each fieldname separated by whitespace
-        and/or commas such as ``'x, y'``, or an iterable of strings.
-
-.. py:attribute:: somerecord._fieldnames
-
-    Tuple of strings listing the fieldnames. Useful for introspection and
-    creating new record types from existing record types. Should not
-    be changed directly.
-
-    Example usage::
-
-        >>> p._fieldnames       # view the fieldnames
-        ('x', 'y')
-        >>> Point3D = rectype('Point3D', Point._fieldnames + ['z'])
-        >>> Point3D(x=1, y=2, z=3)
-        Point3D(x=1, y=2, z=3)
-
-.. py:classmethod:: _get_defaults()
-
-    Return a dict which maps fieldname to their corresponding default_values.
-    If no default values are set an empty dict is returned.
-
-.. py:function:: somerecord._update(*args, **kwargs)
-
-    Update the field values of the record with values from an optional
-    positional argument and a possibly empty set of keyword arguments.
-
-    :param *args: Optional positional argument which can be a mapping of
-        fieldname/field_value pairs or an iterable of field values which
-        are in the same order as the fieldnames in the ``_fieldnames``
-        class attribute.
-    :param **kwargs: Keyword arguments in which each keyword must match a
-        fieldname of the record. Keyword arguments can be supplied on their
-        own, or together with the positional argument.
-
-    Example::
-
-        >>> Rec = rectype('Rec', 'a b c')
-        >>> r = Rec(a=1, b=2, c=3)
-        >>> r._update(b=5, c=6)     # using keyword arguments
-        >>> r
-        Rec(a=1, b=2, c=3)
-        >>> r._update([2, 3], c=4)  # using an iterable and keyword arguments
-        >>> r
-        Rec(a=2, b=3, c=4)
-
-.. py:function:: somerecord._update_defaults(*args, **kwargs)
-
-    Update default field values of the record with values from an optional
-    positional argument and a possibly empty set of keyword arguments.
-
-    :param *args: Optional positional argument which can be a mapping of
-        fieldname/default_value pairs or an iterable of default values which
-        are in the same order as the fieldnames in the ``_fieldnames``
-        class attribute.
-    :param **kwargs: Keyword arguments in which each keyword must match a
-        fieldname of the record. Keyword arguments can be supplied on their
-        own, or together with the positional argument.
-
-    Example::
-
-        >>> Rec = rectype('Rec', [('a', 1), ('b', 2), 'c')
-        >>> Rec._get_defaults()
-        {'a': 1, 'b': 2}
-        >>> Rec._update_defaults([3, 4], c=5)
-        >>> # the default for field 'a' and 'b' is replaced and a new default
-        >>> # for field 'c' is added
-        >>> Rec._get_defaults()
-        {'a': 3, 'b': 4, 'c': 5}
-
-"""
-
-import collections
-import keyword
-import operator
-import sys
-
-__license__ = 'BSD 3-clause'
-__version__ = '0.0.0'
-__author__ = 'Mark Richards'
-__email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
-
-
-def rectype(typename, fieldnames, rename=False):
-    """
-    Return a new ``RecType`` subclass named typename.
-
-    The new subclass is used to create ``RecType`` objects that have
-    fields accessible by attribute lookup as well as being indexable
-    and iterable.
-
-    :param typename: Name of the ``RecType`` subclass to create,
-        e.g. ``'MyRecord'``.
-    :param fieldnames: Can be any of the following
-        * Single string with each fieldname separated by whitespace
-          and/or commas such as ``'x, y'``.
-        * A sequence of strings such as ``['x', 'y']`` and/or 2-tuples
-          of the form ``(fieldname, default-value)`` such as
-          ``[('x', None), ('y', None)]``.
-        * A mapping of fieldname-default value pairs such as
-          ``collections.OrderedDict([('x', None), ('y', None)])``.
-          Note that it only makes sense
-          to use an ordered mapping (e.g. ``OrderedDict``) since
-          access by index or iteration is affected by the order of
-          the fieldnames.
-        A fieldname may be any valid Python identifier except for
-        names starting with an underscore.
-    :param rename: If set to ``True``, invalid fieldnames are automatically
-        replaced with positional names. For example,
-        ('abc', 'def', 'ghi', 'abc') is converted to
-        ('abc', '_1', 'ghi', '_3'), eliminating the keyword 'def' and the
-        duplicate fieldname 'abc'.
-    :returns: A subclass of ``RecType`` named *typename*.
-    :raises: ValueError if *typename* is invalid or *fieldnames*
-        contains an invalid fieldname and rename is ``False``.
     """
     RecType._check_typename(typename)
     if isinstance(fieldnames, collections.Mapping):
@@ -217,7 +83,7 @@ def rectype(typename, fieldnames, rename=False):
         _fieldnames_set=frozenset(fieldnames),
         _defaults=defaults,
         _attr_getters=tuple(
-            [operator.attrgetter(field) for field in fieldnames]),
+            [operator.attrgetter(field) for field in fieldnames])
     )
 
     rectype = type(typename, (RecType,), type_dct)
@@ -239,48 +105,18 @@ def rectype(typename, fieldnames, rename=False):
 
 class RecType(collections.Sequence):
     """
-    Return a new ``RecType`` object initialised from an optional positional
-    argument and optional keyword arguments:
+    Base class for new record types. This class is not stand-alone.
 
-    | *class* **SomeRecType**\ *(**kwargs)*
-    | SomeRecType(mapping, **kwargs)
-    | SomeRecType(iterable, **kwargs)
+    .. note:: To create subclasses of RecType use the :py:func:`rectype.rectype()` factory function.
 
-    If a positional argument is given and it is a mapping object, a
-    record is created with values assigned to fields identified by
-    keys of the mapping. Keys pairs that do not match a fieldname are
-    ignored.
-
-    The positional argument can also be an iterable object whose items
-    are in the same order as the fieldnames of the record type. If the
-    iterable provides too many values for the field the excess values
-    are ignored.
-
-    Keyword arguments can also be given to provide field values by
-    name. If a keyword argument provides a value for a field that
-    has already received a value, the value from the keyword argument
-    replaces the value from the positional argument. Keywords that
-    do not match a filename are ignored.
-
-    Any fields that do not have values defined by the positional or
-    keyword arguments will be assigned a field-specific default value,
-    if one has been defined.
-
-    If a default value is not available for a field that has not been
-    defined by the positional or keyword arguments a ValueError is
-    raised.
-
-    :raises: TypeError if more than one positional argument is passed or
-         if *kwargs* contains a keyword that does not match a fieldname.
+    ``RecType`` supports the following public methods and attributes. To
+    prevent conflicts with fieldnames in subclasses, the method and
+    attribute names start with an underscore.
 
     .. automethod:: _asdict
     .. automethod:: _del_defaults
-
-    **_fieldnames**
-        Tuple of strings listing the fieldnames. Useful for
-        introspection and creating new ``rectype`` classes from existing
-        ``rectyp`` classes.
-
+    .. autoattribute:: _fieldnames
+    .. automethod:: _get_defaults
     .. automethod:: _update
     .. automethod:: _update_defaults
     .. document private functions
@@ -288,8 +124,54 @@ class RecType(collections.Sequence):
 
     __slots__ = ()
 
+    #: Tuple of strings listing the fieldnames. Useful for introspection and
+    #: creating new record types from existing record types. Should not
+    #: be changed directly.
+    #:
+    #: Example usage::
+    #:
+    #:     >>> p._fieldnames       # view the fieldnames
+    #:     ('x', 'y')
+    #:     >>> Point3D = rectype('Point3D', Point._fieldnames + ['z'])
+    #:     >>> Point3D(x=1, y=2, z=3)
+    #:     Point3D(x=1, y=2, z=3)
+    _fieldnames = None
+
     def __init__(self, *args, **kwargs):
         """
+        Return a new ``RecType`` object initialised from an optional positional
+        argument and optional keyword arguments:
+
+        | *class* **SomeRecType**\ *(**kwargs)*
+        | SomeRecType(mapping, **kwargs)
+        | SomeRecType(iterable, **kwargs)
+
+        If a positional argument is given and it is a mapping object, a
+        record is created with values assigned to fields identified by
+        keys of the mapping. Keys pairs that do not match a fieldname are
+        ignored.
+
+        The positional argument can also be an iterable object whose items
+        are in the same order as the fieldnames of the record type. If the
+        iterable provides too many values for the field the excess values
+        are ignored.
+
+        Keyword arguments can also be given to provide field values by
+        name. If a keyword argument provides a value for a field that
+        has already received a value, the value from the keyword argument
+        replaces the value from the positional argument. Keywords that
+        do not match a filename are ignored.
+
+        Any fields that do not have values defined by the positional or
+        keyword arguments will be assigned a field-specific default value,
+        if one has been defined.
+
+        If a default value is not available for a field that has not been
+        defined by the positional or keyword arguments a ValueError is
+        raised.
+
+        :raises: TypeError if more than one positional argument is passed or
+             if *kwargs* contains a keyword that does not match a fieldname.
 
         """
         if len(args) > 1:
@@ -319,13 +201,27 @@ class RecType(collections.Sequence):
 
     def _update(self, *args, **kwargs):
         """
-        Update fields with new values.
+        Update the field values of the record with values from an optional
+        positional argument and a possibly empty set of keyword arguments.
 
-        somerec._update(**kwargs)
-        somerec._update(mapping, **kwargs)
-        somerec._update(iterable, **kwargs)
+        :param *args: Optional positional argument which can be a mapping of
+            fieldname/field_value pairs or an iterable of field values which
+            are in the same order as the fieldnames in the ``_fieldnames``
+            class attribute.
+        :param **kwargs: Keyword arguments in which each keyword must match a
+            fieldname of the record. Keyword arguments can be supplied on their
+            own, or together with the positional argument.
 
-        See the __init__ for a full description of args and kwargs.
+        Example::
+
+            >>> Rec = rectype('Rec', 'a b c')
+            >>> r = Rec(a=1, b=2, c=3)
+            >>> r._update(b=5, c=6)     # using keyword arguments
+            >>> r
+            Rec(a=1, b=2, c=3)
+            >>> r._update([2, 3], c=4)  # using an iterable and keyword arguments
+            >>> r
+            Rec(a=2, b=3, c=4)
         """
         if len(args) > 1:
             raise TypeError(
@@ -357,18 +253,35 @@ class RecType(collections.Sequence):
     @classmethod
     def _get_defaults(cls):
         """
-        Return a dict fieldname/default_value pairs.
+        Return a dict which maps fieldname to their corresponding
+        default_values. If no default values are set an empty dict is returned.
         """
         return cls._defaults
 
     @classmethod
     def _update_defaults(cls, *args, **kwargs):
         """
-        Update the default field values.
+        Update default field values of the record with values from an optional
+        positional argument and a possibly empty set of keyword arguments.
 
-        somerec._update_defaults(**kwargs)
-        somerec._update_defaults(mapping, **kwargs)
-        somerec._update_defaults(iterable, **kwargs)
+        :param *args: Optional positional argument which can be a mapping of
+            fieldname/default_value pairs or an iterable of default values
+            which are in the same order as the fieldnames in the
+            ``_fieldnames`` class attribute.
+        :param **kwargs: Keyword arguments in which each keyword must match a
+            fieldname of the record. Keyword arguments can be supplied on their
+            own, or together with the positional argument.
+
+        Example::
+
+            >>> Rec = rectype('Rec', [('a', 1), ('b', 2), 'c')
+            >>> Rec._get_defaults()
+            {'a': 1, 'b': 2}
+            >>> Rec._update_defaults([3, 4], c=5)
+            >>> # the default for field 'a' and 'b' is replaced and a new
+            >>> # default for field 'c' is added
+            >>> Rec._get_defaults()
+            {'a': 3, 'b': 4, 'c': 5}
         """
         if len(args) > 1:
             raise TypeError(
@@ -519,13 +432,11 @@ class RecType(collections.Sequence):
     @classmethod
     def _del_defaults(cls, fieldnames):
         """
-        Remove the default value for one or more fieldnames
+        Remove the default values for one or more fields.
 
-        Args:
-            fieldnames: string or iterable of strings
-                Fieldnames of the default values to be removed. Can be a
-                single string with each fieldname separated by whitespace
-                and/or commas such as ``'x, y'``, or an iterable of strings.
+        :param fieldnames: Fieldnames of the default values to be removed. Can
+            be a single string with each fieldname separated by whitespace
+            and/or commas such as ``'x, y'``, or an iterable of strings.
         """
         if isinstance(fieldnames, str):
             fieldnames = fieldnames.replace(',', ' ').split()
@@ -544,7 +455,8 @@ class RecType(collections.Sequence):
         """
         Return a new ``OrderedDict`` which maps fieldnames to their values.
         """
-        return self._asdict()
+        return collections.OrderedDict(
+            [(k, getattr(self, k)) for k in self.__slots__])
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__)
@@ -624,10 +536,3 @@ class RecType(collections.Sequence):
         return '{}({})'.format(
             self.__class__.__name__, ', '.join('{}={}'.format(
                 attr, str(getattr(self, attr))) for attr in self.__slots__))
-
-    def _asdict(self):
-        """
-        Return a new ``OrderedDict`` which maps fieldnames to their values.
-        """
-        return collections.OrderedDict(
-            [(k, getattr(self, k)) for k in self.__slots__])
