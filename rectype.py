@@ -71,7 +71,11 @@ with an underscore.
 .. py:function:: somerecord._asdict()
 
     Return a new ``collections.OrderedDict`` which maps fieldnames to their
-    corresponding values.
+    corresponding values. Note, the same result can be obtained using the
+    built-in ``vars()`` function::
+
+        >>> vars(p)
+        OrderedDict([('x', 1), ('y', None)])
 
 .. py:classmethod:: somerecord._del_defaults(fieldnames)
 
@@ -87,9 +91,18 @@ with an underscore.
     creating new record types from existing record types. Should not
     be changed directly.
 
+    Example usage::
+
+        >>> p._fieldnames       # view the fieldnames
+        ('x', 'y')
+        >>> Point3D = rectype('Point3D', Point._fieldnames + ['z'])
+        >>> Point3D(x=1, y=2, z=3)
+        Point3D(x=1, y=2, z=3)
+
 .. py:classmethod:: _get_defaults()
 
-    Return a dict fieldname/default_value pairs.
+    Return a dict which maps fieldname to their corresponding default_values.
+    If no default values are set an empty dict is returned.
 
 .. py:function:: somerecord._update(*args, **kwargs)
 
