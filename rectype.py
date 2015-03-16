@@ -113,7 +113,6 @@ class RecType(collections.Sequence):
     prevent conflicts with fieldnames in subclasses, the method and
     attribute names start with an underscore.
 
-    .. automethod:: _asdict
     .. automethod:: _del_defaults
     .. autoattribute:: _fieldnames
     .. automethod:: _get_defaults
@@ -460,7 +459,7 @@ class RecType(collections.Sequence):
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__)
-            and self._asdict() == other._asdict())
+            and self.__dict__ == other.__dict__)
 
     def __ne__(self, other):
         return not self.__eq__(other)

@@ -1,3 +1,4 @@
+"""Unittest for rectype module"""
 
 from collections import OrderedDict
 import pickle
@@ -9,8 +10,7 @@ import rectype
 Rec = rectype.rectype('Rec', ['a', 'b'])
 
 
-class TestRecord(unittest.TestCase):
-
+class TestRecType(unittest.TestCase):
     # ==========================================================================
     # Test record type creation
 
@@ -434,10 +434,6 @@ class TestRecord(unittest.TestCase):
         rec._update(a=8, b=9)
         self.assertEqual(rec.a, 8)
         self.assertEqual(rec.b, 9)
-
-    def test_asdict(self):
-        rec = Rec([1, 2])
-        self.assertEqual(rec._asdict(), OrderedDict([('a', 1), ('b', 2)]))
 
     def test__dict__(self):
         # These assertions are necessary because record uses __slots__
