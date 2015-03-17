@@ -45,7 +45,7 @@ def rectype(typename, fieldnames, rename=False):
         ('abc', '_1', 'ghi', '_3'), eliminating the keyword 'def' and the
         duplicate fieldname 'abc'.
     :returns: A subclass of ``RecType`` named *typename*.
-    :raises: ValueError if *typename* is invalid or *fieldnames*
+    :raises: ``ValueError`` if *typename* is invalid or *fieldnames*
         contains an invalid fieldname and rename is ``False``.
 
     Basic example::
@@ -107,7 +107,7 @@ class RecType(collections.Sequence):
     """
     Base class for new record types. This class is not stand-alone.
 
-    .. note:: To create subclasses of RecType use the :py:func:`rectype.rectype()` factory function.
+    .. note:: To create subclasses of ``RecType`` use the :py:func:`rectype.rectype()` factory function.
 
     ``RecType`` supports the following public methods and attributes. To
     prevent conflicts with fieldnames in subclasses, the method and
@@ -142,9 +142,9 @@ class RecType(collections.Sequence):
         Return a new ``RecType`` object initialised from an optional positional
         argument and optional keyword arguments:
 
-        | *class* **SomeRecType**\ *(**kwargs)*
-        | SomeRecType(mapping, **kwargs)
-        | SomeRecType(iterable, **kwargs)
+        | *class* **SomeRecType**\ (***kwargs*)
+        | *class* **SomeRecType**\ (*mapping, **kwargs*)
+        | *class* **SomeRecType**\ (*iterable, **kwargs*)
 
         If a positional argument is given and it is a mapping object, a
         record is created with values assigned to fields identified by
@@ -170,9 +170,8 @@ class RecType(collections.Sequence):
         defined by the positional or keyword arguments a ValueError is
         raised.
 
-        :raises: TypeError if more than one positional argument is passed or
-             if *kwargs* contains a keyword that does not match a fieldname.
-
+        :raises: ``TypeError`` if more than one positional argument is passed
+             or if *kwargs* contains a keyword that does not match a fieldname.
         """
         if len(args) > 1:
             raise TypeError(
@@ -203,6 +202,12 @@ class RecType(collections.Sequence):
         """
         Update the field values with values from an optional positional
         argument and a possibly empty set of keyword arguments.
+
+        This method has the following forms:
+
+            | somerec.\ **_update**\ (***kwargs*)
+            | somerec.\ **_update**\ (*mapping, **kwargs*)
+            | somerec.\ **_update**\ (*iterable, **kwargs*)
 
         :param *args: Optional positional argument which can be a mapping of
             fieldname/field_value pairs or an iterable of field values which
@@ -253,9 +258,9 @@ class RecType(collections.Sequence):
     @classmethod
     def _get_defaults(cls):
         """
-        Return a dict which maps fieldnames to their corresponding
+        Return a ``dict`` which maps fieldnames to their corresponding
         default value. Fields with no default value are excluded. If no
-        default values are set an empty dict is returned.
+        default values are set an empty ``dict`` is returned.
         """
         return cls._defaults
 
@@ -271,7 +276,8 @@ class RecType(collections.Sequence):
             used to replace the existing per-field default values. If a
             field is not present in *defaults* it will not have a default
             value. To remove all defaults set *defaults* to an empty mapping.
-        :raises: ValueError if a key in *defaults* does not match a fieldname.
+        :raises: ``ValueError`` if a key in *defaults* does not match a
+            fieldname.
 
         Example::
 
