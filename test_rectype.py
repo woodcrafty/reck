@@ -1,4 +1,3 @@
-"""Unittest for rectype module"""
 
 from collections import OrderedDict
 import pickle
@@ -207,103 +206,21 @@ class TestRecType(unittest.TestCase):
         self.assertEqual(rec.a, 5)
 
     # ==========================================================================
-    # Test manipulation of defaults
+    # Test getting and setting of defaults
 
     def test_get_defaults(self):
         Rec = rectype.rectype('Rec', ['a', ('b', 2), ('c', 3)])
         self.assertEqual(Rec._get_defaults(), dict(b=2, c=3))
 
-    def test_update_defaults(self):
-
-        # Add a new default value
-        # -----------------------
+    def test_set_defaults(self):
         Rec = rectype.rectype('Rec', ['a', ('b', 2), ('c', 3)])
+        self.assertEqual(Rec._get_defaults(), dict(b=2, c=3))
+        Rec._set_defaults(dict(a=1, b=2))
+        self.assertEqual(Rec._get_defaults(), dict(a=1, b=2))
 
-        # With positional sequence arg
-        Rec._update_defaults([1])
-        rec = Rec()
-        self.assertEqual(rec.a, 1)
-        self.assertEqual(rec.b, 2)
-        self.assertEqual(rec.c, 3)
-
-        # With positional sequence arg
-        Rec._update_defaults(dict(a=1))
-        rec = Rec()
-        self.assertEqual(rec.a, 1)
-        self.assertEqual(rec.b, 2)
-        self.assertEqual(rec.c, 3)
-
-        # With keyword argument
-        Rec._update_defaults(a=1)
-        rec = Rec()
-        self.assertEqual(rec.a, 1)
-        self.assertEqual(rec.b, 2)
-        self.assertEqual(rec.c, 3)
-
-        # Change existing default values
-        # ------------------------------
-        Rec = rectype.rectype('Rec', [('a', 1), ('b', 2)])
-
-        # With positional sequence arg
-        Rec._update_defaults([3, 4])
-        rec = Rec()
-        self.assertEqual(rec.a, 3)
-        self.assertEqual(rec.b, 4)
-
-        # With positional mapping arg
-        Rec._update_defaults(dict(a=3, b=4))
-        rec = Rec()
-        self.assertEqual(rec.a, 3)
-        self.assertEqual(rec.b, 4)
-
-        # With keyword arg
-        Rec._update_defaults(b=22)
-        rec = Rec()
-        self.assertEqual(rec.a, 3)
-        self.assertEqual(rec.b, 22)
-
-        # With positional arg and keyword args
-        Rec._update_defaults([0], b=4)
-        rec = Rec()
-        self.assertEqual(rec.a, 0)
-        self.assertEqual(rec.b, 4)
-
-    def test_update_with_bad_defaults(self):
-        # Note that a postional mapping arg is allowed to contain keys that
-        # do not match fields and a positional sequence arg is allowed to
-        # contain more values than there are fields.
-        rec = Rec([1, 2])
-        with self.assertRaises(TypeError):
-            # Non-existent field by keyword argument
-            rec._update_defaults(c=3)
-
-    def test_del_defaults(self):
-
-        # Delete default for single fieldname
-        Rec = rectype.rectype('Rec', [('a', 1), ('b', 2), ('c', 3)])
-        self.assertTrue('b' in Rec._defaults)
-        Rec._del_defaults('b')
-        self.assertEqual(Rec._defaults, dict(a=1, c=3))
+        # Non-existent fieldname in defaults dict
         with self.assertRaises(ValueError):
-            rec = Rec()
-
-        # Delete default for string of space/comma separated fieldnames
-        Rec = rectype.rectype('Rec', [('a', 1), ('b', 2), ('c', 3)])
-        self.assertTrue('a' in Rec._defaults)
-        self.assertTrue('b' in Rec._defaults)
-        self.assertTrue('c' in Rec._defaults)
-        Rec._del_defaults('a b, c')
-        self.assertEqual(Rec._defaults, dict())
-        with self.assertRaises(ValueError):
-            rec = Rec()
-
-        # Delete default for multiple fieldnames using iterable
-        Rec = rectype.rectype('Rec', [('a', 1), ('b', 2), ('c', 3)])
-        self.assertEqual(Rec._defaults, dict(a=1, b=2, c=3))
-        Rec._del_defaults(['a', 'c'])
-        self.assertEqual(Rec._defaults, dict(b=2))
-        with self.assertRaises(ValueError):
-            rec = Rec()
+            Rec._set_defaults(dict(a=1, d=4))
 
     # ==========================================================================
     # Test sequence features

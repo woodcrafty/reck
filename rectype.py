@@ -113,11 +113,10 @@ class RecType(collections.Sequence):
     prevent conflicts with fieldnames in subclasses, the method and
     attribute names start with an underscore.
 
-    .. automethod:: _del_defaults
     .. autoattribute:: _fieldnames
     .. automethod:: _get_defaults
+    .. automethod:: _set_defaults
     .. automethod:: _update
-    .. automethod:: _update_defaults
     .. document private functions
     """
 
@@ -255,57 +254,46 @@ class RecType(collections.Sequence):
     def _get_defaults(cls):
         """
         Return a dict which maps fieldnames to their corresponding
-        default value (if any). If no default values are set an empty dict
-        is returned.
+        default value. Fields with no default value are excluded. If no
+        default values are set an empty dict is returned.
         """
         return cls._defaults
 
     @classmethod
-    def _update_defaults(cls, *args, **kwargs):
+    def _set_defaults(cls, defaults):
         """
-        Update default field values of the record with values from an optional
-        positional argument and a possibly empty set of keyword arguments.
+        Replace the existing per-field default values with a new set.
 
-        :param *args: Optional positional argument which can be a mapping of
-            fieldname/default_value pairs or an iterable of default values
-            which are in the same order as the fieldnames in the
-            ``_fieldnames`` class attribute.
-        :param **kwargs: Keyword arguments in which each keyword must match a
-            fieldname of the record. Keyword arguments can be supplied on their
-            own, or together with the positional argument.
+        This can be useful if you wish to use the same record class in
+        different contexts which require different default values.
+
+        :param defaults: A mapping of fieldname/default_value pairs which is
+            used to replace the existing per-field default values. If a
+            field is not present in *defaults* it will not have a default
+            value. To remove all defaults set *defaults* to an empty mapping.
+        :raises: ValueError if a key in *defaults* does not match a fieldname.
 
         Example::
 
-            >>> Rec = rectype('Rec', [('a', 1), ('b', 2), 'c')
+            >>> Car = rectype('Car', [('make', 'Ford'), 'model', 'body_type')
             >>> Rec._get_defaults()
-            {'a': 1, 'b': 2}
-            >>> Rec._update_defaults([3, 4], c=5)
-            >>> # the default for field 'a' and 'b' is replaced and a new
-            >>> # default for field 'c' is added
-            >>> Rec._get_defaults()
-            {'a': 3, 'b': 4, 'c': 5}
+            {'make': 'Ford'}
+            >>> # Create some Ford cars:
+            >>> car1 = Car(model='Focus', body_type='coupe')
+            >>> car2 = Car(model='Mustang', body_type='saloon')
+            >>> # Now create hatchback cars of different makes. To make life
+            >>> # easier replace the defaults with something more appropriate:
+            >>> Rec._set_defaults(dict(body_type='hatchback'))
+            >>> Rec._get_defaults()   # note, 'make' no longer has a default
+            {'body_type': 'hatchback'}
+            >>> car3 = Car(model='Fiat', model='Panda')
+            >>> car4 = Car(model='Volkswagon', model='Golf')
         """
-        if len(args) > 1:
-            raise TypeError(
-                'expected at most 1 positional argument, got {0}'
-                .format(len(args)))
-        cls._check_kwargs(kwargs)
-
-        # Progressively assemble a dict representation of the default update
-        # from the positional arg and the keyword args.
-        defaults = {}
-        if args:
-            arg = args[0]
-            if isinstance(arg, collections.Mapping):
-                for key in arg:
-                    defaults[key] = arg[key]
-            else:
-                # arg should be an iterable
-                defaults.update(zip(cls._fieldnames, arg))
-        defaults.update(kwargs)
         cls._check_fieldnames_exist(defaults)
-
-        cls._defaults.update(defaults)
+        _defaults = {}
+        for fieldname, default_value in defaults.items():
+            _defaults[fieldname] = default_value
+        cls._defaults = _defaults
 
     @classmethod
     def _check_fieldname(cls, fieldname, used_names, rename, idx):
@@ -407,7 +395,7 @@ class RecType(collections.Sequence):
         """
         for fieldname in fieldnames:
             if fieldname not in cls._fieldnames:
-                raise ValueError('field {0!r} is not defined')
+                raise ValueError('field {0!r} is not defined'.format(fieldname))
 
     @classmethod
     def _check_all_fields_defined(cls, fieldnames):
@@ -430,31 +418,6 @@ class RecType(collections.Sequence):
                 raise TypeError(
                     'keyword argument {0!r} does not match a field'
                     .format(fieldname))
-
-    @classmethod
-    def _del_defaults(cls, fieldnames):
-        """
-        Remove the default value for one or more fields.
-
-        Once the default value for a field has been removed, it will become
-        mandatory to supply a value for that field when making new
-        instances of the class.
-
-        :param fieldnames: Fieldnames of the default values to be removed. Can
-            be a single string with each fieldname separated by whitespace
-            and/or commas such as ``'x, y'``, or an iterable of strings.
-        """
-        if isinstance(fieldnames, str):
-            fieldnames = fieldnames.replace(',', ' ').split()
-
-        for fieldname in fieldnames:
-            try:
-                cls._defaults.pop(fieldname)
-            except ValueError:
-                raise KeyError('field {0!r} is not defined')
-
-        cls._defaults = {
-            k: v for k, v in cls._defaults.items() if k not in fieldnames}
 
     @property
     def __dict__(self):
