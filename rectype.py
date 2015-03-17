@@ -45,8 +45,9 @@ def rectype(typename, fieldnames, rename=False):
         ('abc', '_1', 'ghi', '_3'), eliminating the keyword 'def' and the
         duplicate fieldname 'abc'.
     :returns: A subclass of ``RecType`` named *typename*.
-    :raises: ``ValueError`` if *typename* is invalid or *fieldnames*
-        contains an invalid fieldname and rename is ``False``.
+    :raises: ``ValueError`` if *typename* is invalid; *fieldnames*
+        contains an invalid fieldname and rename is ``False``; *fieldnames*
+        does not contain a 2-tuple when one was expected.
 
     Basic example::
 
@@ -216,6 +217,8 @@ class RecType(collections.Sequence):
         :param **kwargs: Keyword arguments in which each keyword must match a
             fieldname of the record. Keyword arguments can be supplied on their
             own, or together with the positional argument.
+        :raises: ``TypeError`` if more than one positional argument is
+            supplied or a keyword argument does not match a fieldname.
 
         Example::
 
