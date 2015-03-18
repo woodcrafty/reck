@@ -55,7 +55,6 @@ class TestRecType(unittest.TestCase):
             fieldname = 'f{0}'.format(i)
             self.assertEqual(getattr(rec, fieldname), i)
 
-
     def test_rectype_with_bad_sequence(self):
         with self.assertRaises(ValueError):
             # 3-tuple instead of 2-tuple
@@ -157,7 +156,7 @@ class TestRecType(unittest.TestCase):
 
     def test_init_with_mapping(self):
         rec = Rec(dict(a=1, b=2))
-        self.assertTrue(isinstance(rec, rectype.RecType))
+        self.assertTrue(isinstance(rec, Rec))
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
@@ -234,9 +233,13 @@ class TestRecType(unittest.TestCase):
     def test_index(self):
         rec = Rec([1, 2])
         self.assertEqual(rec.index(2), 1)
+        R = rectype.rectype('R', 'a b c d')
+        rec = R([1, 2, 2, 3])
+        self.assertEqual(rec.index(2), 1)  # 1st occurrence of 2
+        self.assertEqual(rec.index(3), 3)
 
     def test_count(self):
-        R = rectype.rectype('R', ['a', 'b', 'c'])
+        R = rectype.rectype('R', 'a b c')
         rec = R([1, 2, 2])
         self.assertEqual(rec.count(1), 1)
         self.assertEqual(rec.count(2), 2)
@@ -365,8 +368,16 @@ class TestRecType(unittest.TestCase):
         # Test that vars() works
         self.assertEqual(vars(rec), {'a': 1, 'b': 2})
 
+        # Test that dict is read-only
+        # TODO: complete this test
+
     # ==========================================================================
     # Miscellaneous tests
+
+    def test_items(self):
+        rec = Rec([1, 2])
+        items = rec._items()
+        self.assertEqual(items, [('a', 1), ('b', 2)])
 
     def test_pickle(self):
         # Note: Only classes defined at the top level of a module can be
@@ -400,60 +411,6 @@ class TestRecType(unittest.TestCase):
     def test_str(self):
         rec = Rec(['1', 2])
         self.assertEqual(str(rec), "Rec(a=1, b=2)")
-
-# Long Record test
-    # def test_instantiation_with_more_than_256_fields(self):
-    #     fieldnames = ['f{0}'.format(i) for i in range(1000)]
-    #     R = record.make_type('R', fieldnames)
-    #     rec = R(list(range(1000)))
-    #     self.assertEqual(rec.f0, 0)
-    #     self.assertEqual(rec.f999, 999)
-
-    # def test_fieldname_starting_with_underscore(self):
-    #     with self.assertRaises(ValueError):
-    #         R = record.make_type('R', ['a', '_b'])
-    #
-    # def test_duplicate_fieldnames(self):
-    #     with self.assertRaises(ValueError):
-    #         R = record.make_type('R', ['a', 'a'])
-    #
-    # def test_non_string_typename_and_fieldname(self):
-    #     with self.assertRaises(TypeError):
-    #         R = record.make_type([1], ['a', 'b'])
-    #     with self.assertRaises(TypeError):
-    #         R = record.make_type('R', ['a', [1]])
-    #
-    # def test_keyword_typename_and_fieldname(self):
-    #     with self.assertRaises(ValueError):
-    #         R = record.make_type('for', ['a', 'b'])
-    #     with self.assertRaises(ValueError):
-    #         R = record.make_type('R', ['a', 'for'])
-    #
-    # def test_non_alphanumeric_typename_and_fieldname(self):
-    #     with self.assertRaises(ValueError):
-    #         R = record.make_type('-R', ['a', 'b'])
-    #     with self.assertRaises(ValueError):
-    #         R = record.make_type('R', ['a', '-b'])
-    #
-    # def test_typename_and_fieldname_starting_with_number(self):
-    #     with self.assertRaises(ValueError):
-    #         R = record.make_type('1R', ['a', 'b'])
-    #     with self.assertRaises(ValueError):
-    #         R = record.make_type('R', ['1a', 'b'])
-    #
-    # def test_rename(self):
-    #     # Use some invalid fieldnames and check that they are renamed
-    #     # appropriately
-    #     # [keyword, evaluates to not, digit, starts with underscore]
-    #     fieldnames = ['for', 'None', '1', '_']
-    #     R = record.make_type('R', fieldnames, rename=True)
-    #     for i, fieldname in enumerate(fieldnames):
-    #         self.assertEqual(R._fieldnames[i], '_{0}'.format(i))
-    #
-    #     # Test that duplicate fieldname is renamed
-    #     fieldnames = ['a', 'a']
-    #     R = record.make_type('R', fieldnames, rename=True)
-    #     self.assertEqual(R._fieldnames[1], '_1')
 
 
 if __name__ == '__main__':

@@ -20,14 +20,13 @@ def rectype(typename, fieldnames, rename=False):
     """
     Return a new subclass of ``collections.Sequence`` named typename.
 
-    The new subclass is used to create ``RecType`` objects that have
+    The new subclass is used to create ``rectype`` objects that have
     fields accessible by attribute lookup as well as being indexable
     and iterable. Per-field default values can be set which are assigned
     to fields that are not supplied a value when new instances of the
     subclass are initialised.
 
-    :param typename: Name of the ``RecType`` subclass to create,
-        e.g. ``'MyRecord'``.
+    :param typename: Name of the subclass to create, .g. ``'MyRecord'``.
     :param fieldnames: Can be a single string with each fieldname separated by
         whitespace and/or commas such as ``'x, y'``; a sequence of strings such
         as ``['x', 'y']`` and/or 2-tuples of the form ``(fieldname,
@@ -86,6 +85,7 @@ def rectype(typename, fieldnames, rename=False):
         _update=_update,
         _get_defaults=_get_defaults,
         _set_defaults=_set_defaults,
+        _items=_items,
         # Protected/internal methods and attributes:
         __slots__=tuple(fieldnames),
         _fieldnames_set=frozenset(fieldnames),
@@ -131,7 +131,7 @@ def rectype(typename, fieldnames, rename=False):
 
 def __init__(self, *args, **kwargs):
     """
-    Return a new ``RecType`` object initialised from an optional positional
+    Return a new ``rectype`` object initialised from an optional positional
     argument and optional keyword arguments:
 
     | *class* **SomeRecType**\ (***kwargs*)
@@ -195,7 +195,7 @@ def _update(self, *args, **kwargs):
     Update field values with values from an optional positional argument
     and a possibly empty set of keyword arguments.
 
-    This method has the following forms:
+    This method has the following call profiles:
 
         | somerec.\ **_update**\ (***kwargs*)
         | somerec.\ **_update**\ (*mapping, **kwargs*)
@@ -203,7 +203,7 @@ def _update(self, *args, **kwargs):
 
     :param *args: Optional positional argument which can be a mapping of
         fieldname/field_value pairs or an iterable of field values which
-        are in the same order as the fieldnames in the ``_fieldnames``
+        are in the same order as the fieldnames listed in the ``_fieldnames``
         class attribute.
     :param **kwargs: Keyword arguments in which each keyword must match a
         fieldname of the record. Keyword arguments can be supplied on their
@@ -249,6 +249,14 @@ def _update(self, *args, **kwargs):
     for fieldname, value in field_values.items():
         setattr(self, fieldname, value)
 
+
+def _items(self):
+    """
+    Return a list of ``(fieldname, value)`` 2-tuples.
+    """
+    return list(zip(self._fieldnames, self))
+
+
 @classmethod
 def _get_defaults(cls):
     """
@@ -257,6 +265,7 @@ def _get_defaults(cls):
     default values are set an empty ``dict`` is returned.
     """
     return cls._defaults
+
 
 @classmethod
 def _set_defaults(cls, defaults):
@@ -305,6 +314,7 @@ def _check_fieldnames_exist(cls, fieldnames):
         if fieldname not in cls._fieldnames:
             raise ValueError('field {0!r} is not defined'.format(fieldname))
 
+
 @classmethod
 def _check_all_fields_defined(cls, fieldnames):
     """
@@ -314,6 +324,7 @@ def _check_all_fields_defined(cls, fieldnames):
     for fieldname in cls._fieldnames:
         if fieldname not in fieldnames:
             raise ValueError('field {0!r} is not defined'.format(fieldname))
+
 
 @classmethod
 def _check_kwargs(cls, kwargs):
@@ -326,6 +337,7 @@ def _check_kwargs(cls, kwargs):
             raise TypeError(
                 'keyword argument {0!r} does not match a field'
                 .format(fieldname))
+
 
 @property
 def __dict__(self):
@@ -380,11 +392,13 @@ def __setitem__(self, index, value):
         for field, v in zip(fields, value):
             setattr(self, field, v)
 
+
 def __getstate__(self):
     """
     Return self as a tuple to allow the record to be pickled.
     """
     return tuple(self)
+
 
 def __setstate__(self, state):
     """
@@ -393,6 +407,7 @@ def __setstate__(self, state):
     for attr, value in zip(self.__slots__, state):
         setattr(self, attr, value)
 
+
 def __iter__(self):
     """
     Iterate over fields.
@@ -400,19 +415,21 @@ def __iter__(self):
     for getter in self._attr_getters:
         yield getter(self)
 
+
 def __len__(self):
     return len(self.__slots__)
+
 
 def __repr__(self):
     return '{}({})'.format(
         self.__class__.__name__, ', '.join('{}={}'.format(
             attr, repr(getattr(self, attr))) for attr in self.__slots__))
 
+
 def __str__(self):
     return '{}({})'.format(
         self.__class__.__name__, ', '.join('{}={}'.format(
             attr, str(getattr(self, attr))) for attr in self.__slots__))
-
 
 # ------------------------------------------------------------------------------
 # Helper functions
