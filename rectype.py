@@ -16,7 +16,6 @@ __version__ = '0.0.0'
 __author__ = 'Mark Richards'
 __email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
 
-
 def rectype(typename, fieldnames, rename=False):
     """
     Return a new ``RecType`` subclass named typename.
@@ -433,8 +432,7 @@ class RecType(collections.Sequence):
         """
         Return a new ``OrderedDict`` which maps fieldnames to their values.
         """
-        return collections.OrderedDict(
-            [(k, getattr(self, k)) for k in self.__slots__])
+        return collections.OrderedDict(zip(self._fieldnames, self))
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__)
