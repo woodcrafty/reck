@@ -18,7 +18,7 @@ __email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
 
 def rectype(typename, fieldnames, rename=False):
     """
-    Return a new ``RecType`` subclass named typename.
+    Return a new subclass of ``collections.Sequence`` named typename.
 
     The new subclass is used to create ``RecType`` objects that have
     fields accessible by attribute lookup as well as being indexable
@@ -64,29 +64,55 @@ def rectype(typename, fieldnames, rename=False):
         >>> p                                # y has been assigned a default value
         Point(x=1, y=None)
     """
-    RecType._check_typename(typename)
+    _check_typename(typename)
     if isinstance(fieldnames, collections.Mapping):
         # Convert mapping to a sequence of (fieldname, value) tuples
         fieldnames = list(fieldnames.items())
     elif isinstance(fieldnames, str):
         fieldnames = fieldnames.replace(',', ' ').split()
 
-    fieldnames, defaults = RecType._parse_fieldnames(fieldnames, rename)
+    fieldnames, defaults = _parse_fieldnames(fieldnames, rename)
 
-    # Create the __dict__ of the Record subclass
-    # An operator.attrgetter is stored for each field because it offers
-    # a slight speedup over getattr()
+    # Create the __dict__ of the Record subclass:
+    # The new type is composed from module-level functions rather than
+    # by subclassing a predefined Record base class because this offers
+    # approach offer greater flexibility for contructing different types
+    # in the future.
     # _fieldnames_set is used to provide fast membership testing
     type_dct = dict(
-        __slots__=tuple(fieldnames),
+        # API methods and attributes:
+        __init__=__init__,
         _fieldnames=tuple(fieldnames),
+        _update=_update,
+        _get_defaults=_get_defaults,
+        _set_defaults=_set_defaults,
+        # Protected/internal methods and attributes:
+        __slots__=tuple(fieldnames),
         _fieldnames_set=frozenset(fieldnames),
-        _defaults=defaults,
+        # An operator.attrgetter is stored for each field because it offers
+        # a slight speedup over getattr(). TODO: test that this holds true
+        # across platforms and python verions
         _attr_getters=tuple(
-            [operator.attrgetter(field) for field in fieldnames])
+            [operator.attrgetter(field) for field in fieldnames]),
+        _defaults=defaults,
+        _check_fieldnames_exist=_check_fieldnames_exist,
+        _check_all_fields_defined=_check_all_fields_defined,
+        _check_kwargs=_check_kwargs,
+        __dict__=__dict__,
+        __eq__=__eq__,
+        __ne__=__ne__,
+        __getstate__=__getstate__,
+        __setstate__=__setstate__,
+        __repr__=__repr__,
+        __str__=__str__,
+        # Sequence-like methods:
+        __getitem__=__getitem__,
+        __setitem__=__setitem__,
+        __iter__=__iter__,
+        __len__=__len__,
     )
 
-    rectype = type(typename, (RecType,), type_dct)
+    rectype = type(typename, (collections.Sequence,), type_dct)
 
     # Explanation from collections.namedtuple:
     # For pickling to work, the __module__ variable needs to be set to the
@@ -103,412 +129,382 @@ def rectype(typename, fieldnames, rename=False):
     return rectype
 
 
-class RecType(collections.Sequence):
+def __init__(self, *args, **kwargs):
     """
-    Base class for new record types. This class is not stand-alone.
+    Return a new ``RecType`` object initialised from an optional positional
+    argument and optional keyword arguments:
 
-    .. note:: To create subclasses of ``RecType`` use the :py:func:`rectype.rectype()` factory function.
+    | *class* **SomeRecType**\ (***kwargs*)
+    | *class* **SomeRecType**\ (*mapping, **kwargs*)
+    | *class* **SomeRecType**\ (*iterable, **kwargs*)
 
-    ``RecType`` supports the following public methods and attributes. To
-    prevent conflicts with fieldnames in subclasses, the method and
-    attribute names start with an underscore.
+    If a positional argument is given and it is a mapping object, a
+    record is created with values assigned to fields identified by
+    keys of the mapping. Keys pairs that do not match a fieldname are
+    ignored.
 
-    .. autoattribute:: _fieldnames
-    .. automethod:: _get_defaults
-    .. automethod:: _set_defaults
-    .. automethod:: _update
-    .. document private functions
+    The positional argument can also be an iterable object whose items
+    are in the same order as the fieldnames of the record type. If the
+    iterable provides too many values for the field the excess values
+    are ignored.
+
+    Keyword arguments can also be given to provide field values by
+    name. If a keyword argument provides a value for a field that
+    has already received a value, the value from the keyword argument
+    replaces the value from the positional argument. Keywords that
+    do not match a filename are ignored.
+
+    Any fields that do not have values defined by the positional or
+    keyword arguments will be assigned a field-specific default value,
+    if one has been defined.
+
+    If a default value is not available for a field that has not been
+    defined by the positional or keyword arguments a ValueError is
+    raised.
+
+    :raises: ``TypeError`` if more than one positional argument is passed
+         or if *kwargs* contains a keyword that does not match a fieldname.
     """
+    if len(args) > 1:
+        raise TypeError(
+            'expected at most 1 positional argument, got {0}'
+            .format(len(args)))
+    self._check_kwargs(kwargs)
 
-    __slots__ = ()
+    # Progressively assemble a dict representation of the record from
+    # the field defaults, the positional arg and the keyword args.
+    field_values = self._defaults.copy()
+    if args:
+        arg = args[0]
+        if isinstance(arg, collections.Mapping):
+            # Can't use update() here because it may not be implemented
+            for key in arg:
+                field_values[key] = arg[key]
+        else:
+            # args should be an iterable so convert it to a mapping
+            field_values.update(dict(zip(self._fieldnames, arg)))
+    field_values.update(kwargs)
 
-    #: Tuple of strings listing the fieldnames. Useful for introspection and
-    #: creating new record types from existing record types. This class
-    #: attribute is set when a RecType subclass is created by the
-    #: :py:func:`rectype.rectype()` factory function. Should not be
-    #: changed directly.
-    #:
-    #: Example usage::
-    #:
-    #:     >>> p._fieldnames       # view the fieldnames
-    #:     ('x', 'y')
-    #:     >>> Point3D = rectype('Point3D', Point._fieldnames + ['z'])
-    #:     >>> Point3D(x=1, y=2, z=3)
-    #:     Point3D(x=1, y=2, z=3)
-    _fieldnames = ()
+    self._check_all_fields_defined(field_values)
 
-    def __init__(self, *args, **kwargs):
-        """
-        Return a new ``RecType`` object initialised from an optional positional
-        argument and optional keyword arguments:
+    for fieldname, value in field_values.items():
+        setattr(self, fieldname, value)
 
-        | *class* **SomeRecType**\ (***kwargs*)
-        | *class* **SomeRecType**\ (*mapping, **kwargs*)
-        | *class* **SomeRecType**\ (*iterable, **kwargs*)
+def _update(self, *args, **kwargs):
+    """
+    Update field values with values from an optional positional argument
+    and a possibly empty set of keyword arguments.
 
-        If a positional argument is given and it is a mapping object, a
-        record is created with values assigned to fields identified by
-        keys of the mapping. Keys pairs that do not match a fieldname are
-        ignored.
+    This method has the following forms:
 
-        The positional argument can also be an iterable object whose items
-        are in the same order as the fieldnames of the record type. If the
-        iterable provides too many values for the field the excess values
-        are ignored.
+        | somerec.\ **_update**\ (***kwargs*)
+        | somerec.\ **_update**\ (*mapping, **kwargs*)
+        | somerec.\ **_update**\ (*iterable, **kwargs*)
 
-        Keyword arguments can also be given to provide field values by
-        name. If a keyword argument provides a value for a field that
-        has already received a value, the value from the keyword argument
-        replaces the value from the positional argument. Keywords that
-        do not match a filename are ignored.
+    :param *args: Optional positional argument which can be a mapping of
+        fieldname/field_value pairs or an iterable of field values which
+        are in the same order as the fieldnames in the ``_fieldnames``
+        class attribute.
+    :param **kwargs: Keyword arguments in which each keyword must match a
+        fieldname of the record. Keyword arguments can be supplied on their
+        own, or together with the positional argument.
+    :raises: ``TypeError`` if more than one positional argument is
+        supplied or a keyword argument does not match a fieldname.
 
-        Any fields that do not have values defined by the positional or
-        keyword arguments will be assigned a field-specific default value,
-        if one has been defined.
+    Example::
 
-        If a default value is not available for a field that has not been
-        defined by the positional or keyword arguments a ValueError is
-        raised.
+        >>> Rec = rectype('Rec', 'a b c')
+        >>> r = Rec(a=1, b=2, c=3)
+        >>> r._update(b=5, c=6)     # using keyword arguments
+        >>> r
+        Rec(a=1, b=2, c=3)
+        >>> r._update([2, 3], c=4)  # using an iterable and keyword arguments
+        >>> r
+        Rec(a=2, b=3, c=4)
+    """
+    if len(args) > 1:
+        raise TypeError(
+            'expected at most 1 positional argument, got {0}'
+            .format(len(args)))
+    self._check_kwargs(kwargs)
 
-        :raises: ``TypeError`` if more than one positional argument is passed
-             or if *kwargs* contains a keyword that does not match a fieldname.
-        """
-        if len(args) > 1:
+    # TODO: can this be made faster? e.g. by setattr the positionals
+    # then setattr the kwargs? In general use, kwargs probably won't
+    # repeat many of the fields from the positionals.
+
+    # Progressively assemble a dict representation of the record
+    field_values = {}
+    if args:
+        arg = args[0]
+        if isinstance(arg, collections.Mapping):
+            # Can't use dict.update() here because it may not be implemented
+            # in a custom mapping type
+            for key in arg:
+                field_values[key] = arg[key]
+        else:
+            # arg should be an iterable
+            field_values.update(zip(self._fieldnames, arg))
+    field_values.update(kwargs)
+
+    for fieldname, value in field_values.items():
+        setattr(self, fieldname, value)
+
+@classmethod
+def _get_defaults(cls):
+    """
+    Return a ``dict`` which maps fieldnames to their corresponding
+    default value. Fields with no default value are excluded. If no
+    default values are set an empty ``dict`` is returned.
+    """
+    return cls._defaults
+
+@classmethod
+def _set_defaults(cls, defaults):
+    """
+    Replace the existing per-field default values with a new set.
+
+    This can be useful if you wish to use the same record class in
+    different contexts which require different default values.
+
+    :param defaults: A mapping of fieldname/default_value pairs which is
+        used to replace the existing per-field default values. If a
+        field is not present in *defaults* it will not have a default
+        value. To remove all defaults set *defaults* to an empty mapping.
+    :raises: ``ValueError`` if a key in *defaults* does not match a
+        fieldname.
+
+    Example::
+
+        >>> Car = rectype('Car', [('make', 'Ford'), 'model', 'body_type')
+        >>> Rec._get_defaults()
+        {'make': 'Ford'}
+        >>> # Create some Ford cars:
+        >>> car1 = Car(model='Focus', body_type='coupe')
+        >>> car2 = Car(model='Mustang', body_type='saloon')
+        >>> # Now create hatchback cars of different makes. To make life
+        >>> # easier replace the defaults with something more appropriate:
+        >>> Rec._set_defaults(dict(body_type='hatchback'))
+        >>> Rec._get_defaults()   # note, 'make' no longer has a default
+        {'body_type': 'hatchback'}
+        >>> car3 = Car(model='Fiat', model='Panda')
+        >>> car4 = Car(model='Volkswagon', model='Golf')
+    """
+    cls._check_fieldnames_exist(defaults)
+    _defaults = {}
+    for fieldname, default_value in defaults.items():
+        _defaults[fieldname] = default_value
+    cls._defaults = _defaults
+
+
+@classmethod
+def _check_fieldnames_exist(cls, fieldnames):
+    """
+    Raise a ValueError if a fieldname does not exist in cls._fieldnames.
+    """
+    for fieldname in fieldnames:
+        if fieldname not in cls._fieldnames:
+            raise ValueError('field {0!r} is not defined'.format(fieldname))
+
+@classmethod
+def _check_all_fields_defined(cls, fieldnames):
+    """
+    Raise a ValueError if fieldnames does not contain all of the
+    fieldnames in cls._fieldnames.
+    """
+    for fieldname in cls._fieldnames:
+        if fieldname not in fieldnames:
+            raise ValueError('field {0!r} is not defined'.format(fieldname))
+
+@classmethod
+def _check_kwargs(cls, kwargs):
+    """
+    Check that every keyword argument in kwargs matches a fieldname. If
+    a keyword does not match a fieldname a ValueError is raised.
+    """
+    for fieldname in kwargs:
+        if fieldname not in cls._fieldnames_set:
             raise TypeError(
-                'expected at most 1 positional argument, got {0}'
-                .format(len(args)))
-        self._check_kwargs(kwargs)
+                'keyword argument {0!r} does not match a field'
+                .format(fieldname))
 
-        # Progressively assemble a dict representation of the record from
-        # the field defaults, the positional arg and the keyword args.
-        field_values = self._defaults.copy()
-        if args:
-            arg = args[0]
-            if isinstance(arg, collections.Mapping):
-                # Can't use update() here because it may not be implemented
-                for key in arg:
-                    field_values[key] = arg[key]
-            else:
-                # args should be an iterable so convert it to a mapping
-                field_values.update(dict(zip(self._fieldnames, arg)))
-        field_values.update(kwargs)
+@property
+def __dict__(self):
+    """
+    Return a new ``OrderedDict`` which maps fieldnames to their values.
+    """
+    return collections.OrderedDict(zip(self._fieldnames, self))
 
-        self._check_all_fields_defined(field_values)
+def __eq__(self, other):
+    return (isinstance(other, self.__class__)
+        and self.__dict__ == other.__dict__)
 
-        for fieldname, value in field_values.items():
-            setattr(self, fieldname, value)
+def __ne__(self, other):
+    return not self.__eq__(other)
 
-    def _update(self, *args, **kwargs):
-        """
-        Update the field values with values from an optional positional
-        argument and a possibly empty set of keyword arguments.
+def __getitem__(self, index):
+    """
+    Retrieve a field or slice of fields from the record using an index.
 
-        This method has the following forms:
+    Args:
+        index: int or slice object
+            Index can be an integer or slice object for normal sequence
+            item access.
+    Returns:
+        If index is an integer the value of the field corresponding to
+        the index is returned. If index is a slice a list of field values
+        corresponding to the slice indices is returned.
+    """
+    if isinstance(index, int):
+        return self._attr_getters[index](self)
+    # Slice object
+    return [getter(self) for getter in self._attr_getters[index]]
 
-            | somerec.\ **_update**\ (***kwargs*)
-            | somerec.\ **_update**\ (*mapping, **kwargs*)
-            | somerec.\ **_update**\ (*iterable, **kwargs*)
+def __setitem__(self, index, value):
+    """
+    Note: if index is a slice and value is longer than the slice then
+    the surplus values are discarded. This behaviour differs from that
+    of list.__setitem__ which inserts the surplus values into the list.
+    Similarly, if value contains too few values, the surplus fields are
+    left unaffected. With a list, the surplus items are deleted.
 
-        :param *args: Optional positional argument which can be a mapping of
-            fieldname/field_value pairs or an iterable of field values which
-            are in the same order as the fieldnames in the ``_fieldnames``
-            class attribute.
-        :param **kwargs: Keyword arguments in which each keyword must match a
-            fieldname of the record. Keyword arguments can be supplied on their
-            own, or together with the positional argument.
-        :raises: ``TypeError`` if more than one positional argument is
-            supplied or a keyword argument does not match a fieldname.
+    Args:
+        index: int or slice object
+            Index/slice to be set.
+        value: any
+            Value to set.
+    """
+    if isinstance(index, int):
+        setattr(self, self.__slots__[index], value)
+    else:  # Slice object
+        fields = self.__slots__[index]
+        for field, v in zip(fields, value):
+            setattr(self, field, v)
 
-        Example::
+def __getstate__(self):
+    """
+    Return self as a tuple to allow the record to be pickled.
+    """
+    return tuple(self)
 
-            >>> Rec = rectype('Rec', 'a b c')
-            >>> r = Rec(a=1, b=2, c=3)
-            >>> r._update(b=5, c=6)     # using keyword arguments
-            >>> r
-            Rec(a=1, b=2, c=3)
-            >>> r._update([2, 3], c=4)  # using an iterable and keyword arguments
-            >>> r
-            Rec(a=2, b=3, c=4)
-        """
-        if len(args) > 1:
-            raise TypeError(
-                'expected at most 1 positional argument, got {0}'
-                .format(len(args)))
-        self._check_kwargs(kwargs)
+def __setstate__(self, state):
+    """
+    Re-initialise the record from the unpickled tuple representation.
+    """
+    for attr, value in zip(self.__slots__, state):
+        setattr(self, attr, value)
 
-        # TODO: can this be made faster? e.g. by setattr the positionals
-        # then setattr the kwargs? In general use, kwargs probably won't
-        # repeat many of the fields from the positionsls.
+def __iter__(self):
+    """
+    Iterate over fields.
+    """
+    for getter in self._attr_getters:
+        yield getter(self)
 
-        # Progressively assemble a dict representation of the record update
-        # from the positional arg and the keyword args.
-        field_values = {}
-        if args:
-            arg = args[0]
-            if isinstance(arg, collections.Mapping):
-               # Can't use update() here because it may not be implemented
-                for key in arg:
-                    field_values[key] = arg[key]
-            else:
-                # arg should be an iterable
-                field_values.update(zip(self._fieldnames, arg))
-        field_values.update(kwargs)
+def __len__(self):
+    return len(self.__slots__)
 
-        for fieldname, value in field_values.items():
-            setattr(self, fieldname, value)
+def __repr__(self):
+    return '{}({})'.format(
+        self.__class__.__name__, ', '.join('{}={}'.format(
+            attr, repr(getattr(self, attr))) for attr in self.__slots__))
 
-    @classmethod
-    def _get_defaults(cls):
-        """
-        Return a ``dict`` which maps fieldnames to their corresponding
-        default value. Fields with no default value are excluded. If no
-        default values are set an empty ``dict`` is returned.
-        """
-        return cls._defaults
+def __str__(self):
+    return '{}({})'.format(
+        self.__class__.__name__, ', '.join('{}={}'.format(
+            attr, str(getattr(self, attr))) for attr in self.__slots__))
 
-    @classmethod
-    def _set_defaults(cls, defaults):
-        """
-        Replace the existing per-field default values with a new set.
 
-        This can be useful if you wish to use the same record class in
-        different contexts which require different default values.
+# ------------------------------------------------------------------------------
+# Helper functions
 
-        :param defaults: A mapping of fieldname/default_value pairs which is
-            used to replace the existing per-field default values. If a
-            field is not present in *defaults* it will not have a default
-            value. To remove all defaults set *defaults* to an empty mapping.
-        :raises: ``ValueError`` if a key in *defaults* does not match a
-            fieldname.
-
-        Example::
-
-            >>> Car = rectype('Car', [('make', 'Ford'), 'model', 'body_type')
-            >>> Rec._get_defaults()
-            {'make': 'Ford'}
-            >>> # Create some Ford cars:
-            >>> car1 = Car(model='Focus', body_type='coupe')
-            >>> car2 = Car(model='Mustang', body_type='saloon')
-            >>> # Now create hatchback cars of different makes. To make life
-            >>> # easier replace the defaults with something more appropriate:
-            >>> Rec._set_defaults(dict(body_type='hatchback'))
-            >>> Rec._get_defaults()   # note, 'make' no longer has a default
-            {'body_type': 'hatchback'}
-            >>> car3 = Car(model='Fiat', model='Panda')
-            >>> car4 = Car(model='Volkswagon', model='Golf')
-        """
-        cls._check_fieldnames_exist(defaults)
-        _defaults = {}
-        for fieldname, default_value in defaults.items():
-            _defaults[fieldname] = default_value
-        cls._defaults = _defaults
-
-    @classmethod
-    def _check_fieldname(cls, fieldname, used_names, rename, idx):
-        """
-        Raise a ValueError if fieldname is invalid or optionally rename it.
-
-        Args:
-            fieldname: string
-                The fieldname to check.
-            used_names: set
-                Set of fieldnames that have already been used.
-            rename: boolean
-                If True invalid fieldnames are replaced with a valid name.
-            idx: integer
-                Index of fieldname in the class fieldnames sequence. Used
-                in the renaming of invalid fieldnames.
-        Returns:
-            The fieldname, which may have been renamed if it was invalid and
-            rename is True.
-        Raises:
-            ValueError if the fieldname is invalid and rename is False.
-        """
-        try:
-            cls._common_name_check(fieldname, 'field')
-            if fieldname.startswith('_'):
-                raise ValueError(
-                    'fieldnames cannot start with an underscore: {0!r}'
-                    .format(fieldname))
-            if fieldname in used_names:
-                raise ValueError(
-                    'encountered duplicate fieldname: {0!r}'.format(fieldname))
-        except ValueError:
-            if rename:
-                return '_{0}'.format(idx)
-            raise
-        return fieldname
-
-    @classmethod
-    def _check_typename(cls, typename):
-        """
-        Raise a ValueError if typename is invalid.
-        """
-        cls._common_name_check(typename, 'type')
-
-    @staticmethod
-    def _common_name_check(name, nametype):
-        """
-        Perform check common to both typenames and fieldnames.
-        """
-        # if not isinstance(name, str):
-        #     raise TypeError(
-        #         '{0}names must be strings: {1:!r}'.format(nametype, name))
-        if not name.isidentifier():
-            raise ValueError(
-                '{0}names must be valid identifiers: {1:!r}'
-                .format(nametype, name))
-        if keyword.iskeyword(name):
-            raise ValueError(
-                '{0}names cannot be a keyword: {1!r}'.format(nametype, name))
-
-    @classmethod
-    def _parse_fieldnames(cls, fieldnames, rename):
-        """
-        Process a sequence of fieldnames/(fieldname, default) tuples,
-        creating a list of corrected fieldnames and a map of fieldname to
-        default-values.
-        """
-        defaults = {}
-        checked_fieldnames = []
-        used_names = set()
-        for idx, fieldname in enumerate(fieldnames):
-            if isinstance(fieldname, str):
-                has_default = False
-            else:
-                try:
-                    if len(fieldname) != 2:
-                        raise ValueError(
-                            'fieldname {0!r} must be a 2-tuple of the form '
-                            '(fieldname, default_value)'.format(fieldname))
-                except TypeError:
+def _parse_fieldnames(fieldnames, rename):
+    """
+    Process a sequence of fieldnames/(fieldname, default) tuples,
+    creating a list of corrected fieldnames and a map of fieldname to
+    default-values.
+    """
+    defaults = {}
+    checked_fieldnames = []
+    used_names = set()
+    for idx, fieldname in enumerate(fieldnames):
+        if isinstance(fieldname, str):
+            has_default = False
+        else:
+            try:
+                if len(fieldname) != 2:
                     raise ValueError(
                         'fieldname {0!r} must be a 2-tuple of the form '
                         '(fieldname, default_value)'.format(fieldname))
-                has_default = True
-                default = fieldname[1]
-                fieldname = fieldname[0]
+            except TypeError:
+                raise ValueError(
+                    'fieldname {0!r} must be a 2-tuple of the form '
+                    '(fieldname, default_value)'.format(fieldname))
+            has_default = True
+            default = fieldname[1]
+            fieldname = fieldname[0]
 
-            fieldname = cls._check_fieldname(fieldname, used_names, rename, idx)
-            checked_fieldnames.append(fieldname)
-            used_names.add(fieldname)
-            if has_default:
-                defaults[fieldname] = default
-        return checked_fieldnames, defaults
+        fieldname = _check_fieldname(fieldname, used_names, rename, idx)
+        checked_fieldnames.append(fieldname)
+        used_names.add(fieldname)
+        if has_default:
+            defaults[fieldname] = default
+    return checked_fieldnames, defaults
 
-    @classmethod
-    def _check_fieldnames_exist(cls, fieldnames):
-        """
-        Raise a ValueError if a fieldname does not exist in cls._fieldnames.
-        """
-        for fieldname in fieldnames:
-            if fieldname not in cls._fieldnames:
-                raise ValueError('field {0!r} is not defined'.format(fieldname))
 
-    @classmethod
-    def _check_all_fields_defined(cls, fieldnames):
-        """
-        Raise a ValueError if fieldnames does not contain all of the
-        fieldnames in cls._fieldnames.
-        """
-        for fieldname in cls._fieldnames:
-            if fieldname not in fieldnames:
-                raise ValueError('field {0!r} is not defined'.format(fieldname))
+def _check_fieldname(fieldname, used_names, rename, idx):
+    """
+    Raise a ValueError if fieldname is invalid or optionally rename it.
 
-    @classmethod
-    def _check_kwargs(cls, kwargs):
-        """
-        Check that every keyword argument in kwargs matches a fieldname. If
-        a keyword does not match a fieldname a ValueError is raised.
-        """
-        for fieldname in kwargs:
-            if fieldname not in cls._fieldnames_set:
-                raise TypeError(
-                    'keyword argument {0!r} does not match a field'
-                    .format(fieldname))
+    Args:
+        fieldname: string
+            The fieldname to check.
+        used_names: set
+            Set of fieldnames that have already been used.
+        rename: boolean
+            If True invalid fieldnames are replaced with a valid name.
+        idx: integer
+            Index of fieldname in the class fieldnames sequence. Used
+            in the renaming of invalid fieldnames.
+    Returns:
+        The fieldname, which may have been renamed if it was invalid and
+        rename is True.
+    Raises:
+        ValueError if the fieldname is invalid and rename is False.
+    """
+    try:
+        _common_name_check(fieldname, 'field')
+        if fieldname.startswith('_'):
+            raise ValueError(
+                'fieldnames cannot start with an underscore: {0!r}'
+                .format(fieldname))
+        if fieldname in used_names:
+            raise ValueError(
+                'encountered duplicate fieldname: {0!r}'.format(fieldname))
+    except ValueError:
+        if rename:
+            return '_{0}'.format(idx)
+        raise
+    return fieldname
 
-    @property
-    def __dict__(self):
-        """
-        Return a new ``OrderedDict`` which maps fieldnames to their values.
-        """
-        return collections.OrderedDict(zip(self._fieldnames, self))
 
-    def __eq__(self, other):
-        return (isinstance(other, self.__class__)
-            and self.__dict__ == other.__dict__)
+def _check_typename(typename):
+    """
+    Raise a ValueError if typename is invalid.
+    """
+    _common_name_check(typename, 'type')
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
-    def __getitem__(self, index):
-        """
-        Retrieve a field or slice of fields from the record using an index.
-
-        Args:
-            index: int or slice object
-                Index can be an integer or slice object for normal sequence
-                item access.
-        Returns:
-            If index is an integer the value of the field corresponding to
-            the index is returned. If index is a slice a list of field values
-            corresponding to the slice indices is returned.
-        """
-        if isinstance(index, int):
-            return self._attr_getters[index](self)
-        # Slice object
-        return [getter(self) for getter in self._attr_getters[index]]
-
-    def __setitem__(self, index, value):
-        """
-        Note: if index is a slice and value is longer than the slice then
-        the surplus values are discarded. This behaviour differs from that
-        of list.__setitem__ which inserts the surplus values into the list.
-        Similarly, if value contains too few values, the surplus fields are
-        left unaffected. With a list, the surplus items are deleted.
-
-        Args:
-            index: int or slice object
-                Index/slice to be set.
-            value: any
-                Value to set.
-        """
-        if isinstance(index, int):
-            setattr(self, self.__slots__[index], value)
-        else:  # Slice object
-            fields = self.__slots__[index]
-            for field, v in zip(fields, value):
-                setattr(self, field, v)
-
-    def __getstate__(self):
-        """
-        Return self as a tuple to allow the record to be pickled.
-        """
-        return tuple(self)
-
-    def __setstate__(self, state):
-        """
-        Re-initialise the record from the unpickled tuple representation.
-        """
-        for attr, value in zip(self.__slots__, state):
-            setattr(self, attr, value)
-
-    def __iter__(self):
-        """
-        Iterate over fields.
-        """
-        for getter in self._attr_getters:
-            yield getter(self)
-
-    def __len__(self):
-        return len(self.__slots__)
-
-    def __repr__(self):
-        return '{}({})'.format(
-            self.__class__.__name__, ', '.join('{}={}'.format(
-                attr, repr(getattr(self, attr))) for attr in self.__slots__))
-
-    def __str__(self):
-        return '{}({})'.format(
-            self.__class__.__name__, ', '.join('{}={}'.format(
-                attr, str(getattr(self, attr))) for attr in self.__slots__))
+def _common_name_check(name, nametype):
+    """
+    Perform check common to both typenames and fieldnames.
+    """
+    # if not isinstance(name, str):
+    #     raise TypeError(
+    #         '{0}names must be strings: {1:!r}'.format(nametype, name))
+    if not name.isidentifier():
+        raise ValueError(
+            '{0}names must be valid identifiers: {1:!r}'
+            .format(nametype, name))
+    if keyword.iskeyword(name):
+        raise ValueError(
+            '{0}names cannot be a keyword: {1!r}'.format(nametype, name))
