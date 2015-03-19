@@ -108,7 +108,6 @@ def rectype(typename, fieldnames, rename=False):
         # Sequence-like methods:
         __getitem__=__getitem__,
         __setitem__=__setitem__,
-        __iter__=__iter__,
         __len__=__len__,
     )
 
@@ -346,12 +345,15 @@ def __dict__(self):
     """
     return collections.OrderedDict(zip(self._fieldnames, self))
 
+
 def __eq__(self, other):
     return (isinstance(other, self.__class__)
         and self.__dict__ == other.__dict__)
 
+
 def __ne__(self, other):
     return not self.__eq__(other)
+
 
 def __getitem__(self, index):
     """
@@ -370,6 +372,7 @@ def __getitem__(self, index):
         return self._attr_getters[index](self)
     # Slice object
     return [getter(self) for getter in self._attr_getters[index]]
+
 
 def __setitem__(self, index, value):
     """
@@ -406,14 +409,6 @@ def __setstate__(self, state):
     """
     for attr, value in zip(self.__slots__, state):
         setattr(self, attr, value)
-
-
-def __iter__(self):
-    """
-    Iterate over fields.
-    """
-    for getter in self._attr_getters:
-        yield getter(self)
 
 
 def __len__(self):
