@@ -17,7 +17,7 @@ to ``collections.namedtuple``, with the following differences:
 
 * rectype field values are mutable.
 * rectype supports optional per-field default values (including default
-factory functions).
+  factory functions).
 * rectype classes can have more than 255 fields.
 * rectype instances are based on slots so require slightly less memory
 
