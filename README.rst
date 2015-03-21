@@ -9,19 +9,20 @@ rectype
 
 Overview
 ========
-``rectype`` is a Python package for creating lightweight custom
+Rectype is a Python package for creating lightweight custom
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_ types.
 
-``rectype`` provides a factory function ``rectype.rectype`` which is similar
+Rectype provides a factory function ``rectype.rectype()`` which is similar
 to ``collections.namedtuple``, with the following differences:
 
-* ``rectype`` field values are mutable.
-* ``rectype`` supports optional per-field default values.
-* ``rectype`` classes can have more than 255 fields.
-* ``rectype`` instances are based on slots so require slightly less memory
+* rectype field values are mutable.
+* rectype supports optional per-field default values (including default
+factory functions).
+* rectype classes can have more than 255 fields.
+* rectype instances are based on slots so require slightly less memory
 
-Like namedtuples, classes created by ``rectype`` have fields accessible by
-attribute lookup as well as being indexable and iterable.
+Like namedtuples, classes created by ``rectype.rectype()`` have fields
+accessible by attribute lookup as well as being indexable and iterable.
 
 Quick Start
 ===========
