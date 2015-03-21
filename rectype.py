@@ -16,6 +16,46 @@ __version__ = '0.0.0'
 __author__ = 'Mark Richards'
 __email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
 
+
+class DefaultFactory(object):
+    """
+    Tag a default value as a factory function.
+
+    To call the wrapped factory function call the DefaultFactory instance
+    itself::
+
+        >>> default = DefaultFactory(list)
+        >>> if isinstance(default, DefaultFactory):
+        ...     default()   # Call the default
+
+    Can be used to wrap default values::
+        >>> Car = rectype.rectype('Car', [
+        ...     'make',
+        ...     'model',
+        ...     ('colours', rectype.DefaultFactory(list))]
+        >>> car = Car(make='Lotus', model='Exige')
+        >>> car.colours.append('Orange')
+        >>> car.colours.append('Grey')
+        Car(name=Lotus, model=Exige, colours=['Orange', 'Grey'])
+
+    :param factory_func: the callable object to be invoked as a default
+        factory function (with *args* and *kwargs* if provided).
+    :param args: a tuple of arguments for the factory function invocation.
+    :param kwargs: a dictionary of keyword arguments for the factory function
+        invocation.
+    """
+    def __init__(self, factory_func, args=(), kwargs={}):
+        self._factory_func = factory_func
+        self._args = args
+        self._kwargs = kwargs
+
+    def __call__(self):
+        return self._factory_func(*self._args, **self._kwargs)
+
+    def __repr__(self):
+        return 'DefaultFactory({0!r})'.format(self._factory_func)
+
+
 def rectype(typename, fieldnames, rename=False):
     """
     Return a new subclass of ``collections.Sequence`` named typename.
@@ -187,7 +227,12 @@ def __init__(self, *args, **kwargs):
     self._check_all_fields_defined(field_values)
 
     for fieldname, value in field_values.items():
-        setattr(self, fieldname, value)
+        if isinstance(value, DefaultFactory):
+            # Call the default factory function
+            v = value()
+            setattr(self, fieldname, value())
+        else:
+            setattr(self, fieldname, value)
 
 def _update(self, *args, **kwargs):
     """
@@ -231,7 +276,7 @@ def _update(self, *args, **kwargs):
     # then setattr the kwargs? In general use, kwargs probably won't
     # repeat many of the fields from the positionals.
 
-    # Progressively assemble a dict representation of the record
+    # Progressively assemble a dict representation of the new record state
     field_values = {}
     if args:
         arg = args[0]
@@ -239,14 +284,15 @@ def _update(self, *args, **kwargs):
             # Can't use dict.update() here because it may not be implemented
             # in a custom mapping type
             for key in arg:
-                field_values[key] = arg[key]
+                if key in self._fieldnames_set:
+                    field_values[key] = arg[key]
         else:
             # arg should be an iterable
             field_values.update(zip(self._fieldnames, arg))
     field_values.update(kwargs)
 
     for fieldname, value in field_values.items():
-        setattr(self, fieldname, value)
+            setattr(self, fieldname, value)
 
 
 def _items(self):

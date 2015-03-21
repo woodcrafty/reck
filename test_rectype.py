@@ -43,6 +43,15 @@ class TestRecType(unittest.TestCase):
         rec = Rec([1])
         self.assertEqual(rec.ab, 1)
 
+        # With DefaultFactory
+        Rec = rectype.rectype('Rec', ['a', ('b', rectype.DefaultFactory(list))])
+        rec = Rec(a=1)
+        self.assertEqual(rec.a, 1)
+        self.assertEqual(rec.b, [])
+        rec.b.append(2)
+        rec.b.append(3)
+        self.assertEqual(rec.b, [2, 3])
+
     def test_rectype_with_mapping(self):
         # Use lots of fields to check that field order is preserved
         nfields = 50
@@ -72,6 +81,59 @@ class TestRecType(unittest.TestCase):
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
         self.assertEqual(rec.c, 3)
+
+    def test_rectype_with_default_factory(self):
+        # default factory with no args/kwargs
+        Rec = rectype.rectype('Rec', ['a', ('b', rectype.DefaultFactory(list))])
+        rec1 = Rec(a=1)
+        rec2 = Rec(a=1)
+        self.assertEqual(rec1.a, 1)
+        self.assertEqual(rec1.b, [])
+        rec1.b.append(2)
+        rec1.b.append(3)
+        self.assertEqual(rec1.b, [2, 3])
+        self.assertNotEqual(rec1.b, rec2.b)
+        self.assertEqual(rec2.b, [])
+
+        # default factory with args
+        Rec = rectype.rectype('Rec', [
+            'a',
+            ('b', rectype.DefaultFactory(list, args=([1, 2],)))])
+        rec1 = Rec(a=1)
+        rec2 = Rec(a=1)
+        self.assertEqual(rec1.a, 1)
+        self.assertEqual(rec1.b, [1, 2])
+        rec1.b.append(3)
+        self.assertEqual(rec1.b, [1, 2, 3])
+        self.assertNotEqual(rec1.b, rec2.b)
+        self.assertEqual(rec2.b, [1, 2])
+
+        # default factory with kwargs
+        Rec = rectype.rectype('Rec', [
+            'a',
+            ('b', rectype.DefaultFactory(dict, kwargs=dict(val1=1, val2=2)))])
+        rec1 = Rec(a=1)
+        rec2 = Rec(a=1)
+        self.assertEqual(rec1.a, 1)
+        self.assertEqual(rec1.b, {'val1': 1, 'val2': 2})
+        rec1.b['val3'] = 3
+        self.assertEqual(rec1.b, dict(val1=1, val2=2, val3=3))
+        self.assertNotEqual(rec1.b, rec2.b)
+        self.assertEqual(rec2.b, dict(val1=1, val2=2))
+
+        # default factory with args and kwargs
+        Rec = rectype.rectype('Rec', [
+            'a',
+            ('b', rectype.DefaultFactory(
+                dict, args=([('val1', 1)],), kwargs=dict(val2=2)))])
+        rec1 = Rec(a=1)
+        rec2 = Rec(a=1)
+        self.assertEqual(rec1.a, 1)
+        self.assertEqual(rec1.b, {'val1': 1, 'val2': 2})
+        rec1.b['val3'] = 3
+        self.assertEqual(rec1.b, dict(val1=1, val2=2, val3=3))
+        self.assertNotEqual(rec1.b, rec2.b)
+        self.assertEqual(rec2.b, dict(val1=1, val2=2))
 
     def test_bad_typename(self):
         with self.assertRaises(ValueError):
@@ -152,7 +214,7 @@ class TestRecType(unittest.TestCase):
         self.assertEqual(rec.field_a, 5)
 
     # ==========================================================================
-    # Test intialisation
+    # Test initialisation
 
     def test_init_with_mapping(self):
         rec = Rec(dict(a=1, b=2))
