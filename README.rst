@@ -21,10 +21,10 @@ to ``collections.namedtuple``, with the following differences:
 * rectype classes can have more than 255 fields.
 * rectype instances are based on slots so require slightly less memory
 
-Like namedtuples, classes created by ``rectype.rectype()`` have fields
-accessible by attribute lookup as well as being indexable and iterable.
+Like namedtuples, rectypes have fields accessible by attribute lookup as well
+as being indexable and iterable.
 
-Quick Start
+Quick start
 ===========
 First, create a ``rectype`` like you would create a ``namedtuple`` type::
 
