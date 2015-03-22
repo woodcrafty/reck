@@ -407,6 +407,8 @@ class TestRecType(unittest.TestCase):
         # Test slicing
         slice = rec[:3]
         self.assertEqual(slice, [1, 2, 3])
+        slice = rec[:3:2]
+        self.assertEqual(slice, [1, 3])
 
         # Test that passing an non-int/str/slice object raises a TypeError
         with self.assertRaises(TypeError):
