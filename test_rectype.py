@@ -9,6 +9,57 @@ import rectype
 Rec = rectype.rectype('Rec', ['a', 'b'])
 
 
+class TestDefaultFactory(unittest.TestCase):
+
+    def test_call(self):
+        # With no args
+        df = rectype.DefaultFactory(list)
+        self.assertEqual(df(), [])
+        df = rectype.DefaultFactory(dict)
+        self.assertEqual(df(), {})
+
+        # With an arg
+        df = rectype.DefaultFactory(list, args=[(1, 2, 3)])
+        self.assertEqual(df(), [1, 2, 3])
+        df = rectype.DefaultFactory(dict, args=[[('a', 1), ('b', 2)]])
+        self.assertEqual(df(), {'a': 1, 'b': 2})
+
+        # With kwargs
+        df = rectype.DefaultFactory(dict, kwargs={'a': 1, 'b': 2})
+        self.assertEqual(df(), {'a': 1, 'b': 2})
+
+        # With args and kwargs
+        df = rectype.DefaultFactory(
+            dict, args=[[('a', 1)]], kwargs={'b': 2, 'c': 3})
+        self.assertEqual(df(), {'a': 1, 'b': 2, 'c': 3})
+
+    def test_repr(self):
+        # no args/kwargs
+        df = rectype.DefaultFactory(list)
+        self.assertEqual(
+            repr(df), 'DefaultFactory({0!r}, args=(), kwargs={{}})'.format(list))
+
+        # with an arg
+        df = rectype.DefaultFactory(list, args=([1, 2],))
+        self.assertEqual(
+            repr(df),
+            'DefaultFactory({0!r}, args=([1, 2],), kwargs={{}})'.format(list))
+        # multiple args
+        df = rectype.DefaultFactory(list, args=(1,2))
+        self.assertEqual(
+            repr(df),
+            'DefaultFactory({0!r}, args=(1, 2), kwargs={{}})'.format(list))
+
+        # with args & kwargs
+        kwargs = dict(b=2, c=3)
+        df = rectype.DefaultFactory(
+            dict, args=[[('a', 1)]], kwargs=kwargs)
+        self.assertEqual(
+            repr(df),
+            "DefaultFactory({0!r}, args=[[('a', 1)]], "
+                "kwargs={1!r})".format(dict, kwargs))
+
+
 class TestRecType(unittest.TestCase):
     # ==========================================================================
     # Test record type creation

@@ -19,24 +19,27 @@ __email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
 
 class DefaultFactory(object):
     """
-    Tag a default value as a factory function.
+    Wrap a default factory function.
 
-    To call the wrapped factory function call the DefaultFactory instance
+    This is used to identify a default value which is a factory function and
+    allow it to be called with optional positional and keyword arguments. To
+    call the wrapped factory function simply call the DefaultFactory instance
     itself::
 
-        >>> default = DefaultFactory(list)
-        >>> if isinstance(default, DefaultFactory):
-        ...     default()   # Call the default
+        >>> default = DefaultFactory(list)           # wrap the list factory func
+        >>> if isinstance(default, DefaultFactory):  # is default a factory func?
+        ...     default()   # Call the default       # call the wrapped factory func
 
     Can be used to wrap default values::
+
         >>> Car = rectype.rectype('Car', [
         ...     'make',
         ...     'model',
         ...     ('colours', rectype.DefaultFactory(list))]
         >>> car = Car(make='Lotus', model='Exige')
         >>> car.colours.append('Orange')
-        >>> car.colours.append('Grey')
-        Car(name=Lotus, model=Exige, colours=['Orange', 'Grey'])
+        >>> car.colours.append('Green')
+        Car(name='Lotus', model='Exige', colours=['Orange', 'Green'])
 
     :param factory_func: the callable object to be invoked as a default
         factory function (with *args* and *kwargs* if provided).
@@ -53,7 +56,15 @@ class DefaultFactory(object):
         return self._factory_func(*self._args, **self._kwargs)
 
     def __repr__(self):
-        return 'DefaultFactory({0!r})'.format(self._factory_func)
+        # if self._args:
+        #
+        #     argstxt = ', '.join([str(value) for value in self._args])
+        #     argstxt += '{0!r}={1!r}, '.join(
+        #         [(k, v) for k, v in self._kwargs.items()])
+        #     return ('DefaultFactory({0!r}({1}))'
+        #         .format(self._factory_func, argstxt))
+        return 'DefaultFactory({0!r}, args={1!r}, kwargs={2!r})'.format(
+            self._factory_func, self._args, self._kwargs)
 
 
 def rectype(typename, fieldnames, rename=False):
@@ -229,7 +240,7 @@ def __init__(self, *args, **kwargs):
     for fieldname, value in field_values.items():
         if isinstance(value, DefaultFactory):
             # Call the default factory function
-            v = value()
+            v = value()  # TODO: remove this
             setattr(self, fieldname, value())
         else:
             setattr(self, fieldname, value)
