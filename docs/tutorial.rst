@@ -28,7 +28,7 @@ Field values are mutable::
     >>> p
     Rec(name='Idle', age=42)
 
-You can specify per-field default values when creating the type::
+You can specify per-field default values when creating a ``rectype``::
 
     >>> Person = rectype('Person', [('name', None), ('age', None)])
     >>> p = Person(name='Eric')
@@ -55,8 +55,8 @@ New types are created with the ``rectype.rectype()`` factory function, e.g.::
 
     >>> Point = rectype(typename='Point', fieldnames=['x', 'y'], rename=False)
 
-Setting fieldnames without defaults
------------------------------------
+Setting fieldnames
+------------------
 If no default values are required *fieldnames* can be a sequence
 of strings or a single string of space and/or comma separated fieldnames. These
 3 examples are equivalent::
@@ -79,9 +79,9 @@ fieldnames with position names::
     >>> Rec._fieldnames    # keyword 'def' and duplicate fieldname 'abc' have been renamed
     ('abc', '_1', 'ghi', '_3')
 
-Setting fieldnames with defaults
---------------------------------
-If per-field default values are required the *fieldnames* can be a sequence
+Setting defaults
+----------------
+If per-field default values are required *fieldnames* can be a sequence
 of (fieldname, default_value) 2-tuples::
 
     >>> Point3D = rectype('Point3D', [('x', None), ('y', None), ('z', None])
@@ -99,11 +99,11 @@ A default does not have to be supplied for every field::
 All fields without a default value must be given a value during instantiation,
 otherwise a ValueError will be raised::
 
-    >>> p = Point3D(z=1)
+    >>> p = Point3D(x=1)
     ValueError: field 'z' is not defined
 
 Per-field defaults can also be specified using an ordered mapping such as
-an ``collections.OrderedDict``::
+a ``collections.OrderedDict``::
 
     >>> from collections import OrderedDict
     >>> Point3D = rectype('Point3D', OrderedDict([
@@ -114,13 +114,15 @@ an ``collections.OrderedDict``::
     >>> p
     Point3D(x=None, y=99, z=None)
 
+**Warning:** only use immutable types as default field values in the same
+way that
+
 Instantiation
 =============
-
-So far objects have been instantiated using keyword arguements to specify the
+So far objects have been instantiated using keyword arguments to specify the
 field values. However, rectype instances can be initialised in the same way as
-a dict, by using a mapping, an iterable, keyword arguments, or a combination of
-a mapping/iterable and keyword arguments. The following examples all return a
+a ``dict``, by using a mapping, an iterable, keyword arguments, or a combination
+of a mapping/iterable and keyword arguments. The following examples all return a
 ``rectype`` equivalent to ``Point3D(x=1, y=2, z=3)``::
 
     >>> p = Point3D(dict(x=1, y=2, z=3))   # using a mapping
@@ -131,7 +133,7 @@ a mapping/iterable and keyword arguments. The following examples all return a
     Point3D(x=1, y=2, z=3)
 
 ``rectype`` instances are iterable so they can be used to initialise
-other ``rectype`` instances::
+other ``rectype`` instances of the same class::
 
     >>> p2 = Point3D(p)
     >>> p2 == p
@@ -148,14 +150,20 @@ Selection by attribute lookup
 Fields are accessible by attribute lookup::
 
     >>> p = Point3D(x=1, y=2, z=3)
-    >>> p.c
+    >>> p.z
     3
 
 The fields of ``rectype`` instances are are mutable, meaning they can be
 modified after creation::
 
-    >>> p.c = 33
-    >>> p.c
+    >>> p.z = 33
+    >>> p.z
+    33
+
+To retrieve a field whose name is stored in a string, use the ``getattr()``
+built-in::
+
+    >>> getattr(p, 'z')
     33
 
 Selection by position
@@ -176,11 +184,12 @@ Setting works as well::
     >>> p
     Point3D(x=10, y=11, z=33)
 
-If the iterable being assigned to the slice is longer than the slice, the
-excess iterable items are ignored::
+Note, slice behaviour is different to that of ``list``. If the iterable being
+assigned to the slice is longer than the slice, the excess iterable items are
+ignored::
 
     >>> p[:3] = [1, 2, 3, 4, 5]   # Slice has 3 items, the iterable has 5
-    >>> p                         # The last 2 items were discarded
+    >>> p                         # The last 2 items of the iterable were ignored
     Point3D(x=1, y=2, z=3)
 
 Likewise, if the iterable contains fewer items than the slice, the surplus
@@ -214,11 +223,12 @@ A dictionary of fieldname/default_value pairs can be obtained with the
 
 The existing per-field default values can be replaced using the
 ``_set_defaults()`` class method. Just supply it with a mapping of the
-fieldnames to their default values::
+fieldnames to their default values. Fields not included in the mapping
+will no longer have a default value set::
 
-    >>> Point3D._set_defaults(dict(x=7, y=8)
-    >>> Point3D._get_defaults()   # field 'z' was not supplied a default
-    {'x': 7, 'y': 8}
+    >>> Point3D._set_defaults(dict(x=7, z=9))
+    >>> Point3D._get_defaults()   # field 'y' was not supplied a default value so no longer has one
+    {'x': 7, 'z': 9}
 
 To remove all default field value just pass in an empty mapping::
 
@@ -243,8 +253,6 @@ class in different contexts that require different default values::
         >>> car3 = Car(model='Fiat', model='Panda')
         >>> car4 = Car(model='Volkswagon', model='Golf')
 
-Operations
-==========
 Iteration
 ---------
 Field values can be iterated over::
@@ -256,7 +264,7 @@ Field values can be iterated over::
     2
     3
 
-If you need the fieldnames as well as values you can use the ``_items`` method
+If you need the fieldnames as well as values you can use the ``_items()`` method
 which returns a list of (fieldname, value) tuples::
 
     >>> for fieldname, value in p._items():
@@ -264,6 +272,36 @@ which returns a list of (fieldname, value) tuples::
     x 1
     y 2
     z 3
+
+Miscellaneous operations
+========================
+Rectypes support various operations that are demonstrated below::
+
+    >>> p = Point3D(x=1, y=2, z=3)
+    >>> len(p)              # get the number of fields in the record
+    3
+    >>> 4 in p              # supports membership testing using the in operator
+    False
+    >>> 4 not in p
+    True
+    >>> iterator = iter(p)  # supports iterators
+    >>> next(iterator)
+    1
+    >>> next(iterator)
+    2
+    >>> reverse_iterator = reversed(p)  # iterate in reverse
+    >>> next(reverse_iterator)
+    3
+    >>> next(reverse_iterator)
+    2
+    >>> p.index(2)          # get the index of the first occurrence of a value
+    1
+    >>> p._update(x=1, y=3, x=3)
+    >>> p.count(3)          # find out how many times does a value occur in the record
+    2
+    >>> vars(p)             # return an OrderedDict mapping fieldnames to values
+    OrderedDict([('x': 1), ('y': 2), ('z': 3)])
+
 
 Pickling
 --------
@@ -274,17 +312,45 @@ Instances can be pickled::
     >>> pickled_p == p
     True
 
-Immutable structure
-===================
-Objects of ``rectype`` classes are based on slots, so new fields cannot be
-added after object creation::
+Subclassing
+===========
+Since rectypes are normal Python classes it is easy to add or change
+functionality with a subclass. Here is how to add a calculated field and a
+fixed-width print format::
 
+    >>> class Point(rectype('Point', 'x y')):
+    ...    __slots__ = ()
+    ...    @property
+    ...    def hypotenuse(self):
+    ...        return (self.x ** 2 + self.y ** 2) ** 0.5
+    ...    def __str__(self):
+    ...        return 'Point: x={0} y={1} z={2}'.format(self.x, self.y, self.hypotenuse)
+    >>> p = Point(x=3, y=4)
+    >>> print(p)
+    Point: x=3 y=4 z=5.0
+
+The subclass shown above sets __slots__ to an empty tuple. This helps keep
+memory requirements low by preventing the creation of instance dictionaries.
+
+
+Adding fields/attributes
+========================
+Because ``rectype`` classes are based on slots, new fields cannot be added
+after object creation::
+
+    >>> Point = rectype('Point', 'x y')
+    >>> p = Point([1, 2])
     >>> p.new_attribute = 4   # Can't do this!
     AttributeError                  Traceback (most recent call last)
     <ipython-input-8-55738ba62948> in <module>()
     ----> 1 rec.c = 3
 
     AttributeError: 'Point3D' object has no attribute 'new_attribute'
+
+Subclassing is also not useful for adding new attributes. Instead, simply
+create a new rectype from the _fieldnames attribute:
+
+    >>> Point3D = rectype('Point3D', Point._fieldnames + ('z',))
 
 Memory usage
 ============
@@ -307,10 +373,25 @@ rather than a per-instance dictionary to store attributes::
     288
 
 They use much less memory than an equivalent ``dict`` and slightly less than
-an equivalent ``namedtuple``.
+an equivalent ``namedtuple``. The memory saving can be significant if you
+have a large number of instances (e.g. hundreds of thousands), especially on
+a low memory device.
+
+Choosing a data type
+====================
+Believe it or not, ``rectypes`` are not always the best data type to use.
+Depending on your use-case other data types may be more appropriate:
+
+* records may be a good choice when one or more of the following are true:
+    - the data has a static structure but dynamic values
+    - the data set consists of a very large number of instances
+    - the data has more than 255 fields
+* named tuples are suitable for data with a static structure
+* dictionaries should be used when the structure of the data is dynamic
+* SimpleNamespace (available in in Python 3.3+) is suitable when the structure of the data is dynamic and attribute access is required
+* classes are needed when you need to add methods to objects
 
 TODO:
-adding new field
-subclassing
-operations (in brief using single lines of code with comments)
+| Demo factory default
+| More than 255 fields
 
