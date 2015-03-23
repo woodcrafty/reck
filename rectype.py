@@ -567,7 +567,7 @@ def _check_typename(typename):
 
 def _common_name_check(name, nametype):
     """
-    Perform check common to both typenames and fieldnames.
+    Perform name checks common to both typenames and fieldnames.
     """
     # if not isinstance(name, str):
     #     raise TypeError(
