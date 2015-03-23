@@ -330,6 +330,17 @@ class TestRecType(unittest.TestCase):
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
+        # Unpacked rectyp
+        rec1 = Rec(1, 2)
+        rec2 = Rec(*rec1)
+        self.assertEqual(rec.a, 1)
+        self.assertEqual(rec.b, 2)
+
+        # Unpacked sequence and keyword arg
+        rec = Rec(*[1], b=2)
+        self.assertEqual(rec.a, 1)
+        self.assertEqual(rec.b, 2)
+
         # Unpacked mapping
         rec = Rec(**dict(a=1, b=2))
         self.assertEqual(rec.a, 1)
