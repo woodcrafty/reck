@@ -22,7 +22,7 @@ Fields are accessible by attribute lookup and by index::
     >>> p[0]
     'Eric'
 
-Field values are mutable::
+Unlike a namedtuple, field values are mutable::
 
     >>> p.name = 'Idle'
     >>> p
@@ -31,8 +31,8 @@ Field values are mutable::
 You can specify per-field default values when creating a ``rectype``::
 
     >>> Person = rectype('Person', [('name', None), ('age', None)])
-    >>> p = Person(name='Eric')
-    >>> p  # a value for age was not supplied so it was assigned it's default value
+    >>> p = Person(name='Eric')   # no value supplied for the 'age' field
+    >>> p                         # 'age' has been set to its default value
     Person(name='Eric', age=None)
 
 Multiple field values can be changed with the ``_update()`` method::
@@ -50,39 +50,23 @@ Fieldnames and field values can be iterated over::
 
 Type creation
 =============
-
 New types are created with the ``rectype.rectype()`` factory function, e.g.::
 
     >>> Point = rectype(typename='Point', fieldnames=['x', 'y'], rename=False)
 
 Setting fieldnames
 ------------------
-If no default values are required *fieldnames* can be a sequence
-of strings or a single string of space and/or comma separated fieldnames. These
-3 examples are equivalent::
+Fieldnames can be specified with a sequence of strings or a single string of
+space and/or comma separated fieldnames. These examples are equivalent::
 
-    >>> Point = rectype('Point', ['x',  'y'])  # fieldnames is a sequence of strings
-    >>> Point = rectype('Point', 'x y')        # fieldnames is a string of space separated fieldnames
-    >>> Point = rectype('Point', 'x,y')        # fieldnames is a string of comma separated fieldnames
-    >>> Point._fieldnames                      # Display a tuple of the record's fieldnames
-    ('x', 'y')
-
-Any valid Python identifier may be used for a fieldname except for names
-starting with an underscore. Valid identifiers consist of letters, digits,
-and underscores but do not start with a digit or underscore and cannot be a
-keyword such as *class*, *for*, *return*, or *print*.
-
-You can set the *rename* argument to True to automatically replace invalid
-fieldnames with position names::
-
-    >>> Rec = rectype('Rec', ['abc', 'def', 'ghi', 'abc'], rename=True)
-    >>> Rec._fieldnames    # keyword 'def' and duplicate fieldname 'abc' have been renamed
-    ('abc', '_1', 'ghi', '_3')
+    >>> Point = rectype('Point', ['x',  'y'])
+    >>> Point = rectype('Point', 'x y')
+    >>> Point = rectype('Point', 'x,y')
 
 Setting defaults
 ----------------
-If per-field default values are required *fieldnames* can be a sequence
-of (fieldname, default_value) 2-tuples::
+Per-field defaults can be specified by supplying a (fieldname, default) tuple
+in place of a string for a fieldname::
 
     >>> Point3D = rectype('Point3D', [('x', None), ('y', None), ('z', None])
     >>> p = Point3D()
@@ -97,13 +81,13 @@ A default does not have to be supplied for every field::
     Point3D(x=1, y=None, z=3)
 
 All fields without a default value must be given a value during instantiation,
-otherwise a ValueError will be raised::
+otherwise a ``ValueError`` will be raised::
 
     >>> p = Point3D(x=1)
     ValueError: field 'z' is not defined
 
-Per-field defaults can also be specified using an ordered mapping such as
-a ``collections.OrderedDict``::
+Per-field defaults can also be specified for every field using an ordered
+mapping such as ``collections.OrderedDict``::
 
     >>> from collections import OrderedDict
     >>> Point3D = rectype('Point3D', OrderedDict([
@@ -114,8 +98,57 @@ a ``collections.OrderedDict``::
     >>> p
     Point3D(x=None, y=99, z=None)
 
-**Warning:** only use immutable types as default field values in the same
-way that
+Factory function defaults
+-------------------------
+As with Python's mutable default arguments, mutable default field values will be
+shared amongst all instances of the rectype::
+
+    >>> Rec = rectype('Rec', [('a', [])])
+    >>> rec1 = Rec()
+    >>> rec2 = Rec()
+    >>> rec1.a.append(1)
+    >>> rec1.a == rec2.a    # rec2.a refers to the same list as rec1.a
+    True
+
+To avoid this happening, mutable defaults can be created using a default factory
+function. This is done by setting the default to a ``rectype.DefaultFactory``
+object, passing in a factory function (along with any positional and keyword
+arguments), to the constructor. This example uses ``list`` with no
+arguments::
+
+    >>> from rectype import rectype, DefaultFactory
+    >>> Rec = rectype('Rec', [('a', DefaultFactory(list))])
+    >>> rec1 = Rec()
+    >>> rec2 = Rec()
+    >>> rec1.a.append(1)
+    >>> rec1.a.append(2)
+    >>> rec1
+    Rec(a=['Orange', 'Green'])
+    >>> rec2
+    Rec(a=[])
+
+This example uses ``dict`` as a default factory, using the ``DefaultFactory``
+*args* and *kwargs* arguments to specify positional and keyword arguments for
+``dict``::
+
+    >>> Rec = rectype('Rec', [('field', DefaultFactory(
+    ...     dict, args=[('a', 1)], kwargs={'b': 2, 'c': 3})])
+    >>> rec = Rec()       # field will be set using the default factory
+    >>> rec
+    Rec(field={'a': 1, 'b': 2, 'c': 3})
+
+Renaming invalid fields
+-----------------------
+Any valid Python identifier may be used for a fieldname except for names
+starting with an underscore. Valid identifiers cannot start with a digit or
+underscore and cannot be a keyword such as *class*.
+
+You can set the *rename* argument to True to automatically replace invalid
+fieldnames with position names::
+
+    >>> Rec = rectype('Rec', ['abc', 'def', 'ghi', 'abc'], rename=True)
+    >>> Rec._fieldnames    # keyword 'def' and duplicate fieldname 'abc' have been renamed
+    ('abc', '_1', 'ghi', '_3')
 
 Instantiation
 =============
@@ -133,7 +166,7 @@ of a mapping/iterable and keyword arguments. The following examples all return a
     Point3D(x=1, y=2, z=3)
 
 ``rectype`` instances are iterable so they can be used to initialise
-other ``rectype`` instances of the same class::
+other ``rectype`` instances of the same type::
 
     >>> p2 = Point3D(p)
     >>> p2 == p
@@ -141,12 +174,12 @@ other ``rectype`` instances of the same class::
 
 Note that when this happens, values are matched by position rather than
 fieldname, a record of one type can be used to initialise a record of another
-type, even of the fields have different names and meanings.
+type, even if the fields have different names and meanings.
 
-Field selection
-===============
-Selection by attribute lookup
------------------------------
+Getting and setting fields
+==========================
+By attribute
+------------
 Fields are accessible by attribute lookup::
 
     >>> p = Point3D(x=1, y=2, z=3)
@@ -160,31 +193,42 @@ modified after creation::
     >>> p.z
     33
 
-To retrieve a field whose name is stored in a string, use the ``getattr()``
-built-in::
+If a fieldname is stored in a string, use the ``getattr()`` and ``setattr()``
+built-in functions to get and set the field value::
 
     >>> getattr(p, 'z')
     33
+    >>> setattr(p, 'z', 22)
+    >>> getattr(p, 'z')
+    22
 
-Selection by position
----------------------
-Fields are also accessible by integer based indexing and slicing::
+By index
+--------
+Fields are also accessible by integer index::
 
-    >>> p[1]    # Get the value of field y
+    >>> p[1]              # Get the value of field y
     2
-    >>> p[:2]   # Slicing returns a list of field values
-    [1, 2]
 
 Setting works as well::
 
-    >>> p[1] = 22         # Set field y to 22
+    >>> p[1] = 22         # Set the value of field y to 22
     >>> p[1]
     22
+
+By slice
+--------
+Fields can also be accessed using slicing::
+
+    >>> p[:2]   # Slicing returns a list of field values
+    [1, 2]
+
+Setting a slice of fields works as well::
+
     >>> p[:2] = [10, 11]  # Set field x to 10 and field y to 11
     >>> p
     Point3D(x=10, y=11, z=33)
 
-Note, slice behaviour is different to that of ``list``. If the iterable being
+**Note**, slice behaviour is different to that of lists. If the iterable being
 assigned to the slice is longer than the slice, the excess iterable items are
 ignored::
 
@@ -199,9 +243,9 @@ fields in the slice remain unaffected::
     >>> p                      # The last slice item (field z) was unaffected
     Point3D(x=None, y=None, z=3)
 
-Setting multiple field values
------------------------------
-Multiple field values can be changed using the ``_update()`` method which
+Setting multiple fields
+-----------------------
+Multiple field values can be updated using the ``_update()`` method, which
 has the same call profile as instantiation. The following examples all
 result in a record equivalent to ``Point3D(x=4, y=5, z=6)``::
 
@@ -212,25 +256,24 @@ result in a record equivalent to ``Point3D(x=4, y=5, z=6)``::
     >>> p
     Point3D(x=4, y=5, z=6)
 
-Changing default values
-=======================
-A dictionary of fieldname/default_value pairs can be obtained with the
+Updating defaults
+=================
+A dictionary of fieldname/default_value pairs can be retrieved with the
 ``_get_defaults()`` class method::
 
     >>> Point3D = rectype('Point3D', [('x', 1), ('y', 2), 'z')
     >>> Point3D._get_defaults()
     {'x': 1, 'y': 2}
 
-The existing per-field default values can be replaced using the
-``_set_defaults()`` class method. Just supply it with a mapping of the
-fieldnames to their default values. Fields not included in the mapping
-will no longer have a default value set::
+The existing per-field default values can be replaced by supplying a
+fieldname/default_value mapping to the ``_set_defaults()`` class method. Fields
+not included in the mapping will no longer have a default value::
 
     >>> Point3D._set_defaults(dict(x=7, z=9))
     >>> Point3D._get_defaults()   # field 'y' was not supplied a default value so no longer has one
     {'x': 7, 'z': 9}
 
-To remove all default field value just pass in an empty mapping::
+To remove all default field values just pass in an empty mapping::
 
     >>> Point3D._set_defaults({})
     >>> Point3D._get_defaults()
@@ -246,7 +289,7 @@ class in different contexts that require different default values::
         >>> car1 = Car(model='Focus', body_type='coupe')
         >>> car2 = Car(model='Mustang', body_type='saloon')
         >>> # Now create hatchback cars of different makes. To make life
-        >>> # easier replace the defaults with something more appropriate:
+        >>> # easier, replace the defaults with something more appropriate:
         >>> Rec._set_defaults(dict(body_type='hatchback'))
         >>> Rec._get_defaults()   # note, 'make' no longer has a default value
         {'body_type': 'hatchback'}
@@ -297,7 +340,7 @@ Rectypes support various operations that are demonstrated below::
     >>> p.index(2)          # get the index of the first occurrence of a value
     1
     >>> p._update(x=1, y=3, x=3)
-    >>> p.count(3)          # find out how many times does a value occur in the record
+    >>> p.count(3)          # count how many times a value occurs in the record
     2
     >>> vars(p)             # return an OrderedDict mapping fieldnames to values
     OrderedDict([('x': 1), ('y': 2), ('z': 3)])

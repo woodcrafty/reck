@@ -45,7 +45,7 @@ per-field default values are supported and they consume slightly less memory.
         ``; a mapping of fieldname-default_value pairs such as
         ``collections.OrderedDict([('x', None), ('y', None)])``.
 
-        **Note**, it only makes sense to use an ordered mapping (e.g.
+        Note, it only makes sense to use an ordered mapping (e.g.
         ``OrderedDict``) since access by index or iteration is affected by the
         order of the fieldnames.
 
@@ -150,19 +150,12 @@ underscore.
 
     Example::
 
-        >>> Car = rectype('Car', [('make', 'Ford'), 'model', 'body_type')
-        >>> Rec._get_defaults()
-        {'make': 'Ford'}
-        >>> # Create some Ford cars:
-        >>> car1 = Car(model='Focus', body_type='coupe')
-        >>> car2 = Car(model='Mustang', body_type='saloon')
-        >>> # Now create hatchback cars of different makes. To make life
-        >>> # easier replace the defaults with something more appropriate:
-        >>> Rec._set_defaults(dict(body_type='hatchback'))
-        >>> Rec._get_defaults()   # note, 'make' no longer has a default
-        {'body_type': 'hatchback'}
-        >>> car3 = Car(model='Fiat', model='Panda')
-        >>> car4 = Car(model='Volkswagon', model='Golf')
+    >>> Point3D = rectype('Point3D', [('x', 1), ('y', 2), 'z')
+    >>> Point3D._get_defaults()
+    {'x': 1, 'y': 2}
+    >>> Point3D._set_defaults({})  # Pass an empty set to remove all defaults
+    >>> Point3D._get_defaults()
+    {}
 
     :param defaults: A mapping of fieldname/default_value pairs which is
         used to replace the existing per-field default values. If a
@@ -228,8 +221,8 @@ These are the operations supported by rectypes:
     Set the value(s) of the field corresponding to the position(s) given by
     integer *index* or slice object *slice*.
 
-    **Note** that the behaviour of setting field values using slices
-    is different from that of lists. If *values* contains more items than
+    Note, the behaviour of setting field values using slices is
+    different from that of lists. If *values* contains more items than
     *slice* the surplus values are discarded, whereas with lists the
     surplus items are inserted into the list. Similarly, if *values* contains
     fewer items than *slice*, the surplus fields in the slice remain
@@ -262,3 +255,42 @@ These are the operations supported by rectypes:
 **vars(rec)**
     Return a new ``collections.OrderedDict`` which maps the fieldnames of *rec*
     to their corresponding values.
+
+--------------
+DefaultFactory
+--------------
+.. py:class:: DefaultFactory(factory_func, args=(), kwargs={})
+
+    Wrap a default factory function.
+
+    Default factory functions must be wrapped using this class so that they
+    can be distinguished from non-factory default values. Optional positional
+    and keyword arguments to be set, which will be passed to the factory
+    function when it is called.
+
+    Example of setting ``list`` (with no srguments), as a default factory
+    during rectype creation::
+
+        >>> Car = rectype.rectype('Car', [
+        ...     'make',
+        ...     'model',
+        ...     ('colours', rectype.DefaultFactory(list))]
+        >>> car = Car(make='Lotus', model='Exige')
+        >>> car.colours.append('Orange')
+        >>> car.colours.append('Green')
+        Car(name='Lotus', model='Exige', colours=['Orange', 'Green'])
+
+    An example using ``dict`` with positional and keyword arguments
+    as a default factory::
+
+        >>> Rec = rectype('Rec', [('field', DefaultFactory(
+        ...     dict, args=[('a', 1)], kwargs={'b': 2, 'c': 3})])
+        >>> rec = Rec()       # field will be set using the default factory
+        >>> rec
+        Rec(field={'a': 1, 'b': 2, 'c': 3})
+
+    :param factory_func: the callable object to be invoked as a default
+        factory function (with *args* and *kwargs* if provided).
+    :param args: a tuple of arguments for the factory function invocation.
+    :param kwargs: a dictionary of keyword arguments for the factory function
+        invocation.
