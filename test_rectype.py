@@ -94,14 +94,55 @@ class TestRecType(unittest.TestCase):
         rec = Rec([1])
         self.assertEqual(rec.ab, 1)
 
-        # With DefaultFactory
+        # With DefaultFactory with no args/kwargs
         Rec = rectype.rectype('Rec', ['a', ('b', rectype.DefaultFactory(list))])
-        rec = Rec(a=1)
-        self.assertEqual(rec.a, 1)
-        self.assertEqual(rec.b, [])
-        rec.b.append(2)
-        rec.b.append(3)
-        self.assertEqual(rec.b, [2, 3])
+        rec1 = Rec(a=1)
+        rec2 = Rec(a=1)
+        self.assertEqual(rec1.a, 1)
+        self.assertEqual(rec1.b, [])
+        rec1.b.append(2)
+        rec1.b.append(3)
+        self.assertEqual(rec1.b, [2, 3])
+        # Check rec2 doesn't share the list with rec1
+        self.assertEqual(rec2.b, [])
+
+        # With DefaultFactory with args
+        Rec = rectype.rectype('Rec', [
+            ('a', rectype.DefaultFactory(list, args=[[1, 2]]))])
+        rec1 = Rec()
+        rec2 = Rec()
+        self.assertEqual(rec1.a, [1, 2])
+        rec1.a.append(3)
+        self.assertEqual(rec1.a, [1, 2, 3])
+        # Check rec2 doesn't share the list with rec1
+        self.assertEqual(rec2.a, [1, 2])
+
+        # With DefaultFactory with kwargs
+        kwargs = {'a': 1}
+        Rec = rectype.rectype('Rec', [
+            ('a', rectype.DefaultFactory(dict, kwargs=kwargs))])
+        rec1 = Rec()
+        rec2 = Rec()
+        self.assertEqual(rec1.a, kwargs)
+        rec1.a['b'] = 2
+        self.assertEqual(rec1.a, {'a': 1, 'b': 2})
+        # Check rec2 doesn't share the list with rec1
+        self.assertEqual(rec2.a, kwargs)
+
+        # With DefaultFactory with args and kwargs
+        args = [[('a', 1), ('b', 2)]]
+        kwargs = {'c': 3}
+        dct = dict(*args, **kwargs)
+        Rec = rectype.rectype('Rec', [
+            ('a', rectype.DefaultFactory(dict, args=args, kwargs=kwargs))])
+        rec1 = Rec()
+        rec2 = Rec()
+        self.assertEqual(rec1.a, dct)
+        rec1.a['d'] = 4
+        # Check rec2 doesn't share the list with rec1
+        self.assertEqual(rec2.a, dct)
+        dct.update(d=4)
+        self.assertEqual(rec1.a, dct)
 
     def test_rectype_with_mapping(self):
         # Use lots of fields to check that field order is preserved
@@ -473,9 +514,8 @@ class TestRecType(unittest.TestCase):
     def test__dict__(self):
         # These assertions are necessary because record uses __slots__
         # to store attributes rather than a per-instance __dict__. To
-        # allow __dict__ to reflect the record attributes a class
-        # __dict__ property which calls record._asdict() when it is
-        # accessed.
+        # allow __dict__ to reflect the record __dict__ has been set to
+        # a read-only property that returns an OrderedDict of the fields.
         rec = Rec([1, 2])
         self.assertIsInstance(rec.__dict__, OrderedDict)
         self.assertEqual(rec.__dict__, {'a': 1, 'b': 2})
@@ -484,7 +524,8 @@ class TestRecType(unittest.TestCase):
         self.assertEqual(vars(rec), {'a': 1, 'b': 2})
 
         # Test that dict is read-only
-        # TODO: complete this test
+        with self.assertRaises(AttributeError):
+            rec.__dict__ = {'a': 3, 'b': 4}
 
     # ==========================================================================
     # Miscellaneous tests
