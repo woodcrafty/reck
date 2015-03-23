@@ -135,6 +135,7 @@ def rectype(typename, fieldnames, rename=False):
         # API methods and attributes:
         __init__=__init__,
         _fieldnames=tuple(fieldnames),
+        _nfields = len(fieldnames),
         _update=_update,
         _get_defaults=_get_defaults,
         _set_defaults=_set_defaults,
@@ -217,24 +218,16 @@ def __init__(self, *args, **kwargs):
     :raises: ``TypeError`` if more than one positional argument is passed
          or if *kwargs* contains a keyword that does not match a fieldname.
     """
-    if len(args) > 1:
+    if len(args) > self._nfields:
         raise TypeError(
-            'expected at most 1 positional argument, got {0}'
-            .format(len(args)))
+            'takes up to {0} positional arguments but {1} were given'
+            .format(self._nfields, len(args)))
     self._check_kwargs(kwargs)
 
     # Progressively assemble a dict representation of the record from
     # the field defaults, the positional arg and the keyword args.
     field_values = self._defaults.copy()
-    if args:
-        arg = args[0]
-        if isinstance(arg, collections.Mapping):
-            # Can't use update() here because it may not be implemented
-            for key in arg:
-                field_values[key] = arg[key]
-        else:
-            # args should be an iterable so convert it to a mapping
-            field_values.update(dict(zip(self._fieldnames, arg)))
+    field_values.update(zip(self._fieldnames, args))
     field_values.update(kwargs)
 
     self._check_all_fields_defined(field_values)
@@ -242,10 +235,10 @@ def __init__(self, *args, **kwargs):
     for fieldname, value in field_values.items():
         if isinstance(value, DefaultFactory):
             # Call the default factory function
-            v = value()  # TODO: remove this
             setattr(self, fieldname, value())
         else:
             setattr(self, fieldname, value)
+
 
 def _update(self, *args, **kwargs):
     """
@@ -279,33 +272,20 @@ def _update(self, *args, **kwargs):
         >>> r
         Rec(a=2, b=3, c=4)
     """
-    if len(args) > 1:
+    if len(args) > self._nfields:
         raise TypeError(
-            'expected at most 1 positional argument, got {0}'
-            .format(len(args)))
+            'takes up to {0} positional arguments but {1} were given'
+            .format(self._nfields, len(args)))
     self._check_kwargs(kwargs)
 
-    # TODO: can this be made faster? e.g. by setattr the positionals
-    # then setattr the kwargs? In general use, kwargs probably won't
-    # repeat many of the fields from the positionals.
-
-    # Progressively assemble a dict representation of the new record state
+    # Progressively assemble a dict representation of the record from
+    # the field defaults, the positional arg and the keyword args.
     field_values = {}
-    if args:
-        arg = args[0]
-        if isinstance(arg, collections.Mapping):
-            # Can't use dict.update() here because it may not be implemented
-            # in a custom mapping type
-            for key in arg:
-                if key in self._fieldnames_set:
-                    field_values[key] = arg[key]
-        else:
-            # arg should be an iterable
-            field_values.update(zip(self._fieldnames, arg))
+    field_values.update(zip(self._fieldnames, args))
     field_values.update(kwargs)
 
     for fieldname, value in field_values.items():
-            setattr(self, fieldname, value)
+        setattr(self, fieldname, value)
 
 
 def _items(self):

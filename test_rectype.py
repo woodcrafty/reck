@@ -67,31 +67,31 @@ class TestRecType(unittest.TestCase):
     def test_rectype_with_sequence(self):
         # Simple sequence
         Rec = rectype.rectype('Rec', ['a', 'b'])
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
         # Sequence of 2-tuples
         Rec = rectype.rectype('Rec', [('a', None), ('b', None)])
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
         # Simple sequence with some 2-tuples
         Rec = rectype.rectype('Rec', ['a', ('b', None)])
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
         # String sequence
         Rec = rectype.rectype('Rec', 'a b,c, d')
-        rec = Rec([1, 2, 3, 4])
+        rec = Rec(1, 2, 3, 4)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
         self.assertEqual(rec.c, 3)
         self.assertEqual(rec.d, 4)
         Rec = rectype.rectype('Rec', 'ab')
-        rec = Rec([1])
+        rec = Rec(1)
         self.assertEqual(rec.ab, 1)
 
         # With DefaultFactory with no args/kwargs
@@ -150,7 +150,7 @@ class TestRecType(unittest.TestCase):
         fieldnames = ['f{0}'.format(i) for i in range(nfields)]
         tuples = [(name, None) for name in fieldnames]
         Rec = rectype.rectype('Rec', OrderedDict(tuples))
-        rec = Rec(list(range(nfields)))
+        rec = Rec(*list(range(nfields)))
         for i in range(nfields):
             self.assertEqual(rec[i], i)
             fieldname = 'f{0}'.format(i)
@@ -297,7 +297,7 @@ class TestRecType(unittest.TestCase):
         fields = (
             ['field_b', 'field_d', 'field_c', 'field_f', 'field_e', 'field_a'])
         Rec = rectype.rectype('Rec', fields)
-        rec = Rec(list(range(len(fields))))
+        rec = Rec(*list(range(len(fields))))
         self.assertEqual(rec.field_b, 0)
         self.assertEqual(rec.field_d, 1)
         self.assertEqual(rec.field_c, 2)
@@ -308,14 +308,8 @@ class TestRecType(unittest.TestCase):
     # ==========================================================================
     # Test initialisation
 
-    def test_init_with_mapping(self):
-        rec = Rec(dict(a=1, b=2))
-        self.assertTrue(isinstance(rec, Rec))
-        self.assertEqual(rec.a, 1)
-        self.assertEqual(rec.b, 2)
-
-    def test_init_with_sequence(self):
-        rec = Rec([1, 2])
+    def test_init_with_args(self):
+        rec = Rec(1, 2)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
@@ -324,13 +318,25 @@ class TestRecType(unittest.TestCase):
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
-    def test_init_with_sequence_and_kwargs(self):
-        rec = Rec([1], b=2)
+    def test_init_with_args_and_kwargs(self):
+        rec = Rec(1, b=2)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
-    def test_init_with_mapping_and_kwargs(self):
-        rec = Rec(dict(a=1), b=2)
+    def test_init_with_unpacked_args_and_kwargs(self):
+
+        # Unpacked sequence
+        rec = Rec(*[1, 2])
+        self.assertEqual(rec.a, 1)
+        self.assertEqual(rec.b, 2)
+
+        # Unpacked mapping
+        rec = Rec(**dict(a=1, b=2))
+        self.assertEqual(rec.a, 1)
+        self.assertEqual(rec.b, 2)
+
+        # Unpacked sequence and mapping
+        rec = Rec(*[1], **dict(b=2))
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
@@ -340,22 +346,22 @@ class TestRecType(unittest.TestCase):
             rec = Rec()
 
         with self.assertRaises(TypeError):
-            # Initialisation with non mapping/sequence positional arg
-            rec = Rec(1)
+            # Initialisation with too many positional arguments
+            rec = Rec(1, 2, 3)
 
-            # Initialisation with a non-existent named field
-            rec = Rec([1], c=2)
+            # Initialisation with a non-existent kwarg
+            rec = Rec(1, c=2)
 
     def test_init_with_duplicate_fields(self):
         # The last field value is the one that the field gets initialised too
 
-        # With sequence and kwargs
-        rec = Rec([1, 2], a=5)
+        # With args and kwargs
+        rec = Rec(1, 2, a=5)
         self.assertEqual(rec.a, 5)
 
-        # With mapping and kwargs
-        rec = Rec(dict(a=1, b=2), a=5)
-        self.assertEqual(rec.a, 5)
+        # # With unpacked mapping and kwargs
+        # rec = Rec(**dict(a=1, b=2), a=5)
+        # self.assertEqual(rec.a, 5)
 
     def test_init_with_more_than_255_fields(self):
         nfields = 5000
@@ -363,9 +369,18 @@ class TestRecType(unittest.TestCase):
         values = [i for i in range(nfields)]
         kwargs = {k: v for k, v in zip(fieldnames, values)}
 
+        # With values unpacked to positional arguments
+        Rec = rectype.rectype('Rec', fieldnames)
+        rec = Rec(*values)
+        self.assertEqual(rec.f0, 0)
+        self.assertEqual(getattr(rec, 'f{0}'.format(nfields - 1)),  nfields - 1)
+
         # With values unpacked to keyword arguments
         Rec = rectype.rectype('Rec', fieldnames)
         rec = Rec(**kwargs)
+        self.assertEqual(rec.f0, 0)
+        self.assertEqual(rec.f0, 0)
+        self.assertEqual(getattr(rec, 'f{0}'.format(nfields - 1)),  nfields - 1)
 
     # ==========================================================================
     # Test getting and setting of defaults
@@ -388,40 +403,40 @@ class TestRecType(unittest.TestCase):
     # Test sequence features
 
     def test_contains(self):
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         self.assertTrue(1 in rec)
         self.assertTrue(2 in rec)
         self.assertFalse(3 in rec)
 
     def test_index(self):
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         self.assertEqual(rec.index(2), 1)
         R = rectype.rectype('R', 'a b c d')
-        rec = R([1, 2, 2, 3])
+        rec = R(1, 2, 2, 3)
         self.assertEqual(rec.index(2), 1)  # 1st occurrence of 2
         self.assertEqual(rec.index(3), 3)
 
     def test_count(self):
         R = rectype.rectype('R', 'a b c')
-        rec = R([1, 2, 2])
+        rec = R(1, 2, 2)
         self.assertEqual(rec.count(1), 1)
         self.assertEqual(rec.count(2), 2)
 
     def test_reverse_iteration(self):
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         reverse_iterator = reversed(rec)
         self.assertEqual(next(reverse_iterator), 2)
         self.assertEqual(next(reverse_iterator), 1)
 
     def test_iteration(self):
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         self.assertEqual([value for value in rec], [1, 2])
 
     # ==========================================================================
     # Test getting and setting field values
 
     def test_set_value_by_attribute(self):
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         rec.a = 'a'
         self.assertEqual(rec.a, 'a')
         self.assertEqual(rec.b, 2)
@@ -431,7 +446,7 @@ class TestRecType(unittest.TestCase):
         self.assertEqual(rec.b, 4)
 
     def test_get_attribute_not_defined_in_slots(self):
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         with self.assertRaises(AttributeError):
             _ = rec.c
 
@@ -443,13 +458,13 @@ class TestRecType(unittest.TestCase):
         'Python 3.2 does not throw an Exception when assigning to an attribute'
         'that does not exist in a slots based object.')
     def test_set_attribute_not_defined_in_slots(self):
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         with self.assertRaises(AttributeError):
             rec.c = 3
 
     def test_getitem(self):
         R = rectype.rectype('R', ['a', 'b', 'c', 'd'])
-        rec = R([1, 2, 3, 4])
+        rec = R(1, 2, 3, 4)
 
         # Test access by numerical index
         self.assertEqual(rec[0], 1)
@@ -471,7 +486,7 @@ class TestRecType(unittest.TestCase):
 
     def test_setitem(self):
         R = rectype.rectype('R', ['a', 'b', 'c', 'd', 'e'])
-        rec = R([1, 2, 3, 4, 5])
+        rec = R(1, 2, 3, 4, 5)
 
         # Test __setitem__ by numerical index
         rec[0] = 99
@@ -496,36 +511,41 @@ class TestRecType(unittest.TestCase):
         self.assertEqual(rec.c, 101)  # Should remain unchanged
 
     def test_update(self):
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
 
         # With positional sequence
-        rec._update([3])
+        rec._update(3)
         self.assertEqual(rec.a, 3)
-
-        # With positional mapping
-        rec._update(dict(a=4))
-        self.assertEqual(rec.a, 4)
 
         # With keyword arg
         rec._update(a=5)
         self.assertEqual(rec.a, 5)
 
-        # With positional seq and keyword arg
-        rec._update([6], b=7)
+        # With positional and keyword arg
+        rec._update(6, b=7)
         self.assertEqual(rec.a, 6)
         self.assertEqual(rec.b, 7)
 
-        # With positional mapping and keyword arg
-        rec._update(a=8, b=9)
+        # With 2 kwargs
+        rec._update(b=9, a=8)
         self.assertEqual(rec.a, 8)
         self.assertEqual(rec.b, 9)
+
+        # With unpacked mapping
+        rec._update(**dict(a=4))
+        self.assertEqual(rec.a, 4)
+
+        # With unpacked sequence
+        rec._update(*[3, 4])
+        self.assertEqual(rec.a, 3)
+        self.assertEqual(rec.b, 4)
 
     def test__dict__(self):
         # These assertions are necessary because record uses __slots__
         # to store attributes rather than a per-instance __dict__. To
         # allow __dict__ to reflect the record __dict__ has been set to
         # a read-only property that returns an OrderedDict of the fields.
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         self.assertIsInstance(rec.__dict__, OrderedDict)
         self.assertEqual(rec.__dict__, {'a': 1, 'b': 2})
 
@@ -540,41 +560,41 @@ class TestRecType(unittest.TestCase):
     # Miscellaneous tests
 
     def test_items(self):
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         items = rec._items()
         self.assertEqual(items, [('a', 1), ('b', 2)])
 
     def test_pickle(self):
         # Note: Only classes defined at the top level of a module can be
         # pickled, hence the use of Rec here.
-        rec = Rec([1, 2])
+        rec = Rec(1, 2)
         for protocol in 0, 1, 2, 3:
             pickled_rec = pickle.loads(pickle.dumps(rec, protocol))
             self.assertEqual(rec, pickled_rec)
             self.assertEqual(rec._fieldnames, pickled_rec._fieldnames)
 
     def test_equality(self):
-        rec1 = Rec([1, 2])
-        rec2 = Rec([1, 2])
+        rec1 = Rec(1, 2)
+        rec2 = Rec(1, 2)
         self.assertEqual(rec1, rec2)
-        rec3 = Rec(dict(b=2, a=1))
+        rec3 = Rec(**dict(b=2, a=1))
         self.assertEqual(rec1, rec3)
         rec4 = Rec(b=2, a=1)
         self.assertEqual(rec1, rec4)
 
     def test_inequality(self):
-        rec1 = Rec([1, 2])
-        rec2 = Rec([2, 1])
-        rec3 = Rec([1, 3])
+        rec1 = Rec(1, 2)
+        rec2 = Rec(2, 1)
+        rec3 = Rec(1, 3)
         self.assertNotEqual(rec1, rec2)
         self.assertNotEqual(rec1, rec3)
 
     def test_repr(self):
-        rec = Rec(['1', 2])
+        rec = Rec('1', 2)
         self.assertEqual(repr(rec), "Rec(a='1', b=2)")
 
     def test_str(self):
-        rec = Rec(['1', 2])
+        rec = Rec('1', 2)
         self.assertEqual(str(rec), "Rec(a=1, b=2)")
 
 
