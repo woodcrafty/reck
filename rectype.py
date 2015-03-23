@@ -21,25 +21,34 @@ class DefaultFactory(object):
     """
     Wrap a default factory function.
 
-    This is used to identify a default value which is a factory function and
-    allow it to be called with optional positional and keyword arguments. To
-    call the wrapped factory function simply call the DefaultFactory instance
-    itself::
+    Default factory functions must be wrapped with this class so that they can
+    be distinguished from non-factory default values. The class also allows
+    optional positional and keyword arguments to be set, which will be passed
+    to the factory function when it is called. To call the wrapped factory
+    function (with the optional positional and keyword arguments), the
+    DefaultFactory instance should be called.
 
-        >>> default = DefaultFactory(list)           # wrap the list factory func
-        >>> if isinstance(default, DefaultFactory):  # is default a factory func?
-        ...     default()   # Call the default       # call the wrapped factory func
+    Example of setting ``list`` as a default factory during rectype creation::
 
-    Can be used to wrap default values::
-
-        >>> Car = rectype.rectype('Car', [
+        >>> from rectype import rectype, DefaultFactory
+        >>> Car = rectype('Car', [
         ...     'make',
         ...     'model',
-        ...     ('colours', rectype.DefaultFactory(list))]
+        ...     ('colours', DefaultFactory(list))]
         >>> car = Car(make='Lotus', model='Exige')
         >>> car.colours.append('Orange')
         >>> car.colours.append('Green')
         Car(name='Lotus', model='Exige', colours=['Orange', 'Green'])
+
+    Example using ``dict`` as a default factory with positional and keyword
+    arguments::
+
+        >>> Rec = rectype.rectype('Rec', ['field1',
+        ...     ('field2', DefaultFactory(
+        ...         dict, args=[('a', 1)], kwargs={'b': 2, 'c': 3})])
+        >>> rec = Rec(field1=1)   # field2 will be set using the default factory
+        >>> rec
+        Rec(field1=1, field2={'a': 1, 'b': 2, 'c': 3})
 
     :param factory_func: the callable object to be invoked as a default
         factory function (with *args* and *kwargs* if provided).
@@ -56,15 +65,8 @@ class DefaultFactory(object):
         return self._factory_func(*self._args, **self._kwargs)
 
     def __repr__(self):
-        # if self._args:
-        #
-        #     argstxt = ', '.join([str(value) for value in self._args])
-        #     argstxt += '{0!r}={1!r}, '.join(
-        #         [(k, v) for k, v in self._kwargs.items()])
-        #     return ('DefaultFactory({0!r}({1}))'
-        #         .format(self._factory_func, argstxt))
-        return 'DefaultFactory({0!r}, args={1!r}, kwargs={2!r})'.format(
-            self._factory_func, self._args, self._kwargs)
+        return ('DefaultFactory({0!r}, args={1!r}, kwargs={2!r})'
+            .format(self._factory_func, self._args, self._kwargs))
 
 
 def rectype(typename, fieldnames, rename=False):
