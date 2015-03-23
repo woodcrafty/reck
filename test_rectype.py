@@ -346,8 +346,7 @@ class TestRecType(unittest.TestCase):
             # Initialisation with a non-existent named field
             rec = Rec([1], c=2)
 
-
-    def initialisation_with_duplicate_fields(self):
+    def test_init_with_duplicate_fields(self):
         # The last field value is the one that the field gets initialised too
 
         # With sequence and kwargs
@@ -357,6 +356,16 @@ class TestRecType(unittest.TestCase):
         # With mapping and kwargs
         rec = Rec(dict(a=1, b=2), a=5)
         self.assertEqual(rec.a, 5)
+
+    def test_init_with_more_than_255_fields(self):
+        nfields = 5000
+        fieldnames = ['f{0}'.format(i) for i in range(nfields)]
+        values = [i for i in range(nfields)]
+        kwargs = {k: v for k, v in zip(fieldnames, values)}
+
+        # With values unpacked to keyword arguments
+        Rec = rectype.rectype('Rec', fieldnames)
+        rec = Rec(**kwargs)
 
     # ==========================================================================
     # Test getting and setting of defaults
