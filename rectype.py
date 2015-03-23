@@ -184,39 +184,43 @@ def rectype(typename, fieldnames, rename=False):
 
 def __init__(self, *args, **kwargs):
     """
-    Return a new ``rectype`` object initialised from an optional positional
-    argument and optional keyword arguments:
+    Return a new ``rectype`` object initialised from positional and/or keyword
+    arguments.
 
-    | *class* **SomeRecType**\ (***kwargs*)
-    | *class* **SomeRecType**\ (*mapping, **kwargs*)
-    | *class* **SomeRecType**\ (*iterable, **kwargs*)
+    The following examples all return a rectype equivalent to
+    ``Rec(a=1, b=2, c=3)``::
 
-    If a positional argument is given and it is a mapping object, a
-    record is created with values assigned to fields identified by
-    keys of the mapping. Keys pairs that do not match a fieldname are
-    ignored.
+        >>> Rec = rectype('Rec', 'a b c')
+        >>> rec = Rec(1, 2, 3)                # using positional args
+        >>> rec = Rec(a=1, b=2, c=3)          # using keyword args
+        >>> rec = Rec(*[1, 2, 3])             # using an unpacked sequence
+        >>> rec = Rec(**dict(a=1, b=2, c=3))  # using an unpacked mapping
+        >>> rec = Rec(*[1, 2], c=3)           # using an unpacked sequence and a keyword arg
+        >>> rec
+        Rec(a=1, b=2, c=3)
 
-    The positional argument can also be an iterable object whose items
-    are in the same order as the fieldnames of the record type. If the
-    iterable provides too many values for the field the excess values
-    are ignored.
+    Since rectype instances are iterable they can be used to initialise
+    other instances of the same type by unpacking them::
 
-    Keyword arguments can also be given to provide field values by
-    name. If a keyword argument provides a value for a field that
-    has already received a value, the value from the keyword argument
-    replaces the value from the positional argument. Keywords that
-    do not match a filename are ignored.
+        >>> rec2 = Rec(*rec)
+        >>> rec2 == rec
+        True
 
-    Any fields that do not have values defined by the positional or
-    keyword arguments will be assigned a field-specific default value,
-    if one has been defined.
+    If a positional and keyword argument are supplied for the same field the
+    keyword argument overrides the positional argument::
 
-    If a default value is not available for a field that has not been
-    defined by the positional or keyword arguments a ValueError is
-    raised.
+        >>> rec = Rec(1, a=2, b=3)
+        >>> rec
+        Rec(a=2, b=3)
 
-    :raises: ``TypeError`` if more than one positional argument is passed
-         or if *kwargs* contains a keyword that does not match a fieldname.
+    If a field has not been supplied a value by an argument, its default value
+    will be used (if it has been defined).
+
+    :raises: ``TypeError`` if the number of positional arguments exceeds the
+         number of fields or if a keyword argument contains a keyword that
+         does not match a fieldname.
+         ``ValueError`` if a field has not been defined by the positional
+         or keyword arguments and has no default value set.
     """
     if len(args) > self._nfields:
         raise TypeError(
@@ -242,24 +246,8 @@ def __init__(self, *args, **kwargs):
 
 def _update(self, *args, **kwargs):
     """
-    Update field values with values from an optional positional argument
-    and a possibly empty set of keyword arguments.
-
-    This method has the following call profiles:
-
-        | somerec.\ **_update**\ (***kwargs*)
-        | somerec.\ **_update**\ (*mapping, **kwargs*)
-        | somerec.\ **_update**\ (*iterable, **kwargs*)
-
-    :param *args: Optional positional argument which can be a mapping of
-        fieldname/field_value pairs or an iterable of field values which
-        are in the same order as the fieldnames listed in the ``_fieldnames``
-        class attribute.
-    :param **kwargs: Keyword arguments in which each keyword must match a
-        fieldname of the record. Keyword arguments can be supplied on their
-        own, or together with the positional argument.
-    :raises: ``TypeError`` if more than one positional argument is
-        supplied or a keyword argument does not match a fieldname.
+    Update the field values of the record with positional and/or keyword
+    arguments.
 
     Example::
 
@@ -268,9 +256,24 @@ def _update(self, *args, **kwargs):
         >>> r._update(b=5, c=6)     # using keyword arguments
         >>> r
         Rec(a=1, b=2, c=3)
-        >>> r._update([2, 3], c=4)  # using an iterable and keyword arguments
+        >>> r._update(2, 3, c=4)  # using positional and keyword arguments
         >>> r
         Rec(a=2, b=3, c=4)
+
+    If a positional and keyword argument are supplied for the same field the
+    keyword argument will override the positional argument::
+
+        >>> rec._update(3, a=4, b=5)
+        >>> rec
+        Rec(a=4, b=5)
+
+    :param *args: Optional positional arguments in the same order as the
+        fieldnames listed in the ``_fieldnames`` class attribute.
+    :param **kwargs: Keyword arguments in which each keyword must match a
+        fieldname of the record. Keyword arguments can be supplied on their
+        own, or together with positional arguments.
+    :raises: ``TypeError`` if more than one positional argument is
+        supplied or a keyword argument does not match a fieldname.
     """
     if len(args) > self._nfields:
         raise TypeError(
