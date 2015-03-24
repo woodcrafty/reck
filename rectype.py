@@ -151,7 +151,7 @@ def rectype(typename, fieldnames, rename=False):
         _defaults=defaults,
         _check_fieldnames_exist=_check_fieldnames_exist,
         _check_all_fields_defined=_check_all_fields_defined,
-        _check_kwargs=_check_kwargs,
+        _check_args=_check_args,
         __dict__=__dict__,
         __eq__=__eq__,
         __ne__=__ne__,
@@ -216,17 +216,15 @@ def __init__(self, *args, **kwargs):
     If a field has not been supplied a value by an argument, its default value
     will be used (if it has been defined).
 
+    :param *args: Field values passed by position.
+    :param **kwargs: Field values passed by name.
     :raises: ``TypeError`` if the number of positional arguments exceeds the
-         number of fields or if a keyword argument contains a keyword that
-         does not match a fieldname.
+         number of fields, a keyword argument does not match a fieldname,
+         or a keyword argument redefines a positional argument.
          ``ValueError`` if a field has not been defined by the positional
          or keyword arguments and has no default value set.
     """
-    if len(args) > self._nfields:
-        raise TypeError(
-            'takes up to {0} positional arguments but {1} were given'
-            .format(self._nfields, len(args)))
-    self._check_kwargs(kwargs)
+    self._check_args(args, kwargs)
 
     # Progressively assemble a dict representation of the record from
     # the field defaults, the positional arg and the keyword args.
@@ -267,19 +265,13 @@ def _update(self, *args, **kwargs):
         >>> rec
         Rec(a=4, b=5)
 
-    :param *args: Optional positional arguments in the same order as the
-        fieldnames listed in the ``_fieldnames`` class attribute.
-    :param **kwargs: Keyword arguments in which each keyword must match a
-        fieldname of the record. Keyword arguments can be supplied on their
-        own, or together with positional arguments.
-    :raises: ``TypeError`` if more than one positional argument is
-        supplied or a keyword argument does not match a fieldname.
+    :param *args: Field values passed by position.
+    :param **kwargs: Field values passed by name.
+    :raises: ``TypeError`` if the number of positional arguments exceeds the
+         number of fields, a keyword argument does not match a fieldname,
+         or a keyword argument redefines a positional argument.
     """
-    if len(args) > self._nfields:
-        raise TypeError(
-            'takes up to {0} positional arguments but {1} were given'
-            .format(self._nfields, len(args)))
-    self._check_kwargs(kwargs)
+    self._check_args(args, kwargs)
 
     # Progressively assemble a dict representation of the record from
     # the field defaults, the positional arg and the keyword args.
@@ -309,41 +301,24 @@ def _get_defaults(cls):
 
 
 @classmethod
-def _set_defaults(cls, defaults):
+def _set_defaults(cls, *args, **kwargs):
     """
-    Replace the existing per-field default values with a new set.
+    Replace the existing per-field default values.
 
     This can be useful if you wish to use the same record class in
     different contexts which require different default values.
 
-    :param defaults: A mapping of fieldname/default_value pairs which is
-        used to replace the existing per-field default values. If a
-        field is not present in *defaults* it will not have a default
-        value. To remove all defaults set *defaults* to an empty mapping.
-    :raises: ``ValueError`` if a key in *defaults* does not match a
-        fieldname.
-
-    Example::
-
-        >>> Car = rectype('Car', [('make', 'Ford'), 'model', 'body_type')
-        >>> Rec._get_defaults()
-        {'make': 'Ford'}
-        >>> # Create some Ford cars:
-        >>> car1 = Car(model='Focus', body_type='coupe')
-        >>> car2 = Car(model='Mustang', body_type='saloon')
-        >>> # Now create hatchback cars of different makes. To make life
-        >>> # easier replace the defaults with something more appropriate:
-        >>> Rec._set_defaults(dict(body_type='hatchback'))
-        >>> Rec._get_defaults()   # note, 'make' no longer has a default
-        {'body_type': 'hatchback'}
-        >>> car3 = Car(model='Fiat', model='Panda')
-        >>> car4 = Car(model='Volkswagon', model='Golf')
+    :param *args: Default field values passed by position.
+    :param **kwargs: Default field values passed by name.
+    :raises: ``TypeError`` if the number of positional arguments exceeds the
+         number of fields, a keyword argument does not match a fieldname,
+         or a keyword argument redefines a positional argument.
     """
-    cls._check_fieldnames_exist(defaults)
-    _defaults = {}
-    for fieldname, default_value in defaults.items():
-        _defaults[fieldname] = default_value
-    cls._defaults = _defaults
+    cls._check_args(args, kwargs)
+    defaults = {}
+    defaults.update(zip(cls._fieldnames, args))
+    defaults.update(kwargs)
+    cls._defaults = defaults
 
 
 @classmethod
@@ -368,16 +343,28 @@ def _check_all_fields_defined(cls, fieldnames):
 
 
 @classmethod
-def _check_kwargs(cls, kwargs):
+def _check_args(cls, args, kwargs):
     """
-    Check that every keyword argument in kwargs matches a fieldname. If
-    a keyword does not match a fieldname a ValueError is raised.
+    Check validity of positional and keyword arguments.
     """
+    if len(args) > cls._nfields:
+        raise TypeError(
+            'takes up to {0} positional arguments but {1} were given'
+            .format(cls._nfields, len(args)))
+
+    # Check that every keyword argument in kwargs matches a fieldname.
     for fieldname in kwargs:
         if fieldname not in cls._fieldnames_set:
             raise TypeError(
                 'keyword argument {0!r} does not match a field'
                 .format(fieldname))
+
+    # Check that none of the keyword args are redefining a positional arg
+    positional_fields = {name for name in cls._fieldnames[:len(args)]}
+    for fieldname in kwargs:
+        if fieldname in positional_fields:
+            raise TypeError(
+                'got multiple values for argument {0!r}'.format(fieldname))
 
 
 @property

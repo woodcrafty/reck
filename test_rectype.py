@@ -351,10 +351,13 @@ class TestRecType(unittest.TestCase):
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
-    def test_init_with_bad_values(self):
+    def test_init_with_bad_args(self):
         with self.assertRaises(ValueError):
             # Initialisation without a value when there are no defaults
             rec = Rec()
+
+            # Initialisation with only 1 value when 2 are required
+            rec = Rec(1)
 
         with self.assertRaises(TypeError):
             # Initialisation with too many positional arguments
@@ -363,16 +366,8 @@ class TestRecType(unittest.TestCase):
             # Initialisation with a non-existent kwarg
             rec = Rec(1, c=2)
 
-    def test_init_with_duplicate_fields(self):
-        # The last field value is the one that the field gets initialised too
-
-        # With args and kwargs
-        rec = Rec(1, 2, a=5)
-        self.assertEqual(rec.a, 5)
-
-        # # With unpacked mapping and kwargs
-        # rec = Rec(**dict(a=1, b=2), a=5)
-        # self.assertEqual(rec.a, 5)
+            # Redefinition of positional arg with keyword arg
+            rec = Rec(1, 2, a=3)
 
     def test_init_with_more_than_255_fields(self):
         nfields = 5000
@@ -403,12 +398,29 @@ class TestRecType(unittest.TestCase):
     def test_set_defaults(self):
         Rec = rectype.rectype('Rec', ['a', ('b', 2), ('c', 3)])
         self.assertEqual(Rec._get_defaults(), dict(b=2, c=3))
-        Rec._set_defaults(dict(a=1, b=2))
+
+        # With args
+        Rec._set_defaults(1, 2)
         self.assertEqual(Rec._get_defaults(), dict(a=1, b=2))
 
-        # Non-existent fieldname in defaults dict
-        with self.assertRaises(ValueError):
+        # With kwargs
+        Rec._set_defaults(a=3, b=4)
+        self.assertEqual(Rec._get_defaults(), dict(a=3, b=4))
+
+        # With args and kwargs
+        Rec._set_defaults(5, 6, c=7)
+        self.assertEqual(Rec._get_defaults(), dict(a=5, b=6, c=7))
+
+    def test_set_bad_defaults(self):
+        # Initialisation with too many positional arguments
+        with self.assertRaises(TypeError):
+            rec = Rec(1, 2, 3, 4)
+
+            # Non-existent fieldname in defaults dict
             Rec._set_defaults(dict(a=1, d=4))
+
+            # Redefinition of positional arg with keyword arg
+            rec = Rec(1, 2, a=3)
 
     # ==========================================================================
     # Test sequence features
@@ -550,6 +562,20 @@ class TestRecType(unittest.TestCase):
         rec._update(*[3, 4])
         self.assertEqual(rec.a, 3)
         self.assertEqual(rec.b, 4)
+
+    def test_update_with_bad_args(self):
+        Rec = rectype.rectype('Rec', 'a b c d')
+        rec = Rec(1, 2, 3, 4)
+
+        with self.assertRaises(TypeError):
+            # Initialisation with too many positional arguments
+            rec._update(1, 2, 3, 4)
+
+            # Initialisation with a non-existent kwarg
+            rec._update(1, c=2)
+
+            # Redefinition of positional arg with keyword arg
+            rec._update(1, 2, a=3)
 
     def test__dict__(self):
         # These assertions are necessary because record uses __slots__
