@@ -15,7 +15,7 @@ data both easy and intuitive.
 What problem does *rectype* solve?
 ----------------------------------
 Python provides a range of data types for handling record-like data including
-dictionaries, namedtuples and SimpleNameSpace, each with their own pros and
+dictionaries, namedtuples and SimpleNameSpaces, each with their own pros and
 cons.
 
 *rectype* provides a factory function to easily create custom record classes
@@ -26,8 +26,6 @@ that have a unique set of properties:
 * support for per-field default values (including default factory functions)
 * can have more than 255 fields
 * very low memory footprint
-
-Interested? Check out the `tutorial <TODO: insert tutorial link>'_
 
 Quick taster
 ============
