@@ -53,9 +53,10 @@ def rectype(typename, fieldnames, rename=False):
         ('abc', '_1', 'ghi', '_3'), eliminating the keyword 'def' and the
         duplicate fieldname 'abc'.
     :returns: A subclass of ``RecType`` named *typename*.
-    :raises ValueError: if *typename* is invalid; *fieldnames*
-        contains an invalid fieldname and rename is ``False``; *fieldnames*
-        does not contain a 2-tuple when one was expected.
+    :raises ValueError: if *typename* is invalid; *fieldnames* contains
+        an invalid fieldname and rename is ``False``; *fieldnames*
+        contains a sequence that is not length 2.
+    :raises TypeError: if a fieldname is neither a string or a sequence.
     """
     _check_typename(typename)
     if isinstance(fieldnames, collections.Mapping):
@@ -76,14 +77,14 @@ def rectype(typename, fieldnames, rename=False):
         # API methods and attributes:
         __init__=__init__,
         _fieldnames=tuple(fieldnames),
-        _nfields = len(fieldnames),  # For speed
         _update=_update,
         _get_defaults=_get_defaults,
         _set_defaults=_set_defaults,
         _items=_items,
         # Protected/internal methods and attributes:
         __slots__=tuple(fieldnames),
-        _fieldnames_set=frozenset(fieldnames),
+        _fieldnames_set=frozenset(fieldnames),  # For fast membership testing
+        _nfields=len(fieldnames),  # For speed
         # An operator.attrgetter is stored for each field because it offers
         # a slight speedup over getattr(). TODO: test that this holds true
         # across platforms and python verions
@@ -409,12 +410,12 @@ def _parse_fieldnames(fieldnames, rename):
             try:
                 if len(fieldname) != 2:
                     raise ValueError(
-                        'fieldname {0!r} must be a 2-tuple of the form '
-                        '(fieldname, default_value)'.format(fieldname))
+                        'fieldname should be a (fieldname, default_value) '
+                        '2-tuple'.format(fieldname))
             except TypeError:
-                raise ValueError(
-                    'fieldname {0!r} must be a 2-tuple of the form '
-                    '(fieldname, default_value)'.format(fieldname))
+                raise TypeError(
+                    'fieldname should be a string, or a '
+                    '(fieldname, default_value) 2-tuple'.format(fieldname))
             has_default = True
             default = fieldname[1]
             fieldname = fieldname[0]
@@ -474,16 +475,16 @@ def _common_name_check(name, nametype):
     """
     Perform name checks common to both typenames and fieldnames.
     """
-    # if not isinstance(name, str):
-    #     raise TypeError(
-    #         '{0}names must be strings: {1:!r}'.format(nametype, name))
+    if not isinstance(name, str):
+        raise TypeError(
+            '{0}name must be a string: {1!r}'.format(nametype, name))
     if not name.isidentifier():
         raise ValueError(
-            '{0}names must be valid identifiers: {1:!r}'
+            '{0}name must be a valid identifiers: {1:!r}'
             .format(nametype, name))
     if keyword.iskeyword(name):
         raise ValueError(
-            '{0}names cannot be a keyword: {1!r}'.format(nametype, name))
+            '{0}name cannot be a keyword: {1!r}'.format(nametype, name))
 
 
 class DefaultFactory(object):
