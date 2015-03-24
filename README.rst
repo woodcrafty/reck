@@ -43,7 +43,8 @@ Quick taster
     >>> p[0] + p[1]                           # fields are also indexable
     3
     >>> p.x = 5                               # fields are mutable
-    >>> Point3D = rectype('Point3D', ['x', 'y', ('z', None)])  # per-field defaults can be set
+    >>> Point3D = rectype('Point3D',
+    ...     ['x', 'y', ('z', None)])          # per-field defaults can be set
     >>> p = Point3D(1, 2)
     >>> p
     Point3D(x=1, y=2, z=None)

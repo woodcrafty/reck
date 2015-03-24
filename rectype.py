@@ -53,7 +53,7 @@ def rectype(typename, fieldnames, rename=False):
         ('abc', '_1', 'ghi', '_3'), eliminating the keyword 'def' and the
         duplicate fieldname 'abc'.
     :returns: A subclass of ``RecType`` named *typename*.
-    :raises: ``ValueError`` if *typename* is invalid; *fieldnames*
+    :raises ValueError: if *typename* is invalid; *fieldnames*
         contains an invalid fieldname and rename is ``False``; *fieldnames*
         does not contain a 2-tuple when one was expected.
     """
@@ -153,10 +153,10 @@ def __init__(self, *values_by_field_order, **values_by_fieldname):
 
     :param *values_by_field_order: Field values passed by field order.
     :param **kwargs: Field values passed by fieldname.
-    :raises: ``TypeError`` if the number of positional arguments exceeds the
+    :raises TypeError: if the number of positional arguments exceeds the
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
-         ``ValueError`` if a field has not been defined by the positional
+    :raises ValueError: if a field has not been defined by the positional
          or keyword arguments and has no default value set.
     """
     self._check_args(values_by_field_order, values_by_fieldname)
@@ -196,7 +196,7 @@ def _update(self, *values_by_field_order, **values_by_fieldname):
 
     :param *values_by_field_order: Field values passed by field order.
     :param **values_by_fieldname: Field values passed by fieldname.
-    :raises: ``TypeError`` if the number of positional arguments exceeds the
+    :raises TypeError: if the number of positional arguments exceeds the
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
     """
@@ -245,7 +245,7 @@ def _set_defaults(cls, *values_by_field_order, **values_by_fieldname):
 
     :param *values_by_field_order: Default field values passed by field order.
     :param **values_by_fieldname: Default field values passed by fieldname.
-    :raises: ``TypeError`` if the number of positional arguments exceeds the
+    :raises TypeError: if the number of positional arguments exceeds the
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
     """
@@ -259,7 +259,7 @@ def _set_defaults(cls, *values_by_field_order, **values_by_fieldname):
 @classmethod
 def _check_fieldnames_exist(cls, fieldnames):
     """
-    Raise a ValueError if a fieldname does not exist in cls._fieldnames.
+    Raises ValueError if a fieldname does not exist in cls._fieldnames.
     """
     for fieldname in fieldnames:
         if fieldname not in cls._fieldnames:
