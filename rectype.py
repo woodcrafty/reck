@@ -1,11 +1,4 @@
-# Note that the module docstring below contains function descriptions etc.
-# because some of the the functions and attributes to be documented
-# are added dynamically to a subclass of RecType so is not possible to get
-# a reasonable Sphinx generated API doc.
-"""
-"""
 
-import abc
 import collections
 import keyword
 import operator
@@ -17,58 +10,6 @@ __author__ = 'Mark Richards'
 __email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
 
 
-class DefaultFactory(object):
-    """
-    Wrap a default factory function.
-
-    Default factory functions must be wrapped with this class so that they can
-    be distinguished from non-factory default values. The class also allows
-    optional positional and keyword arguments to be set, which will be passed
-    to the factory function when it is called. To call the wrapped factory
-    function (with the optional positional and keyword arguments), the
-    DefaultFactory instance should be called.
-
-    Example of setting ``list`` as a default factory during rectype creation::
-
-        >>> from rectype import rectype, DefaultFactory
-        >>> Car = rectype('Car', [
-        ...     'make',
-        ...     'model',
-        ...     ('colours', DefaultFactory(list))]
-        >>> car = Car(make='Lotus', model='Exige')
-        >>> car.colours.append('Orange')
-        >>> car.colours.append('Green')
-        Car(name='Lotus', model='Exige', colours=['Orange', 'Green'])
-
-    Example using ``dict`` as a default factory with positional and keyword
-    arguments::
-
-        >>> Rec = rectype.rectype('Rec', ['field1',
-        ...     ('field2', DefaultFactory(
-        ...         dict, args=[('a', 1)], kwargs={'b': 2, 'c': 3})])
-        >>> rec = Rec(field1=1)   # field2 will be set using the default factory
-        >>> rec
-        Rec(field1=1, field2={'a': 1, 'b': 2, 'c': 3})
-
-    :param factory_func: the callable object to be invoked as a default
-        factory function (with *args* and *kwargs* if provided).
-    :param args: a tuple of arguments for the factory function invocation.
-    :param kwargs: a dictionary of keyword arguments for the factory function
-        invocation.
-    """
-    def __init__(self, factory_func, args=(), kwargs={}):
-        self._factory_func = factory_func
-        self._args = args
-        self._kwargs = kwargs
-
-    def __call__(self):
-        return self._factory_func(*self._args, **self._kwargs)
-
-    def __repr__(self):
-        return ('DefaultFactory({0!r}, args={1!r}, kwargs={2!r})'
-            .format(self._factory_func, self._args, self._kwargs))
-
-
 def rectype(typename, fieldnames, rename=False):
     """
     Return a new subclass of ``collections.Sequence`` named typename.
@@ -78,6 +19,22 @@ def rectype(typename, fieldnames, rename=False):
     and iterable. Per-field default values can be set which are assigned
     to fields that are not supplied a value when new instances of the
     subclass are initialised.
+
+    Basic example::
+
+        >>> Point = rectype('Point', 'x y')  # create a new record type
+        >>> p = Point(x=1, y=2)              # instantiate with keyword arguments
+        >>> p[0]                             # indexable like lists
+        1
+        >>> p.y                              # fields also accesible by name
+        2
+        >>> p                                # readable __repr__ with name=value style
+        Point(x=1, y=None)
+        >>> # Create a new record type with default field values
+        >>> Point = rectype('Point', [('x', None), ('y', None)])
+        >>> p = Point(x=1)                   # fields with defaults do not need to be specified
+        >>> p                                # y has been assigned a default value
+        Point(x=1, y=None)
 
     :param typename: Name of the subclass to create, .g. ``'MyRecord'``.
     :param fieldnames: Can be a single string with each fieldname separated by
@@ -99,22 +56,6 @@ def rectype(typename, fieldnames, rename=False):
     :raises: ``ValueError`` if *typename* is invalid; *fieldnames*
         contains an invalid fieldname and rename is ``False``; *fieldnames*
         does not contain a 2-tuple when one was expected.
-
-    Basic example::
-
-        >>> Point = rectype('Point', 'x y')  # create a new record type
-        >>> p = Point(x=1, y=2)              # instantiate with keyword arguments
-        >>> p[0]                             # indexable like lists
-        1
-        >>> p.y                              # fields also accesible by name
-        2
-        >>> p                                # readable __repr__ with name=value style
-        Point(x=1, y=None)
-        >>> # Create a new record type with default field values
-        >>> Point = rectype('Point', [('x', None), ('y', None)])
-        >>> p = Point(x=1)                   # fields with defaults do not need to be specified
-        >>> p                                # y has been assigned a default value
-        Point(x=1, y=None)
     """
     _check_typename(typename)
     if isinstance(fieldnames, collections.Mapping):
@@ -135,7 +76,7 @@ def rectype(typename, fieldnames, rename=False):
         # API methods and attributes:
         __init__=__init__,
         _fieldnames=tuple(fieldnames),
-        _nfields = len(fieldnames),
+        _nfields = len(fieldnames),  # For speed
         _update=_update,
         _get_defaults=_get_defaults,
         _set_defaults=_set_defaults,
@@ -182,10 +123,11 @@ def rectype(typename, fieldnames, rename=False):
     return rectype
 
 
-def __init__(self, *args, **kwargs):
+def __init__(self, *values_by_field_order, **values_by_fieldname):
     """
-    Return a new ``rectype`` object initialised from positional and/or keyword
-    arguments.
+    Return a new ``rectype`` object.
+
+    Field values can be passed by field order, fieldname, or both.
 
     The following examples all return a rectype equivalent to
     ``Rec(a=1, b=2, c=3)``::
@@ -206,31 +148,24 @@ def __init__(self, *args, **kwargs):
         >>> rec2 == rec
         True
 
-    If a positional and keyword argument are supplied for the same field the
-    keyword argument overrides the positional argument::
-
-        >>> rec = Rec(1, a=2, b=3)
-        >>> rec
-        Rec(a=2, b=3)
-
     If a field has not been supplied a value by an argument, its default value
-    will be used (if it has been defined).
+    will be used (if one has been defined).
 
-    :param *args: Field values passed by position.
-    :param **kwargs: Field values passed by name.
+    :param *values_by_field_order: Field values passed by field order.
+    :param **kwargs: Field values passed by fieldname.
     :raises: ``TypeError`` if the number of positional arguments exceeds the
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
          ``ValueError`` if a field has not been defined by the positional
          or keyword arguments and has no default value set.
     """
-    self._check_args(args, kwargs)
+    self._check_args(values_by_field_order, values_by_fieldname)
 
     # Progressively assemble a dict representation of the record from
     # the field defaults, the positional arg and the keyword args.
     field_values = self._defaults.copy()
-    field_values.update(zip(self._fieldnames, args))
-    field_values.update(kwargs)
+    field_values.update(zip(self._fieldnames, values_by_field_order))
+    field_values.update(values_by_fieldname)
 
     self._check_all_fields_defined(field_values)
 
@@ -242,10 +177,11 @@ def __init__(self, *args, **kwargs):
             setattr(self, fieldname, value)
 
 
-def _update(self, *args, **kwargs):
+def _update(self, *values_by_field_order, **values_by_fieldname):
     """
-    Update the field values of the record with positional and/or keyword
-    arguments.
+    Update field values.
+
+    Update field values with values passed by field order, fieldname, or both.
 
     Example::
 
@@ -258,26 +194,19 @@ def _update(self, *args, **kwargs):
         >>> r
         Rec(a=2, b=3, c=4)
 
-    If a positional and keyword argument are supplied for the same field the
-    keyword argument will override the positional argument::
-
-        >>> rec._update(3, a=4, b=5)
-        >>> rec
-        Rec(a=4, b=5)
-
-    :param *args: Field values passed by position.
-    :param **kwargs: Field values passed by name.
+    :param *values_by_field_order: Field values passed by field order.
+    :param **values_by_fieldname: Field values passed by fieldname.
     :raises: ``TypeError`` if the number of positional arguments exceeds the
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
     """
-    self._check_args(args, kwargs)
+    self._check_args(values_by_field_order, values_by_fieldname)
 
     # Progressively assemble a dict representation of the record from
     # the field defaults, the positional arg and the keyword args.
     field_values = {}
-    field_values.update(zip(self._fieldnames, args))
-    field_values.update(kwargs)
+    field_values.update(zip(self._fieldnames, values_by_field_order))
+    field_values.update(values_by_fieldname)
 
     for fieldname, value in field_values.items():
         setattr(self, fieldname, value)
@@ -294,30 +223,36 @@ def _items(self):
 def _get_defaults(cls):
     """
     Return a ``dict`` which maps fieldnames to their corresponding
-    default value. Fields with no default value are excluded. If no
-    default values are set an empty ``dict`` is returned.
+    default value (if they have one). If no default values are set an empty
+     ``dict`` is returned.
+    ::
+        >>> Point = rectype('Point', [('x', None), ('y', None)])
+        >>> Point._get_defaults()
+        {'x': None, 'y': None}
     """
     return cls._defaults
 
 
 @classmethod
-def _set_defaults(cls, *args, **kwargs):
+def _set_defaults(cls, *values_by_field_order, **values_by_fieldname):
     """
     Replace the existing per-field default values.
 
-    This can be useful if you wish to use the same record class in
-    different contexts which require different default values.
+    Default field values can be passed by field order, fieldname, or both.
 
-    :param *args: Default field values passed by position.
-    :param **kwargs: Default field values passed by name.
+    Changing the defaults can be useful if you wish to use the same record
+    class in different contexts which require different default values.
+
+    :param *values_by_field_order: Default field values passed by field order.
+    :param **values_by_fieldname: Default field values passed by fieldname.
     :raises: ``TypeError`` if the number of positional arguments exceeds the
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
     """
-    cls._check_args(args, kwargs)
+    cls._check_args(values_by_field_order, values_by_fieldname)
     defaults = {}
-    defaults.update(zip(cls._fieldnames, args))
-    defaults.update(kwargs)
+    defaults.update(zip(cls._fieldnames, values_by_field_order))
+    defaults.update(values_by_fieldname)
     cls._defaults = defaults
 
 
@@ -343,25 +278,25 @@ def _check_all_fields_defined(cls, fieldnames):
 
 
 @classmethod
-def _check_args(cls, args, kwargs):
+def _check_args(cls, values_by_field_order, values_by_fieldname):
     """
     Check validity of positional and keyword arguments.
     """
-    if len(args) > cls._nfields:
+    if len(values_by_field_order) > cls._nfields:
         raise TypeError(
             'takes up to {0} positional arguments but {1} were given'
-            .format(cls._nfields, len(args)))
+            .format(cls._nfields, len(values_by_field_order)))
 
     # Check that every keyword argument in kwargs matches a fieldname.
-    for fieldname in kwargs:
+    for fieldname in values_by_fieldname:
         if fieldname not in cls._fieldnames_set:
             raise TypeError(
                 'keyword argument {0!r} does not match a field'
                 .format(fieldname))
 
     # Check that none of the keyword args are redefining a positional arg
-    positional_fields = {name for name in cls._fieldnames[:len(args)]}
-    for fieldname in kwargs:
+    positional_fields = frozenset(cls._fieldnames[:len(values_by_field_order)])
+    for fieldname in values_by_fieldname:
         if fieldname in positional_fields:
             raise TypeError(
                 'got multiple values for argument {0!r}'.format(fieldname))
@@ -549,3 +484,55 @@ def _common_name_check(name, nametype):
     if keyword.iskeyword(name):
         raise ValueError(
             '{0}names cannot be a keyword: {1!r}'.format(nametype, name))
+
+
+class DefaultFactory(object):
+    """
+    Wrap a default factory function.
+
+    Default factory functions must be wrapped with this class so that they can
+    be distinguished from non-factory default values. The class also allows
+    optional positional and keyword arguments to be set, which will be passed
+    to the factory function when it is called. To call the wrapped factory
+    function (with the optional positional and keyword arguments), the
+    DefaultFactory instance should be called.
+
+    Example of setting ``list`` as a default factory during rectype creation::
+
+        >>> from rectype import rectype, DefaultFactory
+        >>> Car = rectype('Car', [
+        ...     'make',
+        ...     'model',
+        ...     ('colours', DefaultFactory(list))]
+        >>> car = Car(make='Lotus', model='Exige')
+        >>> car.colours.append('Orange')
+        >>> car.colours.append('Green')
+        Car(name='Lotus', model='Exige', colours=['Orange', 'Green'])
+
+    Example using ``dict`` as a default factory with positional and keyword
+    arguments::
+
+        >>> Rec = rectype.rectype('Rec', ['field1',
+        ...     ('field2', DefaultFactory(
+        ...         dict, args=[('a', 1)], kwargs={'b': 2, 'c': 3})])
+        >>> rec = Rec(field1=1)   # field2 will be set using the default factory
+        >>> rec
+        Rec(field1=1, field2={'a': 1, 'b': 2, 'c': 3})
+
+    :param factory_func: the callable object to be invoked as a default
+        factory function (with *args* and *kwargs* if provided).
+    :param args: a tuple of arguments for the factory function invocation.
+    :param kwargs: a dictionary of keyword arguments for the factory function
+        invocation.
+    """
+    def __init__(self, factory_func, args=(), kwargs={}):
+        self._factory_func = factory_func
+        self._args = args
+        self._kwargs = kwargs
+
+    def __call__(self):
+        return self._factory_func(*self._args, **self._kwargs)
+
+    def __repr__(self):
+        return ('DefaultFactory({0!r}, args={1!r}, kwargs={2!r})'
+            .format(self._factory_func, self._args, self._kwargs))
