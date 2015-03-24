@@ -160,6 +160,8 @@ class TestRecType(unittest.TestCase):
         with self.assertRaises(ValueError):
             # 3-tuple instead of 2-tuple
             Rec = rectype.rectype('Rec', [('a', 1, 2)])
+
+        with self.assertRaises(ValueError):
             # 1-tuple instead of 2-tuple
             Rec = rectype.rectype('Rec', [('a',)])
 
@@ -232,28 +234,50 @@ class TestRecType(unittest.TestCase):
             # Typename is a keyword
             R = rectype.rectype('for', ['a', 'b'])
 
+        with self.assertRaises(ValueError):
             # Typename with a leading digit
             R = rectype.rectype('1R', ['a', 'b'])
 
+        with self.assertRaises(ValueError):
             # Typename contains a non alpha-numeric/underscore character
             R = rectype.rectype('R-', ['a', 'b'])
 
     def test_bad_fieldname(self):
         with self.assertRaises(ValueError):
             # Duplicate fieldname
-            R = rectype.rectype('R', ('a', 'a', 'b', 'a'))
+            R = rectype.rectype('R', ['a', 'a', 'b', 'a'])
 
+        with self.assertRaises(ValueError):
             # Fieldname with leading underscore
-            R = rectype.rectype('R', ('a', '_b'))
+            R = rectype.rectype('R', ['a', '_b'])
 
+        with self.assertRaises(ValueError):
             # Fieldname is a keyword
-            R = rectype.rectype('R', ('a', 'for'))
+            R = rectype.rectype('R', ['a', 'for'])
 
+        with self.assertRaises(ValueError):
             # Fieldname with a leading digit
-            R = rectype.rectype('R', ('a', '1b'))
+            R = rectype.rectype('R', ['a', '1b'])
 
+        with self.assertRaises(ValueError):
             # Fieldname contains a non alpha-numeric character/underscore char
-            R = rectype.rectype('R', ('a', 'b!'))
+            R = rectype.rectype('R', ['a', 'b!'])
+
+        with self.assertRaises(ValueError):
+            # tuple of len 1 (2-tuple is required)
+            R = rectype.rectype('R', [('a',)])
+
+        with self.assertRaises(ValueError):
+            # tuple of len 3 (2-tuple is required)
+            R = rectype.rectype('R', [('a', 1, 1)])
+
+        with self.assertRaises(ValueError):
+            # Non-string/2-tuple fieldname
+            R = rectype.rectype('R', ['a', {'b': 1}])
+
+        with self.assertRaises(TypeError):
+            # Non-string/2-tuple fieldname
+            R = rectype.rectype('R', ['a', 1])
 
     def test_rename(self):
         # Duplicate fieldname
@@ -356,6 +380,7 @@ class TestRecType(unittest.TestCase):
             # Initialisation without a value when there are no defaults
             rec = Rec()
 
+        with self.assertRaises(ValueError):
             # Initialisation with only 1 value when 2 are required
             rec = Rec(1)
 
@@ -363,9 +388,11 @@ class TestRecType(unittest.TestCase):
             # Initialisation with too many positional arguments
             rec = Rec(1, 2, 3)
 
+        with self.assertRaises(TypeError):
             # Initialisation with a non-existent kwarg
             rec = Rec(1, c=2)
 
+        with self.assertRaises(TypeError):
             # Redefinition of positional arg with keyword arg
             rec = Rec(1, 2, a=3)
 
@@ -416,9 +443,11 @@ class TestRecType(unittest.TestCase):
         with self.assertRaises(TypeError):
             rec = Rec(1, 2, 3, 4)
 
+        with self.assertRaises(TypeError):
             # Non-existent fieldname in defaults dict
-            Rec._set_defaults(dict(a=1, d=4))
+            Rec._set_defaults(a=1, d=4)
 
+        with self.assertRaises(TypeError):
             # Redefinition of positional arg with keyword arg
             rec = Rec(1, 2, a=3)
 
@@ -564,18 +593,20 @@ class TestRecType(unittest.TestCase):
         self.assertEqual(rec.b, 4)
 
     def test_update_with_bad_args(self):
-        Rec = rectype.rectype('Rec', 'a b c d')
-        rec = Rec(1, 2, 3, 4)
+        Rec = rectype.rectype('Rec', 'a b')
+        rec = Rec(1, 2)
 
         with self.assertRaises(TypeError):
             # Initialisation with too many positional arguments
-            rec._update(1, 2, 3, 4)
+            rec._update(3, 4, 5)
 
-            # Initialisation with a non-existent kwarg
-            rec._update(1, c=2)
+        with self.assertRaises(TypeError):
+            # Initialisation with a non-existent fieldname
+            rec._update(3, c=4)
 
+        with self.assertRaises(TypeError):
             # Redefinition of positional arg with keyword arg
-            rec._update(1, 2, a=3)
+            rec._update(3, 4, a=5)
 
     def test__dict__(self):
         # These assertions are necessary because record uses __slots__
