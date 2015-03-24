@@ -23,58 +23,35 @@ that have a unique set of properties:
 
 * mutable field values accessible using named attributes
 * indexable, sliceable and iterable
-* support for optional per-field default values (including default factory
-  functions).
-* can have more than 255 fields.
+* support for per-field default values (including default factory functions)
+* can have more than 255 fields
 * very low memory footprint
 
 Interested? Check out the `tutorial <TODO: insert tutorial link>'_
 
-Quick start
-===========
-First, create a ``rectype`` like you would create a ``namedtuple`` type::
+Quick taster
+============
+::
 
     >>> from rectype import rectype
-    >>> Person = rectype('Person', ['name', 'age'])
-
-Next, create an instance of ``Person`` with values for ``name`` and ``age``::
-
-    >>> p = Person(name='Eric', age=42)
-    >>> p
-    Person(name='Eric', age=42)
-
-Fields are accessible by attribute lookup and by index::
-
-    >>> p.name
+    >>> Point = rectype('Point', ['x', 'y'])  # create a new record type
+    >>> p = Point(1, y=2)                     # pass values by field order or fieldname
+    >>> p                                     # readable __repr__ with a name=value style
+    Point(x=1, y=2)
+    >>> p.name                                # fields accessible by name
     'Eric'
-    >>> p[0]
-    'Eric'
-
-Field values are mutable::
-
-    >>> p.name = 'Idle'
+    >>> p[0] + p[1]                           # fields are also indexable
+    3
+    >>> p.x = 5                               # fields are mutable
+    >>> Point3D = rectype('Point3D', ['x', 'y', ('z', None)])  # per-field defaults can be set
+    >>> p = Point3D(1, 2)
     >>> p
-    Rec(name='Idle', age=42)
-
-You can specify per-field default values when creating the type::
-
-    >>> Person = rectype('Person', [('name', None), ('age', None)])
-    >>> p = Person(name='Eric')
+    Point3D(x=1, y=2, z=None)
+    >>> p._update(y=3, z=4)                   # update multiple fields
     >>> p
-    Person(name='Eric', age=None)
+    Point3D(x=1, y=3, z=4)
 
-Multiple field values can be changed with the ``_update()`` method::
-
-    >>> p._update(name='John', age=43)
-    >>> p
-    Person(name='John', age=43)
-
-Fieldnames and field values can be iterated over::
-
-    >>> for fieldname, field_value in zip(p._fieldnames, p):
-    ...     print(fieldname, field_value)
-    name John
-    age 43
+Want to see more? Check out the `tutorial <TODO: insert tutorial link>'_
 
 Installation
 ------------
