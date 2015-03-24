@@ -1,18 +1,19 @@
 ===========
 rectype API
 ===========
+*rectype* is a Python module for creating lightweight record types with mutable
+field values. Rectype fields are accessible using named attributes
+as well as being indexable and iterable.
+
 --------------------------------------------------------------------------------
 :py:func:`rectype` factory function for record classes with mutable field values
 --------------------------------------------------------------------------------
 
-Record types allow fields to be accessed by name as well as position index
-allowing for more readable, self-documenting code. They are similar to
-``collections.namedtuple`` types except that field values are mutable,
-per-field default values are supported and they consume slightly less memory.
-
 .. py:function:: rectype(typename, fieldnames, rename=False)
 
-    Return a new ``collections.Sequence`` subclass named *typename*.
+    Create a new record class with fields accessible by named attributes.
+
+    The new type is a subclass of ``collections.Sequence`` named *typename*.
 
     The new subclass is used to create ``rectype`` objects that have
     fields accessible by attribute lookup as well as being indexable
@@ -62,61 +63,44 @@ per-field default values are supported and they consume slightly less memory.
 
 Instances of classes created by ``rectype.rectype()`` are created as follows:
 
-.. py:class:: SomeRecType(*args, **kwargs)
+.. py:class:: SomeRecType(*values_by_field_order, **values_by_fieldname)
 
-    Return a new ``rectype`` object initialised from an optional positional
-    argument and optional keyword arguments. It has the following call
-    profiles:
+    Return a new ``rectype`` object.
 
-        | *class* **SomeRecType**\ (***kwargs*)
-        | *class* **SomeRecType**\ (*mapping, **kwargs*)
-        | *class* **SomeRecType**\ (*iterable, **kwargs*)
+    Field values can be passed by field order, fieldname, or both.
 
     The following examples all return a rectype equivalent to
     ``Rec(a=1, b=2, c=3)``::
 
-        >>> rec = Rec(dict(a=1, b=2, c=3))   # using a mapping
-        >>> rec = Rec([1, 2, 3])             # using a sequence
-        >>> rec = Rec(a=1, b=2, c=3)         # using keyword args
-        >>> rec = Rec([1, 2], c=3)           # using a sequence and keyword args
+        >>> Rec = rectype('Rec', 'a b c')
+        >>> rec = Rec(1, 2, 3)                # using positional args
+        >>> rec = Rec(a=1, b=2, c=3)          # using keyword args
+        >>> rec = Rec(*[1, 2, 3])             # using a sequence
+        >>> rec = Rec(**dict(a=1, b=2, c=3))  # using a mapping
+        >>> rec = Rec(*[1, 2], c=3)           # using an unpacked sequence and keyword arg
         >>> rec
         Rec(a=1, b=2, c=3)
 
     Since rectype instances are iterable they can be used to initialise
-    other instances of the same type::
+    other instances of the same type by unpacking them::
 
-        >>> rec2 = Rec(rec)
+        >>> rec2 = Rec(*rec)
         >>> rec2 == rec
         True
 
-    If a positional argument is given and it is a mapping object, a
-    record is created with values assigned to fields identified by
-    keys of the mapping. Keys pairs that do not match a fieldname are
-    ignored.
+    If a field has not been supplied a value by an argument, its default value
+    will be used (if one has been defined).
 
-    The positional argument can also be an iterable object whose items
-    are in the same order as the fieldnames of the record type. If the
-    iterable provides too many values for the field the excess values
-    are ignored.
-
-    Keyword arguments can also be given to provide field values by
-    name. If a keyword argument provides a value for a field that
-    has already received a value, the value from the keyword argument
-    replaces the value from the positional argument. Keywords that
-    do not match a filename are ignored.
-
-    Any fields that do not have values defined by the positional or
-    keyword arguments will be assigned a field-specific default value,
-    if one has been defined.
-
-    :raises: ``TypeError`` if more than one positional argument is passed
-         or if *kwargs* contains a keyword that does not match a fieldname.
+    :param *values_by_field_order: Field values passed by field order.
+    :param **values_by_fieldname: Field values passed by fieldname.
+    :raises: ``TypeError`` if the number of positional arguments exceeds the
+         number of fields, a keyword argument does not match a fieldname,
+         or a keyword argument redefines a positional argument.
          ``ValueError`` if a field has not been defined by the positional
          or keyword arguments and has no default value set.
 
 Methods and attributes
 ----------------------
-
 These are the methods and attributes supported by rectypes. To prevent
 conflicts with fieldnames, the method and attribute names start with an
 underscore.
@@ -141,28 +125,32 @@ underscore.
     Return a dict that maps fieldnames to their corresponding default_value.
     If no default values are set an empty dict is returned.
 
-.. py:classmethod:: somerecord._set_defaults()
+.. py:classmethod:: somerecord._set_defaults(*args, *kwargs)
 
-    Replace the existing per-field default values with a new set.
+    Replace the existing per-field default values.
 
-    This can be useful if you wish to use the same record class in
-    different contexts which require different default values.
+    Default field values can be passed by field order, fieldname, or both.
+
+    Changing the defaults can be useful if you wish to use the same record
+    class in different contexts which require different default values.
 
     Example::
 
-    >>> Point3D = rectype('Point3D', [('x', 1), ('y', 2), 'z')
-    >>> Point3D._get_defaults()
-    {'x': 1, 'y': 2}
-    >>> Point3D._set_defaults({})  # Pass an empty set to remove all defaults
-    >>> Point3D._get_defaults()
-    {}
+        >>> Point3D = rectype('Point3D', [('x', 1), ('y', 2), 'z')
+        >>> Point3D._get_defaults()
+        {'x': 1, 'y': 2}
+        >>> Point3D._set_defaults(z=None)  # Set default for z, remove default for x and y
+        >>> Point3D._get_defaults()
+        {'z': None}
+        >>> Point3D._set_defaults()        # Pass no arguments to remove all defaults
+        >>> Point3D._get_defaults()
+        {}
 
-    :param defaults: A mapping of fieldname/default_value pairs which is
-        used to replace the existing per-field default values. If a
-        field is not present in *defaults* it will not have a default
-        value. To remove all defaults set *defaults* to an empty mapping.
-    :raises: ``ValueError`` if a key in *defaults* does not match a
-        fieldname.
+    :param *values_by_field_order: Default field values passed by field order.
+    :param **values_by_fieldname: Default field values passed by fieldname.
+    :raises: ``TypeError`` if the number of positional arguments exceeds the
+         number of fields, a keyword argument does not match a fieldname,
+         or a keyword argument redefines a positional argument.
 
 .. py:function:: somerecord._items()
 
@@ -170,40 +158,28 @@ underscore.
 
 .. py:function:: somerecord._update(*args, **kwargs)
 
-    Update the field values of the record with values from an optional
-    positional argument and a possibly empty set of keyword arguments.
-
-    This method has the following call profiles:
-
-        | somerec.\ **_update**\ (***kwargs*)
-        | somerec.\ **_update**\ (*mapping, **kwargs*)
-        | somerec.\ **_update**\ (*iterable, **kwargs*)
+    Update field values with values passed by field order, fieldname, or both.
 
     Example::
 
         >>> Rec = rectype('Rec', 'a b c')
         >>> r = Rec(a=1, b=2, c=3)
-        >>> r._update(b=5, c=6)     # using keyword arguments
+        >>> r._update(b=5, c=6)   # Using keyword arguments
         >>> r
         Rec(a=1, b=2, c=3)
-        >>> r._update([2, 3], c=4)  # using an iterable and keyword arguments
+        >>> r._update(2, 3, c=4)  # Using positional and keyword arguments
         >>> r
         Rec(a=2, b=3, c=4)
 
-    :param *args: Optional positional argument which can be a mapping of
-        fieldname/field_value pairs or an iterable of field values which
-        are in the same order as the fieldnames listed in the ``_fieldnames``
-        class attribute.
-    :param **kwargs: Keyword arguments in which each keyword must match a
-        fieldname of the record. Keyword arguments can be supplied on their
-        own, or together with the positional argument.
-    :raises: ``TypeError`` if more than one positional argument is
-        supplied or a keyword argument does not match a fieldname.
+    :param *values_by_field_order: Field values passed by field order.
+    :param **values_by_fieldname: Field values passed by fieldname.
+    :raises: ``TypeError`` if the number of positional arguments exceeds the
+         number of fields, a keyword argument does not match a fieldname,
+         or a keyword argument redefines a positional argument.
 
 Operations
 ----------
-
-These are the operations supported by rectypes:
+The following operations are supported by rectypes:
 
 **len(rec)**
 
@@ -265,10 +241,10 @@ DefaultFactory
 
     Default factory functions must be wrapped using this class so that they
     can be distinguished from non-factory default values. Optional positional
-    and keyword arguments to be set, which will be passed to the factory
-    function when it is called.
+    and keyword arguments to be passed to the factory function when it is
+    called can be set.
 
-    Example of setting ``list`` (with no srguments), as a default factory
+    Example of setting ``list`` (with no arguments), as a default factory
     during rectype creation::
 
         >>> Car = rectype.rectype('Car', [
