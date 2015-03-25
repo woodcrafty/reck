@@ -278,7 +278,7 @@ A dictionary of fieldname/default_value pairs can be retrieved with the
 
 The existing per-field default values can be replaced by supplying the
 ``_replace_defaults()`` class method with new default values by field order,
-fieldname or both::
+fieldname, or both::
 
     >>> Point3D._replace_defaults(dict(x=7, z=9))
     >>> Point3D._get_defaults()   # 'y' was not supplied a default value so it no longer has one
@@ -287,7 +287,7 @@ fieldname or both::
 To remove all default field values just call ``_replace_defaults()`` with no
 arguments::
 
-    >>> Point3D._replace_defaults({})
+    >>> Point3D._replace_defaults()
     >>> Point3D._get_defaults()
     {}
 
