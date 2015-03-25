@@ -125,11 +125,12 @@ underscore.
     Return a dict that maps fieldnames to their corresponding default_value.
     If no default values are set an empty dict is returned.
 
-.. py:classmethod:: somerecord._set_defaults(*args, *kwargs)
+.. py:classmethod:: somerecord._replace_defaults(*values_by_field_order, **values_by_fieldname)
 
     Replace the existing per-field default values.
 
-    Default field values can be passed by field order, fieldname, or both.
+    The new default field values can be passed by field order, fieldname, or
+    both.
 
     Changing the defaults can be useful if you wish to use the same record
     class in different contexts which require different default values.
@@ -156,7 +157,7 @@ underscore.
 
     Return a list of ``(fieldname, value)`` 2-tuples.
 
-.. py:function:: somerecord._update(*args, **kwargs)
+.. py:function:: somerecord._update(*values_by_field_order, **values_by_fieldname)
 
     Update field values with values passed by field order, fieldname, or both.
 

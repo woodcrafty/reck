@@ -34,14 +34,14 @@ Field values are mutable::
     >>> p
     Rec(name='Idle', age=42)
 
-You can specify per-field default values when creating a ``rectype``::
+You can specify per-field default values when creating a rectype::
 
     >>> Person = rectype('Person', [('name', None), ('age', None)])
     >>> p = Person(name='Eric')   # no value supplied for the 'age' field
     >>> p                         # 'age' has been set to its default value
     Person(name='Eric', age=None)
 
-Multiple field values can be changed with the ``_update()`` method::
+Multiple field values can be changed using the ``_update()`` method::
 
     >>> p._update(name='John', age=43)
     >>> p
@@ -120,12 +120,11 @@ be shared amongst all instances of the rectype::
     [1]
 
 To avoid this happening, mutable defaults can be created using a default
-factory function. This is done by setting the default to a
-``rectype.DefaultFactory`` object, passing in a factory function (along with
-any positional and keyword arguments), to the constructor. This example uses
-``list`` with no arguments::
+factory function. This is done by wrapping the factory function with a
+``rectype.DefaultFactory`` object. This example uses ``list`` with no
+arguments::
 
-    >>> from rectype import rectype, DefaultFactory
+    >>> from rectype import DefaultFactory
     >>> Rec = rectype('Rec', [('a', DefaultFactory(list))])
     >>> rec1 = Rec()
     >>> rec2 = Rec()
@@ -135,8 +134,9 @@ any positional and keyword arguments), to the constructor. This example uses
     >>> rec2.a           # the value of 'a' remains unmodified
     []
 
-This example uses dict as a default factory, using the ``DefaultFactory()`` args
-and kwargs arguments to specify positional and keyword arguments for dict::
+The next example uses ``dict`` as a default factory, using the
+args and kwargs arguments of ``DefaultFactory()`` to specify positional and
+keyword arguments for ``dict``::
 
     >>> Rec = rectype('Rec', [
     ...     ('a', DefaultFactory(dict, args=[('b', 2)], kwargs=dict(c=3)])
@@ -152,14 +152,12 @@ and kwargs arguments to specify positional and keyword arguments for dict::
 
 Renaming invalid fieldnames
 ---------------------------
-Renaming invalid fields
-
 Any valid Python identifier may be used for a fieldname except for names
 starting with an underscore. Valid identifiers cannot start with a digit or
 underscore and cannot be a keyword such as *class*.
 
-You can set the rename argument to ``True`` to automatically replace invalid
-fieldnames with position names::
+You can set the *rename* argument of ``rectype()`` to ``True`` to automatically
+replace invalid fieldnames with position names::
 
     >>> Rec = rectype('Rec', ['abc', 'def', 'ghi', 'abc'], rename=True)
     >>> Rec._fieldnames    # keyword 'def' and duplicate fieldname 'abc' have been renamed
@@ -239,15 +237,16 @@ Setting a slice of fields works as well::
     Point3D(x=10, y=11, z=33)
 
 Note, slice behaviour is different to that of lists. If the iterable being
-assigned to the slice is longer than the slice, the excess iterable items are
-ignored::
+assigned to the slice is longer than the slice, the surplus iterable items are
+ignored (with a list the surplus items are inserted into the list)::
 
     >>> p[:3] = [1, 2, 3, 4, 5]   # Slice has 3 items, the iterable has 5
     >>> p                         # The last 2 items of the iterable were ignored
     Point3D(x=1, y=2, z=3)
 
 Likewise, if the iterable contains fewer items than the slice, the surplus
-fields in the slice remain unaffected::
+fields in the slice remain unaffected (with a list the surplus items are
+deleted)::
 
     >>> p[:3] = [None, None]   # Slice has 3 items, the iterable only 2
     >>> p                      # The last slice item (field z) was unaffected
@@ -256,19 +255,20 @@ fields in the slice remain unaffected::
 
 Setting multiple fields
 -----------------------
-Multiple field values can be updated using the ``_update()`` method, which has
-the same call profile as instantiation. The following examples all result in
-a record equivalent to ``Point3D(x=4, y=5, z=6)``::
+Multiple field values can be updated using the ``_update()`` method, with field
+values passed by field order, fieldname, or both (as with instantiation). The
+following examples all result in a record equivalent to
+``Point3D(x=4, y=5, z=6)``::
 
-    >>> p._update(x=4, y=5, z=6)        # using keyword arguments
-    >>> p._update([4, 5, 6])            # using an iterable
-    >>> p._update(dict(x=4, y=5, z=6))  # using a mapping
-    >>> p._update([4, 5], c=6)          # using an iterable and keyword args
+    >>> p._update(4, 5, 6)              # using values by field order
+    >>> p._update(x=4, y=5, z=6)        # using values by fieldname
+    >>> p._update(*[4, 5, 6])            # using an unpacked sequence
+    >>> p._update(**dict(x=4, y=5, z=6)) # using an unpacked mapping
     >>> p
     Point3D(x=4, y=5, z=6)
 
-Updating defaults
-=================
+Replacing defaults
+==================
 A dictionary of fieldname/default_value pairs can be retrieved with the
 ``_get_defaults()`` class method::
 
@@ -276,17 +276,18 @@ A dictionary of fieldname/default_value pairs can be retrieved with the
     >>> Point3D._get_defaults()
     {'x': 1, 'y': 2}
 
-The existing per-field default values can be replaced by supplying a
-fieldname/default_value mapping to the ``_set_defaults()`` class method.
-Fields not included in the mapping will no longer have a default value::
+The existing per-field default values can be replaced by supplying the
+``_replace_defaults()`` class method with new default values by field order,
+fieldname or both::
 
-    >>> Point3D._set_defaults(dict(x=7, z=9))
-    >>> Point3D._get_defaults()   # field 'y' was not supplied a default value so no longer has one
+    >>> Point3D._replace_defaults(dict(x=7, z=9))
+    >>> Point3D._get_defaults()   # 'y' was not supplied a default value so it no longer has one
     {'x': 7, 'z': 9}
 
-To remove all default field values just pass in an empty mapping::
+To remove all default field values just call ``_replace_defaults()`` with no
+arguments::
 
-    >>> Point3D._set_defaults({})
+    >>> Point3D._replace_defaults({})
     >>> Point3D._get_defaults()
     {}
 
@@ -301,7 +302,7 @@ class in different contexts that require different default values::
     >>> car2 = Car(model='Mustang', body_type='saloon')
     >>> # Now create hatchback cars of different makes. To make life
     >>> # easier, replace the defaults with something more appropriate:
-    >>> Rec._set_defaults(dict(body_type='hatchback'))
+    >>> Rec._replace_defaults(dict(body_type='hatchback'))
     >>> Rec._get_defaults()   # note, 'make' no longer has a default value
     {'body_type': 'hatchback'}
     >>> car3 = Car(model='Fiat', model='Panda')
@@ -384,7 +385,8 @@ fixed-width print format::
     Point: x=3 y=4 z=5.0
 
 The subclass shown above sets ``__slots__`` to an empty tuple. This helps
-keep memory requirements low by preventing the creation of instance dictionaries.
+keep memory requirements low by preventing the creation of per-instance
+dictionaries.
 
 Adding fields/attributes
 ========================
