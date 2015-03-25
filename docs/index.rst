@@ -13,6 +13,8 @@ Contents:
 
    overview
    tutorial
+   choosing_a_data_type
+   memory_usage
    api
 
 
