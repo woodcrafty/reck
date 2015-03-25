@@ -246,12 +246,12 @@ DefaultFactory
     called can be set.
 
     Example of setting ``list`` (with no arguments), as a default factory
-    during rectype creation::
+    during wrecord creation::
 
-        >>> Car = rectype.rectype('Car', [
+        >>> Car = wrecord.wrecord('Car', [
         ...     'make',
         ...     'model',
-        ...     ('colours', rectype.DefaultFactory(list))]
+        ...     ('colours', wrecord.DefaultFactory(list))]
         >>> car = Car(make='Lotus', model='Exige')
         >>> car.colours.append('Orange')
         >>> car.colours.append('Green')
@@ -260,7 +260,7 @@ DefaultFactory
     An example using ``dict`` with positional and keyword arguments
     as a default factory::
 
-        >>> Rec = rectype('Rec', [('field', DefaultFactory(
+        >>> Rec = wwrecord.record('Rec', [('field', wrecord.DefaultFactory(
         ...     dict, args=[('a', 1)], kwargs={'b': 2, 'c': 3})])
         >>> rec = Rec()       # field will be set using the default factory
         >>> rec

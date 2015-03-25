@@ -1,13 +1,13 @@
 ================
-rectype tutorial
+wrecord tutorial
 ================
 
 The basics
 ==========
-First, create a ``rectype`` like you would create a ``namedtuple`` type.
+First, create a ``wrecord`` like you would create a ``namedtuple`` type.
 
-    >>> from rectype import rectype
-    >>> Person = rectype('Person', ['name', 'age'])
+    >>> from wrecord import wrecord
+    >>> Person = wrecord('Person', ['name', 'age'])
 
 Next, create an instance of ``Person`` with values for ``name`` and ``age``::
 
@@ -34,9 +34,9 @@ Field values are mutable::
     >>> p
     Rec(name='Idle', age=42)
 
-You can specify per-field default values when creating a rectype::
+You can specify per-field default values when creating a wrecord::
 
-    >>> Person = rectype('Person', [('name', None), ('age', None)])
+    >>> Person = wrecord('Person', [('name', None), ('age', None)])
     >>> p = Person(name='Eric')   # no value supplied for the 'age' field
     >>> p                         # 'age' has been set to its default value
     Person(name='Eric', age=None)
@@ -57,32 +57,32 @@ Field values can be iterated over::
 Type creation
 =============
 
-New types are created with the ``rectype.rectype()`` factory function::
+New types are created with the ``wrecord.wrecord()`` factory function::
 
-    >>> Point = rectype(typename='Point', fieldnames=['x', 'y'], rename=False)
+    >>> Point = wrecord(typename='Point', fieldnames=['x', 'y'], rename=False)
 
 Setting fieldnames
 ------------------
 Fieldnames can be specified with a sequence of strings or a single string of
 space and/or comma separated fieldnames. These examples are equivalent::
 
-    >>> Point = rectype('Point', ['x',  'y'])
-    >>> Point = rectype('Point', 'x y')
-    >>> Point = rectype('Point', 'x,y')
+    >>> Point = wrecord('Point', ['x',  'y'])
+    >>> Point = wrecord('Point', 'x y')
+    >>> Point = wrecord('Point', 'x,y')
 
 Setting defaults
 ----------------
 Per-field defaults can be specified by supplying a ``(fieldname, default)``
 tuple in place of a string for a fieldname::
 
-    >>> Point3D = rectype('Point3D', [('x', None), ('y', None), ('z', None])
+    >>> Point3D = wrecord('Point3D', [('x', None), ('y', None), ('z', None])
     >>> p = Point3D()
     >>> p
     Point3D(x=None, y=None, z=None)
 
 A default does not have to be supplied for every field::
 
-    >>> Point3D = rectype('Point3D', ['x', ('y', None), 'z'])
+    >>> Point3D = wrecord('Point3D', ['x', ('y', None), 'z'])
     >>> p = Point3D(x=1, z=3)
     >>> p
     Point3D(x=1, y=None, z=3)
@@ -97,7 +97,7 @@ Per-field defaults can also be specified for every field using an ordered
 mapping such as ``collections.OrderedDict``::
 
     >>> from collections import OrderedDict
-    >>> Point3D = rectype('Point3D', OrderedDict([
+    >>> Point3D = wrecord('Point3D', OrderedDict([
     ...     ('x', None),
     ...     ('y', None),
     ...     ('z', None)]))
@@ -108,9 +108,9 @@ mapping such as ``collections.OrderedDict``::
 Factory function defaults
 -------------------------
 As with Python's mutable default arguments, mutable default field values will
-be shared amongst all instances of the rectype::
+be shared amongst all instances of the wrecord::
 
-    >>> Rec = rectype('Rec', [('a', [])])
+    >>> Rec = wrecord('Rec', [('a', [])])
     >>> rec1 = Rec()
     >>> rec2 = Rec()
     >>> rec1.a.append(1)
@@ -121,11 +121,11 @@ be shared amongst all instances of the rectype::
 
 To avoid this happening, mutable defaults can be created using a default
 factory function. This is done by wrapping the factory function with a
-``rectype.DefaultFactory`` object. This example uses ``list`` with no
+``wrecord.DefaultFactory`` object. This example uses ``list`` with no
 arguments::
 
-    >>> from rectype import DefaultFactory
-    >>> Rec = rectype('Rec', [('a', DefaultFactory(list))])
+    >>> from wrecord import DefaultFactory
+    >>> Rec = wrecord('Rec', [('a', DefaultFactory(list))])
     >>> rec1 = Rec()
     >>> rec2 = Rec()
     >>> rec1.a.append(1)
@@ -138,7 +138,7 @@ The next example uses ``dict`` as a default factory, using the
 args and kwargs arguments of ``DefaultFactory()`` to specify positional and
 keyword arguments for ``dict``::
 
-    >>> Rec = rectype('Rec', [
+    >>> Rec = wrecord('Rec', [
     ...     ('a', DefaultFactory(dict, args=[('b', 2)], kwargs=dict(c=3)])
     >>> rec1 = Rec()     # calls dict([('b', 2)], c=3) to initialise field 'a'
     >>> rec2 = Rec()     # calls dict([('b', 2)], c=3) to initialise field 'a'
@@ -156,18 +156,18 @@ Any valid Python identifier may be used for a fieldname except for names
 starting with an underscore. Valid identifiers cannot start with a digit or
 underscore and cannot be a keyword such as *class*.
 
-You can set the *rename* argument of ``rectype()`` to ``True`` to automatically
+You can set the *rename* argument of ``wrecord()`` to ``True`` to automatically
 replace invalid fieldnames with position names::
 
-    >>> Rec = rectype('Rec', ['abc', 'def', 'ghi', 'abc'], rename=True)
+    >>> Rec = wrecord('Rec', ['abc', 'def', 'ghi', 'abc'], rename=True)
     >>> Rec._fieldnames    # keyword 'def' and duplicate fieldname 'abc' have been renamed
     ('abc', '_1', 'ghi', '_3')
 
 Instantiation
 =============
-When instantiating new *rectype* objects, field values can be passed by
+When instantiating new *wrecord* objects, field values can be passed by
 field order, fieldname, or both. The following examples all return a
-``rectype`` equivalent to ``Point3D(x=1, y=2, z=3)``::
+``wrecord`` equivalent to ``Point3D(x=1, y=2, z=3)``::
 
     >>> p = Point3D(1, 2, 3)                # using values by field order
     >>> p = Point3D(x=1, y=2, z=3)          # using values by fieldname
@@ -177,8 +177,8 @@ field order, fieldname, or both. The following examples all return a
     >>> p
     Point3D(x=1, y=2, z=3)
 
-*rectype* objects are iterable so they can be used to initialise
-other *rectype* objects of the same type::
+*wrecord* objects are iterable so they can be used to initialise
+other *wrecord* objects of the same type::
 
     >>> p2 = Point3D(*p)
     >>> p2 == p
@@ -194,7 +194,7 @@ Fields are accessible by named attribute::
     >>> p.z
     3
 
-The fields of *rectype* objects are are mutable, meaning they can be
+The fields of *wrecord* objects are are mutable, meaning they can be
 modified after creation::
 
     >>> p.z = 33
@@ -272,7 +272,7 @@ Replacing defaults
 A dictionary of fieldname/default_value pairs can be retrieved with the
 ``_get_defaults()`` class method::
 
-    >>> Point3D = rectype('Point3D', [('x', 1), ('y', 2), 'z')
+    >>> Point3D = wrecord('Point3D', [('x', 1), ('y', 2), 'z')
     >>> Point3D._get_defaults()
     {'x': 1, 'y': 2}
 
@@ -294,7 +294,7 @@ arguments::
 Replacing the default values can be useful if you wish to use the same record
 class in different contexts that require different default values::
 
-    >>> Car = rectype('Car', [('make', 'Ford'), 'model', 'body_type')
+    >>> Car = wrecord('Car', [('make', 'Ford'), 'model', 'body_type')
     >>> Car._get_defaults()
     {'make': 'Ford'}
     >>> # Create some Ford cars:
@@ -334,7 +334,7 @@ method::
 
 Miscellaneous operations
 ========================
-Rectypes support various operations that are demonstrated below::
+Wrecords support various operations that are demonstrated below::
 
     >>> p = Point3D(x=1, y=2, z=3)
     >>> len(p)              # get the number of fields in the record
@@ -373,11 +373,11 @@ Instances can be pickled::
 
 Subclassing
 ===========
-Since rectypes are normal Python classes it is easy to add or change
+Since wrecords are normal Python classes it is easy to add or change
 functionality with a subclass. Here is how to add a calculated field and a
 fixed-width print format::
 
-    >>> class Point(rectype('Point', 'x y')):
+    >>> class Point(wrecord('Point', 'x y')):
     ...    __slots__ = ()
     ...    @property
     ...    def hypotenuse(self):
@@ -394,10 +394,10 @@ dictionaries.
 
 Adding fields/attributes
 ========================
-Because *rectype* objects are based on slots, new fields cannot be added after
+Because *wrecord* objects are based on slots, new fields cannot be added after
 object creation::
 
-    >>> Point = rectype('Point', 'x y')
+    >>> Point = wrecord('Point', 'x y')
     >>> p = Point([1, 2])
     >>> p.new_attribute = 4   # Can't do this!
     AttributeError                  Traceback (most recent call last)
@@ -407,9 +407,9 @@ object creation::
     AttributeError: 'Point3D' object has no attribute 'new_attribute'
 
 Subclassing is also not useful for adding new attributes. Instead, simply
-create a new rectype from the ``_fieldnames`` class attribute::
+create a new wrecord from the ``_fieldnames`` class attribute::
 
-    >>> Point3D = rectype('Point3D', Point._fieldnames + ('z',))
+    >>> Point3D = wrecord('Point3D', Point._fieldnames + ('z',))
 
 More than 255 fields
 ====================

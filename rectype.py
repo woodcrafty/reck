@@ -10,11 +10,11 @@ __author__ = 'Mark Richards'
 __email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
 
 
-def rectype(typename, fieldnames, rename=False):
+def wrecord(typename, fieldnames, rename=False):
     """
     Return a new subclass of ``collections.Sequence`` named typename.
 
-    The new subclass is used to create ``rectype`` objects that have
+    The new subclass is used to create wrecord objects that have
     fields accessible by attribute lookup as well as being indexable
     and iterable. Per-field default values can be set which are assigned
     to fields that are not supplied a value when new instances of the
@@ -22,16 +22,16 @@ def rectype(typename, fieldnames, rename=False):
 
     Basic example::
 
-        >>> Point = rectype('Point', 'x y')  # create a new record type
+        >>> Point = wrecord('Point', 'x y')  # create a new record type
         >>> p = Point(x=1, y=2)              # instantiate with keyword arguments
         >>> p[0]                             # indexable like lists
         1
-        >>> p.y                              # fields also accesible by name
+        >>> p.y                              # fields also accessible by name
         2
         >>> p                                # readable __repr__ with name=value style
         Point(x=1, y=None)
         >>> # Create a new record type with default field values
-        >>> Point = rectype('Point', [('x', None), ('y', None)])
+        >>> Point = wrecord('Point', [('x', None), ('y', None)])
         >>> p = Point(x=1)                   # fields with defaults do not need to be specified
         >>> p                                # y has been assigned a default value
         Point(x=1, y=None)
@@ -52,7 +52,7 @@ def rectype(typename, fieldnames, rename=False):
         ('abc', 'def', 'ghi', 'abc') is converted to
         ('abc', '_1', 'ghi', '_3'), eliminating the keyword 'def' and the
         duplicate fieldname 'abc'.
-    :returns: A subclass of ``RecType`` named *typename*.
+    :returns: A subclass of of collections.Sequence named *typename*.
     :raises ValueError: if *typename* is invalid; *fieldnames* contains
         an invalid fieldname and rename is ``False``; *fieldnames*
         contains a sequence that is not length 2.
@@ -107,7 +107,7 @@ def rectype(typename, fieldnames, rename=False):
         __len__=__len__,
     )
 
-    rectype = type(typename, (collections.Sequence,), type_dct)
+    wrecord = type(typename, (collections.Sequence,), type_dct)
 
     # Explanation from collections.namedtuple:
     # For pickling to work, the __module__ variable needs to be set to the
@@ -116,24 +116,24 @@ def rectype(typename, fieldnames, rename=False):
     # or sys._getframe is not defined for arguments greater than 0
     # (e.g. IronPython).
     try:
-        rectype.__module__ = sys._getframe(1).f_globals.get(
+        wrecord.__module__ = sys._getframe(1).f_globals.get(
             '__name__', '__main__')
     except (AttributeError, ValueError):
         pass
 
-    return rectype
+    return wrecord
 
 
 def __init__(self, *values_by_field_order, **values_by_fieldname):
     """
-    Return a new ``rectype`` object.
+    Return a new wrecord object.
 
     Field values can be passed by field order, fieldname, or both.
 
-    The following examples all return a rectype equivalent to
+    The following examples all return a wrecord equivalent to
     ``Rec(a=1, b=2, c=3)``::
 
-        >>> Rec = rectype('Rec', 'a b c')
+        >>> Rec = wrecord('Rec', 'a b c')
         >>> rec = Rec(1, 2, 3)                # using positional args
         >>> rec = Rec(a=1, b=2, c=3)          # using keyword args
         >>> rec = Rec(*[1, 2, 3])             # using an unpacked sequence
@@ -142,7 +142,7 @@ def __init__(self, *values_by_field_order, **values_by_fieldname):
         >>> rec
         Rec(a=1, b=2, c=3)
 
-    Since rectype instances are iterable they can be used to initialise
+    Since wrecord instances are iterable they can be used to initialise
     other instances of the same type by unpacking them::
 
         >>> rec2 = Rec(*rec)
@@ -186,7 +186,7 @@ def _update(self, *values_by_field_order, **values_by_fieldname):
 
     Example::
 
-        >>> Rec = rectype('Rec', 'a b c')
+        >>> Rec = wrecord('Rec', 'a b c')
         >>> r = Rec(a=1, b=2, c=3)
         >>> r._update(b=5, c=6)     # using keyword arguments
         >>> r
@@ -227,7 +227,7 @@ def _get_defaults(cls):
     default value (if they have one). If no default values are set an empty
      ``dict`` is returned.
     ::
-        >>> Point = rectype('Point', [('x', None), ('y', None)])
+        >>> Point = wrecord('Point', [('x', None), ('y', None)])
         >>> Point._get_defaults()
         {'x': None, 'y': None}
     """
@@ -499,10 +499,10 @@ class DefaultFactory(object):
     function (with the optional positional and keyword arguments), the
     DefaultFactory instance should be called.
 
-    Example of setting ``list`` as a default factory during rectype creation::
+    Example of setting ``list`` as a default factory during wrecord creation::
 
-        >>> from rectype import rectype, DefaultFactory
-        >>> Car = rectype('Car', [
+        >>> from wrecord import wrecord, DefaultFactory
+        >>> Car = wrecord('Car', [
         ...     'make',
         ...     'model',
         ...     ('colours', DefaultFactory(list))]
@@ -514,7 +514,7 @@ class DefaultFactory(object):
     Example using ``dict`` as a default factory with positional and keyword
     arguments::
 
-        >>> Rec = rectype.rectype('Rec', ['field1',
+        >>> Rec = wrecord.wrecord('Rec', ['field1',
         ...     ('field2', DefaultFactory(
         ...         dict, args=[('a', 1)], kwargs={'b': 2, 'c': 3})])
         >>> rec = Rec(field1=1)   # field2 will be set using the default factory

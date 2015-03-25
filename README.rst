@@ -1,5 +1,5 @@
 =======
-rectype
+wrecord
 =======
 
 :Author: `Mark Richards <http://www.abdn.ac.uk/staffnet/profiles/m.richards/>`_
@@ -7,18 +7,18 @@ rectype
 :License: `BSD 3-Clause <http://opensource.org/licenses/BSD-3-Clause>`_
 :Status: Pre-alpha
 
-*rectype* is a Python module for creating lightweight, flexible data types
+*wrecord* is a Python module for creating lightweight, flexible data types
 designed to make working with
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_-like
 data both easy and intuitive.
 
-What problem does *rectype* solve?
+What problem does *wrecord* solve?
 ----------------------------------
 Python provides a range of data types for handling record-like data including
 dictionaries, namedtuples and SimpleNameSpaces, each with their own pros and
 cons.
 
-*rectype* provides a factory function to easily create custom record classes
+*wrecord* provides a factory function to easily create custom record classes
 that have a unique set of properties:
 
 * mutable field values accessible using named attributes
@@ -31,8 +31,8 @@ Quick taster
 ============
 ::
 
-    >>> from rectype import rectype
-    >>> Point = rectype('Point', ['x', 'y'])  # create a new record type
+    >>> from wrecord import wrecord
+    >>> Point = wrecord('Point', ['x', 'y'])  # create a new record type
     >>> p = Point(1, y=2)                     # pass values by field order or fieldname
     >>> p                                     # readable __repr__ with a name=value style
     Point(x=1, y=2)
@@ -41,7 +41,7 @@ Quick taster
     >>> p[0] + p[1]                           # fields are also indexable
     3
     >>> p.x = 5                               # fields are mutable
-    >>> Point3D = rectype('Point3D',
+    >>> Point3D = wrecord('Point3D',
     ...     ['x', 'y', ('z', None)])          # per-field defaults can be set
     >>> p = Point3D(1, 2)
     >>> p

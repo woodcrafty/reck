@@ -1,17 +1,17 @@
 ========
 Overview
 ========
-*rectype* is a an open source, BSD-licensed module for creating lightweight,
+*wrecord* is a an open source, BSD-licensed module for creating lightweight,
 easy-to-use `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
 types in `Python <https://www.python.org/>`_ 3.2+ and PyPy3.
 
-What problem does *rectype* solve?
+What problem does *wrecord* solve?
 ----------------------------------
 Python provides a range of data types for handling record-like data including
 dictionaries, namedtuples and SimpleNameSpaces, each with their own pros and
 cons.
 
-*rectype* provides a factory function to easily create custom record classes
+*wrecord* provides a factory function to easily create custom record classes
 that have a unique set of properties:
 
 * mutable field values accessible using named attributes
