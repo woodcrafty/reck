@@ -319,14 +319,18 @@ Field values can be iterated over::
     2
     3
 
-If you need the fieldnames as well as values you can use the ``_items()`` method
-which returns a list of (fieldname, value) tuples::
+Other methods/attributes
+========================
+The ``_fieldnames`` class attribute provides a tuple of fieldnames::
 
-    >>> for fieldname, value in p._items():
-    ...     print(fieldname, value)
-    x 1
-    y 2
-    z 3
+    >>> p._fieldnames
+    ('x', 'y', 'z')
+
+A list of (fieldname, default_value) tuples is provided by the ``_items()``
+method::
+
+    >>> p._items():
+    [('x', 1), ('y', 2), ('z', 3)]
 
 Miscellaneous operations
 ========================
@@ -407,48 +411,6 @@ create a new rectype from the ``_fieldnames`` class attribute::
 
     >>> Point3D = rectype('Point3D', Point._fieldnames + ('z',))
 
-Memory usage
-============
-``rectype`` objects have a low memory footprint because they use slots
-rather than a per-instance dictionary to store attributes::
-
-    >>> from rectype import rectype
-    >>> from collections import namedtuple
-    >>> import sys
-    >>> Rec = rectype('Rec', ['a', 'b'])
-    >>> rec = Rec(a=1, b=2)
-    >>> NT = namedtuple('NT', ['a', 'b'])
-    >>> nt = NT(a=1, b=2)
-    >>> dct = dict(a=1, b=2)
-    >>> sys.getsizeof(rec)    # Number of bytes used by a rectype
-    56
-    >>> sys.getsizeof(nt)     # Number of bytes used by a namedtuple
-    64
-    >>> sys.getsizeof(dct)    # Number of bytes used by a dict
-    288
-
-They use much less memory than an equivalent ``dict`` and slightly less than
-an equivalent ``namedtuple``. The memory saving can be significant if you
-have a large number of instances (e.g. hundreds of thousands).
-
-Choosing a data type
+More than 255 fields
 ====================
-Believe it or not, rectypes are not always the best data type to use.
-Depending on your use-case other data types may be more appropriate:
-
-* rectypes may be a good choice when one or more of the following are true:
-    - the data has a static structure but dynamic values
-    - per field default values (including factory function defaults) are
-      required
-    - the data set consists of a very large number of instances
-    - the data has more than 255 fields
-* named tuples are suitable for data with a static structure and static values
-  (although the ``_replace()`` method can be used to update values)
-* dictionaries should be used when the structure of the data is dynamic, but
-  memory use a very large number of instances is required.
-* SimpleNamespace (available in in Python 3.3+) is suitable when the structure
-  of the data is dynamic and attribute access is required
-* classes may be needed when you need to add lots of methods to objects
-
-TODO: More than 255 fields
-
+Unlike
