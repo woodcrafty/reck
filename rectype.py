@@ -79,7 +79,7 @@ def rectype(typename, fieldnames, rename=False):
         _fieldnames=tuple(fieldnames),
         _update=_update,
         _get_defaults=_get_defaults,
-        _set_defaults=_set_defaults,
+        _replace_defaults=_replace_defaults,
         _items=_items,
         # Protected/internal methods and attributes:
         __slots__=tuple(fieldnames),
@@ -235,11 +235,12 @@ def _get_defaults(cls):
 
 
 @classmethod
-def _set_defaults(cls, *values_by_field_order, **values_by_fieldname):
+def _replace_defaults(cls, *values_by_field_order, **values_by_fieldname):
     """
     Replace the existing per-field default values.
 
-    Default field values can be passed by field order, fieldname, or both.
+    The new default field values can be passed by field order, fieldname, or
+    both.
 
     Changing the defaults can be useful if you wish to use the same record
     class in different contexts which require different default values.

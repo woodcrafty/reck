@@ -422,20 +422,20 @@ class TestRecType(unittest.TestCase):
         Rec = rectype.rectype('Rec', ['a', ('b', 2), ('c', 3)])
         self.assertEqual(Rec._get_defaults(), dict(b=2, c=3))
 
-    def test_set_defaults(self):
+    def test_replace_defaults(self):
         Rec = rectype.rectype('Rec', ['a', ('b', 2), ('c', 3)])
         self.assertEqual(Rec._get_defaults(), dict(b=2, c=3))
 
         # With args
-        Rec._set_defaults(1, 2)
+        Rec._replace_defaults(1, 2)
         self.assertEqual(Rec._get_defaults(), dict(a=1, b=2))
 
         # With kwargs
-        Rec._set_defaults(a=3, b=4)
+        Rec._replace_defaults(a=3, b=4)
         self.assertEqual(Rec._get_defaults(), dict(a=3, b=4))
 
         # With args and kwargs
-        Rec._set_defaults(5, 6, c=7)
+        Rec._replace_defaults(5, 6, c=7)
         self.assertEqual(Rec._get_defaults(), dict(a=5, b=6, c=7))
 
     def test_set_bad_defaults(self):
@@ -445,7 +445,7 @@ class TestRecType(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             # Non-existent fieldname in defaults dict
-            Rec._set_defaults(a=1, d=4)
+            Rec._replace_defaults(a=1, d=4)
 
         with self.assertRaises(TypeError):
             # Redefinition of positional arg with keyword arg
