@@ -4,7 +4,7 @@ wrecord tutorial
 
 The basics
 ==========
-First, create a ``wrecord`` like you would create a ``namedtuple`` type.
+First, create a wrecord like you would create a namedtuple type.
 
     >>> from wrecord import wrecord
     >>> Person = wrecord('Person', ['name', 'age'])
@@ -56,7 +56,6 @@ Field values can be iterated over::
 
 Type creation
 =============
-
 New types are created with the ``wrecord.wrecord()`` factory function::
 
     >>> Point = wrecord(typename='Point', fieldnames=['x', 'y'], rename=False)
@@ -119,24 +118,23 @@ be shared amongst all instances of the wrecord::
     >>> rec2.a      # the value of 'a' in rec2 has also been updated
     [1]
 
-To avoid this happening, mutable defaults can be created using a default
-factory function. This is done by wrapping the factory function with a
-``wrecord.DefaultFactory`` object. This example uses ``list`` with no
-arguments::
+To avoid this behaviour, mutable defaults can be created by setting the
+default value to a factory function wrapped with a ``wrecord.DefaultFactory``
+object. Here is an example using the ``list`` factory with no arguments::
 
     >>> from wrecord import DefaultFactory
     >>> Rec = wrecord('Rec', [('a', DefaultFactory(list))])
-    >>> rec1 = Rec()
-    >>> rec2 = Rec()
+    >>> rec1 = Rec()     # calls list() to initialise field 'a'
+    >>> rec2 = Rec()     # calls list() to initialise field 'a'
     >>> rec1.a.append(1)
     >>> rec1.a
     [1]
     >>> rec2.a           # the value of 'a' remains unmodified
     []
 
-The next example uses ``dict`` as a default factory, using the
-args and kwargs arguments of ``DefaultFactory()`` to specify positional and
-keyword arguments for ``dict``::
+A default factory function can also be called with positional and keyword
+arguments using the *args* and *kwargs* arguments of ``DefaultFactory()``.
+Here is an example using ``dict``::
 
     >>> Rec = wrecord('Rec', [
     ...     ('a', DefaultFactory(dict, args=[('b', 2)], kwargs=dict(c=3)])
@@ -152,9 +150,9 @@ keyword arguments for ``dict``::
 
 Renaming invalid fieldnames
 ---------------------------
-Any valid Python identifier may be used for a fieldname except for names
-starting with an underscore. Valid identifiers cannot start with a digit or
-underscore and cannot be a keyword such as *class*.
+Any valid Python identifier may be used for a fieldname except keywords
+such as *class* or *def* for names starting with an underscore. Valid cannot
+be a keyword such as *class* or *def*.
 
 You can set the *rename* argument of ``wrecord()`` to ``True`` to automatically
 replace invalid fieldnames with position names::
@@ -165,7 +163,7 @@ replace invalid fieldnames with position names::
 
 Instantiation
 =============
-When instantiating new *wrecord* objects, field values can be passed by
+When instantiating *wrecords*, field values can be passed by
 field order, fieldname, or both. The following examples all return a
 ``wrecord`` equivalent to ``Point3D(x=1, y=2, z=3)``::
 
@@ -267,6 +265,17 @@ following examples all result in a record equivalent to
     >>> p
     Point3D(x=4, y=5, z=6)
 
+Iteration
+---------
+Field values can be iterated over::
+
+    >>> p = Point3D(1, 2, 3)
+    >>> for value in p:
+    ...     print(value)
+    1
+    2
+    3
+
 Replacing defaults
 ==================
 A dictionary of fieldname/default_value pairs can be retrieved with the
@@ -308,17 +317,6 @@ class in different contexts that require different default values::
     >>> car3 = Car(model='Fiat', model='Panda')
     >>> car4 = Car(model='Volkswagon', model='Golf')
 
-Iteration
----------
-Field values can be iterated over::
-
-    >>> p = Point3D(x=1, y=2, z=3)
-    >>> for value in p:
-    ...     print(value)
-    1
-    2
-    3
-
 Other methods/attributes
 ========================
 The ``_fieldnames`` class attribute provides a tuple of fieldnames::
@@ -334,7 +332,7 @@ method::
 
 Miscellaneous operations
 ========================
-Wrecords support various operations that are demonstrated below::
+*wrecord* types support various operations that are demonstrated below::
 
     >>> p = Point3D(x=1, y=2, z=3)
     >>> len(p)              # get the number of fields in the record
@@ -356,7 +354,7 @@ Wrecords support various operations that are demonstrated below::
     >>> p.index(2)          # get the index of the first occurrence of a value
     1
     >>> p._update(x=1, y=3, x=3)
-    >>> p.count(3)          # find out how many times does a value occur in the record
+    >>> p.count(3)          # find out how many times a value occurs in the record
     2
     >>> vars(p)             # return an OrderedDict mapping fieldnames to values
     OrderedDict([('x': 1), ('y': 2), ('z': 3)])
