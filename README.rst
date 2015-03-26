@@ -27,6 +27,9 @@ that have a unique set of properties:
 * can have more than 255 fields
 * very low memory footprint
 
+The documentation is available at
+`http://wrecord.readthedocs.org/en/latest/index.html`
+
 Quick taster
 ============
 ::
@@ -67,3 +70,11 @@ Versions tested
 License
 -------
 BSD 3-Clause "New" or "Revised" License
+
+.. image:: https://travis-ci.org/woodcrafty/wrecord.png?branch=master
+    :target: https://travis-ci.org/woodcrafty/wrecord
+    :alt: Build Status
+
+.. image:: https://coveralls.io/repos/woodcrafty/wrecord/badge.png?branch=master
+    :target: https://coveralls.io/r/woodcrafty/wrecord?branch=master
+    :alt: Coverage Status
