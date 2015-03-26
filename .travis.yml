@@ -6,7 +6,7 @@ python:
   - pypy3
 install:
   - pip install coveralls
-script:
+script:s
   - python -m test_wrecord
-  - coverage run -m wrecord setup.py test
+  - coverage run --source=wrecord setup.py test
 after_success: coveralls
