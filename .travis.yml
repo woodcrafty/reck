@@ -7,3 +7,4 @@ python:
 install: true
 script:
   - python -m test_wrecord
+after_success: coveralls
