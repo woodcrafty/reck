@@ -1,13 +1,13 @@
-===========
-rectype API
-===========
+===
+API
+===
 *wrecord* is a Python module for creating lightweight record types with mutable
-field values. Rectype fields are accessible using named attributes
-as well as being indexable and iterable.
+field values and per-field defaults. Fields are accessible using named
+attributes as well as being indexable and iterable.
 
---------------------------------------------------------------------------------
-:py:func:`wrecord` factory function for record classes with mutable field values
---------------------------------------------------------------------------------
+-------------------------------------------------------
+:py:func:`wrecord` factory function for *wrecord* types
+-------------------------------------------------------
 
 .. py:function:: wrecord(typename, fieldnames, rename=False)
 
@@ -15,9 +15,9 @@ as well as being indexable and iterable.
 
     The new type is a subclass of ``collections.Sequence`` named *typename*.
 
-    The new subclass is used to create ``wrecord`` objects that have
-    fields accessible by attribute lookup as well as being indexable
-    and iterable. Per-field default values can be set. These are assigned
+    The new subclass is used to create record objects that have fields
+    accessible by attribute lookup as well as being indexable and
+    iterable. Per-field default values can be set. These are assigned
     to fields that are not supplied a value when new instances of the
     subclass are initialised.
 
@@ -42,9 +42,9 @@ as well as being indexable and iterable.
         default values of the record. It cam be a single string with each
         fieldname separated by whitespace and/or commas such as ``'x, y'``;
         a sequence of strings such as ``['x', 'y']`` and/or 2-tuples of the
-        form ``(fieldname, default_value)`` such as ``[('x', None), ('y', None)]
-        ``; a mapping of fieldname-default_value pairs such as
-        ``collections.OrderedDict([('x', None), ('y', None)])``.
+        form ``(fieldname, default_value)`` such as
+        ``[('x', None), ('y', None)]``; a mapping of fieldname-default_value
+        pairs such as ``collections.OrderedDict([('x', None), ('y', None)])``.
 
         Note, it only makes sense to use an ordered mapping (e.g.
         ``OrderedDict``) since access by index or iteration is affected by the
@@ -63,7 +63,7 @@ as well as being indexable and iterable.
 
 Instances of classes created by ``wrecord.wrecord()`` are created as follows:
 
-.. py:class:: SomeRecType(*values_by_field_order, **values_by_fieldname)
+.. py:class:: SomeWrecordType(*values_by_field_order, **values_by_fieldname)
 
     Return a new wrecord object.
 
@@ -101,7 +101,7 @@ Instances of classes created by ``wrecord.wrecord()`` are created as follows:
 
 Methods and attributes
 ----------------------
-These are the methods and attributes supported by wrecords. To prevent
+These are the methods and attributes supported by wrecord types. To prevent
 conflicts with fieldnames, the method and attribute names start with an
 underscore.
 
