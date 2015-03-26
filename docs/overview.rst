@@ -1,9 +1,10 @@
 ========
 Overview
 ========
-*wrecord* is a an open source, BSD-licensed module for creating lightweight,
-easy-to-use `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
-types in `Python <https://www.python.org/>`_ 3.2+ and PyPy3.
+*wrecord* is a an open source, BSD-licensed `Python <https://www.python.org/>`_
+module for creating lightweight, easy-to-use
+`record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
+types in Python 3.2+ and `PyPy3 <http://pypy.org/>`_.
 
 What problem does *wrecord* solve?
 ----------------------------------
@@ -21,5 +22,27 @@ that have a unique set of properties:
 * can have more than 255 fields
 * very low memory footprint
 
-Interested? Check out the `tutorial <TODO: insert tutorial link>'_
+Quick taster
+============
+::
 
+    >>> from wrecord import wrecord
+    >>> Point = wrecord('Point', ['x', 'y'])  # create a new wrecord type
+    >>> p = Point(1, y=2)                     # pass values by field order or fieldname
+    >>> p                                     # readable __repr__ with a name=value style
+    Point(x=1, y=2)
+    >>> p.name                                # fields accessible by name
+    'Eric'
+    >>> p[0] + p[1]                           # fields are also indexable
+    3
+    >>> p.x = 5                               # fields are mutable
+    >>> Point3D = wrecord('Point3D',
+    ...     ['x', 'y', ('z', None)])          # per-field defaults can be set
+    >>> p = Point3D(1, 2)
+    >>> p
+    Point3D(x=1, y=2, z=None)
+    >>> p._update(y=3, z=4)                   # update multiple fields at a time
+    >>> p
+    Point3D(x=1, y=3, z=4)
+
+Interested? Check out the :doc:`tutorial`.
