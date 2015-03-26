@@ -12,7 +12,7 @@ __email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
 
 def wrecord(typename, fieldnames, rename=False):
     """
-    Return a new subclass of ``collections.Sequence`` named typename.
+    Return a new subclass of ``collections.Sequence`` named *typename*.
 
     The new subclass is used to create wrecord objects that have
     fields accessible by attribute lookup as well as being indexable
@@ -58,7 +58,7 @@ def wrecord(typename, fieldnames, rename=False):
         contains a sequence that is not length 2.
     :raises TypeError: if a fieldname is neither a string or a sequence.
     """
-    _check_typename(typename)
+    _validate_typename(typename)
     if isinstance(fieldnames, collections.Mapping):
         # Convert mapping to a sequence of (fieldname, value) tuples
         fieldnames = list(fieldnames.items())
@@ -355,9 +355,9 @@ def __setitem__(self, index, value):
             Value to set.
     """
     if isinstance(index, int):
-        setattr(self, self.__slots__[index], value)
+        setattr(self, self._fieldnames[index], value)
     else:  # Slice object
-        fields = self.__slots__[index]
+        fields = self._fieldnames[index]
         for field, v in zip(fields, value):
             setattr(self, field, v)
 
@@ -373,24 +373,24 @@ def __setstate__(self, state):
     """
     Re-initialise the record from the unpickled tuple representation.
     """
-    for attr, value in zip(self.__slots__, state):
+    for attr, value in zip(self._fieldnames, state):
         setattr(self, attr, value)
 
 
 def __len__(self):
-    return len(self.__slots__)
+    return self._nfields
 
 
 def __repr__(self):
     return '{}({})'.format(
         self.__class__.__name__, ', '.join('{}={}'.format(
-            attr, repr(getattr(self, attr))) for attr in self.__slots__))
+            attr, repr(getattr(self, attr))) for attr in self._fieldnames))
 
 
 def __str__(self):
     return '{}({})'.format(
         self.__class__.__name__, ', '.join('{}={}'.format(
-            attr, str(getattr(self, attr))) for attr in self.__slots__))
+            attr, str(getattr(self, attr))) for attr in self._fieldnames))
 
 # ------------------------------------------------------------------------------
 # Helper functions
@@ -402,7 +402,7 @@ def _parse_fieldnames(fieldnames, rename):
     default-values.
     """
     defaults = {}
-    checked_fieldnames = []
+    validated_fieldnames = []
     used_names = set()
     for idx, fieldname in enumerate(fieldnames):
         if isinstance(fieldname, str):
@@ -421,60 +421,56 @@ def _parse_fieldnames(fieldnames, rename):
             default = fieldname[1]
             fieldname = fieldname[0]
 
-        fieldname = _check_fieldname(fieldname, used_names, rename, idx)
-        checked_fieldnames.append(fieldname)
+        fieldname = _validate_fieldname(fieldname, used_names, rename, idx)
+        validated_fieldnames.append(fieldname)
         used_names.add(fieldname)
         if has_default:
             defaults[fieldname] = default
-    return checked_fieldnames, defaults
+    return validated_fieldnames, defaults
 
 
-def _check_fieldname(fieldname, used_names, rename, idx):
+def _validate_fieldname(fieldname, used_names, rename, idx):
     """
-    Raise a ValueError if fieldname is invalid or optionally rename it.
+    Return fieldname if it is valid, a renamed fieldname if it is invalid
+    and *rename* is True, esle raise a ValueError.
 
-    Args:
-        fieldname: string
-            The fieldname to check.
-        used_names: set
-            Set of fieldnames that have already been used.
-        rename: boolean
-            If True invalid fieldnames are replaced with a valid name.
-        idx: integer
-            Index of fieldname in the class fieldnames sequence. Used
-            in the renaming of invalid fieldnames.
-    Returns:
-        The fieldname, which may have been renamed if it was invalid and
+    :param fieldname: fieldname to validate.
+    :param used_names:: set of fieldnames that have already been used.
+    :param rename: If True invalid fieldnames are replaced with a valid name.
+    :param idx: integer ndex of fieldname in the class fieldnames sequence.
+        Used in the renaming of invalid fieldnames.
+    :eturns: The fieldname, which may have been renamed if it was invalid and
         rename is True.
-    Raises:
-        ValueError if the fieldname is invalid and rename is False.
+    :raises ValueError: if the fieldname is invalid and rename is False.
     """
     try:
-        _common_name_check(fieldname, 'field')
+        _validate_name(fieldname, 'field')
+        # Validation specific to fieldnames:
         if fieldname.startswith('_'):
             raise ValueError(
-                'fieldnames cannot start with an underscore: {0!r}'
+                'fieldname cannot start with an underscore: {0!r}'
                 .format(fieldname))
         if fieldname in used_names:
             raise ValueError(
                 'encountered duplicate fieldname: {0!r}'.format(fieldname))
-    except ValueError:
+    except (ValueError, TypeError):
         if rename:
             return '_{0}'.format(idx)
-        raise
+        else:
+            raise
     return fieldname
 
 
-def _check_typename(typename):
+def _validate_typename(typename):
     """
     Raise a ValueError if typename is invalid.
     """
-    _common_name_check(typename, 'type')
+    _validate_name(typename, 'type')
 
 
-def _common_name_check(name, nametype):
+def _validate_name(name, nametype):
     """
-    Perform name checks common to both typenames and fieldnames.
+    Perform name validation common to both type names and fieldnames.
     """
     if not isinstance(name, str):
         raise TypeError(
@@ -493,10 +489,10 @@ class DefaultFactory(object):
     Wrap a default factory function.
 
     Default factory functions must be wrapped with this class so that they can
-    be distinguished from non-factory default values. The class also allows
-    optional positional and keyword arguments to be set, which will be passed
-    to the factory function when it is called. To call the wrapped factory
-    function (with the optional positional and keyword arguments), the
+    be distinguished from other callable non-factory default values. The class
+    also allows optional positional and keyword arguments to be set, which will
+    be passed to the factory function when it is called. To call the wrapped
+    factory function (with the optional positional and keyword arguments), the
     DefaultFactory instance should be called.
 
     Example of setting ``list`` as a default factory during wrecord creation::
