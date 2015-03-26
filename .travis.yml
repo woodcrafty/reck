@@ -8,5 +8,5 @@ install:
   - pip install coveralls
 script:
   - python -m test_wrecord
-  - coverage run --source=wrecord setup.py test
+  - coverage run -m wrecord setup.py test
 after_success: coveralls
