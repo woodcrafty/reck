@@ -1,21 +1,21 @@
 ===========
 rectype API
 ===========
-*rectype* is a Python module for creating lightweight record types with mutable
+*wrecord* is a Python module for creating lightweight record types with mutable
 field values. Rectype fields are accessible using named attributes
 as well as being indexable and iterable.
 
 --------------------------------------------------------------------------------
-:py:func:`rectype` factory function for record classes with mutable field values
+:py:func:`wrecord` factory function for record classes with mutable field values
 --------------------------------------------------------------------------------
 
-.. py:function:: rectype(typename, fieldnames, rename=False)
+.. py:function:: wrecord(typename, fieldnames, rename=False)
 
     Create a new record class with fields accessible by named attributes.
 
     The new type is a subclass of ``collections.Sequence`` named *typename*.
 
-    The new subclass is used to create ``rectype`` objects that have
+    The new subclass is used to create ``wrecord`` objects that have
     fields accessible by attribute lookup as well as being indexable
     and iterable. Per-field default values can be set. These are assigned
     to fields that are not supplied a value when new instances of the
@@ -23,7 +23,7 @@ as well as being indexable and iterable.
 
     Basic example::
 
-        >>> Point = rectype('Point', 'x y')  # create a new record type
+        >>> Point = wrecord('Point', 'x y')  # create a new record type
         >>> p = Point(x=1, y=2)              # instantiate with keyword arguments
         >>> p[0]                             # indexable like lists
         1
@@ -32,7 +32,7 @@ as well as being indexable and iterable.
         >>> p                                # readable __repr__ with name=value style
         Point(x=1, y=None)
         >>> # Create a new record type with default field values
-        >>> Point = rectype('Point', [('x', None), ('y', None)])
+        >>> Point = wrecord('Point', [('x', None), ('y', None)])
         >>> p = Point(x=1)                   # fields with defaults do not need to be specified
         >>> p                                # y has been assigned a default value
         Point(x=1, y=None)
@@ -61,18 +61,18 @@ as well as being indexable and iterable.
     :raises: ValueError if *typename* is invalid or *fieldnames*
         contains an invalid fieldname and rename is ``False``.
 
-Instances of classes created by ``rectype.rectype()`` are created as follows:
+Instances of classes created by ``wrecord.wrecord()`` are created as follows:
 
 .. py:class:: SomeRecType(*values_by_field_order, **values_by_fieldname)
 
-    Return a new ``rectype`` object.
+    Return a new wrecord object.
 
     Field values can be passed by field order, fieldname, or both.
 
-    The following examples all return a rectype equivalent to
+    The following examples all return a wrecord equivalent to
     ``Rec(a=1, b=2, c=3)``::
 
-        >>> Rec = rectype('Rec', 'a b c')
+        >>> Rec = wrecord('Rec', 'a b c')
         >>> rec = Rec(1, 2, 3)                # using positional args
         >>> rec = Rec(a=1, b=2, c=3)          # using keyword args
         >>> rec = Rec(*[1, 2, 3])             # using a sequence
@@ -81,7 +81,7 @@ Instances of classes created by ``rectype.rectype()`` are created as follows:
         >>> rec
         Rec(a=1, b=2, c=3)
 
-    Since rectype instances are iterable they can be used to initialise
+    Since wrecord instances are iterable they can be used to initialise
     other instances of the same type by unpacking them::
 
         >>> rec2 = Rec(*rec)
@@ -101,7 +101,7 @@ Instances of classes created by ``rectype.rectype()`` are created as follows:
 
 Methods and attributes
 ----------------------
-These are the methods and attributes supported by rectypes. To prevent
+These are the methods and attributes supported by wrecords. To prevent
 conflicts with fieldnames, the method and attribute names start with an
 underscore.
 
@@ -113,10 +113,10 @@ underscore.
 
     Example usage::
 
-        >>> Point = rectype('Point', 'x y')  # create a new record type
+        >>> Point = wrecord('Point', 'x y')  # create a new record type
         >>> Point._fieldnames       # view the fieldnames
         ('x', 'y')
-        >>> Point3D = rectype('Point3D', Point._fieldnames + ('z',))
+        >>> Point3D = wrecord('Point3D', Point._fieldnames + ('z',))
         >>> Point3D._fieldnames
         ('x', 'y', 'z')
 
@@ -137,7 +137,7 @@ underscore.
 
     Example::
 
-        >>> Point3D = rectype('Point3D', [('x', 1), ('y', 2), 'z')
+        >>> Point3D = wrecord('Point3D', [('x', 1), ('y', 2), 'z')
         >>> Point3D._get_defaults()
         {'x': 1, 'y': 2}
         >>> Point3D._set_defaults(z=None)  # Set default for z, remove default for x and y
@@ -163,7 +163,7 @@ underscore.
 
     Example::
 
-        >>> Rec = rectype('Rec', 'a b c')
+        >>> Rec = wrecord('Rec', 'a b c')
         >>> r = Rec(a=1, b=2, c=3)
         >>> r._update(b=5, c=6)   # Using keyword arguments
         >>> r
@@ -180,7 +180,7 @@ underscore.
 
 Operations
 ----------
-The following operations are supported by rectypes:
+The following operations are supported by wrecords:
 
 **len(rec)**
 
