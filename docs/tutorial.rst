@@ -356,10 +356,10 @@ Miscellaneous operations
     3
     >>> next(reverse_iterator)
     2
-    >>> p.index(2)          # get the index of the first occurrence of a value
+    >>> p._index(2)         # get the index of the first occurrence of a value
     1
     >>> p._update(x=1, y=3, x=3)
-    >>> p.count(3)          # find out how many times a value occurs in the record
+    >>> p._count(3)         # find out how many times a value occurs in the record
     2
     >>> vars(p)             # return an OrderedDict mapping fieldnames to values
     OrderedDict([('x': 1), ('y': 2), ('z': 3)])

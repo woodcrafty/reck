@@ -114,13 +114,13 @@ underscore.
 
     Return a list of ``(fieldname, value)`` 2-tuples.
 
-.. py:function:: somewrecord.index(value)
-
-    Return the index of the first occurrence of *value* in the record.
-
-.. py:function:: somewrecord.count(value)
+.. py:function:: somewrecord._count(value)
 
     Return a count of how many times *value* occurs in the record.
+
+.. py:function:: somewrecord._index(value)
+
+    Return the index of the first occurrence of *value* in the record.
 
 .. py:attribute:: somewrecord._fieldnames
 
