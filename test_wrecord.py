@@ -462,17 +462,37 @@ class TestWrecord(unittest.TestCase):
 
     def test_index(self):
         rec = Rec(1, 2)
-        self.assertEqual(rec.index(2), 1)
+        self.assertEqual(rec._index(2), 1)
         R = wrecord('R', 'a b c d')
         rec = R(1, 2, 2, 3)
-        self.assertEqual(rec.index(2), 1)  # 1st occurrence of 2
-        self.assertEqual(rec.index(3), 3)
+        self.assertEqual(rec._index(2), 1)  # 1st occurrence of 2
+        self.assertEqual(rec._index(3), 3)
+
+        # Test it still works if one of the fields is called count. This is
+        # done because _index() is set to the baseclass index() (implemented by
+        # collections.Sequence)
+        R = wrecord('R', 'a b c index')
+        rec = R(1, 2, 2, 3)
+        self.assertEqual(rec.index, 3)
+        self.assertEqual(rec._index(2), 1)  # 1st occurrence of 2
+        self.assertEqual(rec._index(3), 3)
 
     def test_count(self):
         R = wrecord('R', 'a b c')
         rec = R(1, 2, 2)
-        self.assertEqual(rec.count(1), 1)
-        self.assertEqual(rec.count(2), 2)
+        c =rec._count(1)
+        self.assertEqual(rec._count(1), 1)
+        self.assertEqual(rec._count(2), 2)
+
+        # Test it still works if one of the fields is called count. This is
+        # done because _count() calls the baseclass count() (inherited from
+        # collections.Sequence
+        R = wrecord('R', 'a b count')
+        rec = R(1, 2, 2)
+        self.assertEqual(rec.count, 2)
+        self.assertEqual(rec._count(1), 1)
+        self.assertEqual(rec._count(2), 2)
+
 
     def test_reverse_iteration(self):
         rec = Rec(1, 2)

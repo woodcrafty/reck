@@ -82,7 +82,12 @@ def wrecord(typename, fieldnames, rename=False):
         _replace_defaults=_replace_defaults,
         _asdict=_asdict,
         _asitems=_asitems,
-        # Protected/internal methods and attributes:
+        # Need to set _count and _index to the baseclass implementation in case
+        # a fieldname attribute overwrites count or index
+        _count=collections.Sequence.count,
+        _index=collections.Sequence.index,
+
+        # Internal methods and attributes:
         __slots__=tuple(fieldnames),
         _fieldnames_set=frozenset(fieldnames),  # For fast membership testing
         _nfields=len(fieldnames),  # For speed
@@ -94,6 +99,8 @@ def wrecord(typename, fieldnames, rename=False):
         _defaults=defaults,
         _check_all_fields_defined=_check_all_fields_defined,
         _check_args=_check_args,
+
+        # Special methods
         __dict__=property(_asdict),
         __eq__=__eq__,
         __ne__=__ne__,

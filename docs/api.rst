@@ -105,16 +105,24 @@ These are the methods and attributes supported by wrecord types. To prevent
 conflicts with fieldnames, the method and attribute names start with an
 underscore.
 
-.. py:function:: somerecord._asdict()
+.. py:function:: somewrecord._asdict()
 
     Return a new ``collections.OrderedDict`` which maps fieldnames to their
     values.
 
-.. py:function:: somerecord._asitems()
+.. py:function:: somewrecord._asitems()
 
     Return a list of ``(fieldname, value)`` 2-tuples.
 
-.. py:attribute:: somerecord._fieldnames
+.. py:function:: somewrecord.index(value)
+
+    Return the index of the first occurrence of *value* in the record.
+
+.. py:function:: somewrecord.count(value)
+
+    Return a count of how many times *value* occurs in the record.
+
+.. py:attribute:: somewrecord._fieldnames
 
     Tuple of strings listing the fieldnames. Useful for introspection and
     creating new record types from existing record types. Should not be
@@ -129,12 +137,12 @@ underscore.
         >>> Point3D._fieldnames
         ('x', 'y', 'z')
 
-.. py:classmethod:: _get_defaults()
+.. py:classmethod:: somewrecord._get_defaults()
 
     Return a dict that maps fieldnames to their corresponding default_value.
     If no default values are set an empty dict is returned.
 
-.. py:classmethod:: somerecord._replace_defaults(*values_by_field_order, **values_by_fieldname)
+.. py:classmethod:: somewrecord._replace_defaults(*values_by_field_order, **values_by_fieldname)
 
     Replace the existing per-field default values.
 
@@ -162,11 +170,7 @@ underscore.
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
 
-.. py:function:: somerecord._items()
-
-    Return a list of ``(fieldname, value)`` 2-tuples.
-
-.. py:function:: somerecord._update(*values_by_field_order, **values_by_fieldname)
+.. py:function:: somewrecord._update(*values_by_field_order, **values_by_fieldname)
 
     Update field values with values passed by field order, fieldname, or both.
 
@@ -230,17 +234,10 @@ The following operations are supported by wrecords:
 
     Return a reverse iterator over the field values of record *rec*.
 
-**rec.index(value)**
-
-    Return the index of the first occurrence of *value* in record *rec*.
-
-**rec.count(value)**
-
-    Return a count of how many times *value* occurs in record *rec*.
-
 **vars(rec)**
-    Return a new ``collections.OrderedDict`` which maps the fieldnames of *rec*
-    to their corresponding values.
+    Return a new ``collections.OrderedDict`` which maps the fieldnames of
+    *rec* to their corresponding values. This is equivalent to calling
+    ``rec._asdict()``.
 
 --------------
 DefaultFactory
