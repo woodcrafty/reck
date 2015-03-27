@@ -91,7 +91,6 @@ def wrecord(typename, fieldnames, rename=False):
         _attr_getters=tuple(
             [operator.attrgetter(field) for field in fieldnames]),
         _defaults=defaults,
-        _check_fieldnames_exist=_check_fieldnames_exist,
         _check_all_fields_defined=_check_all_fields_defined,
         _check_args=_check_args,
         __dict__=__dict__,
@@ -256,16 +255,6 @@ def _replace_defaults(cls, *values_by_field_order, **values_by_fieldname):
     defaults.update(zip(cls._fieldnames, values_by_field_order))
     defaults.update(values_by_fieldname)
     cls._defaults = defaults
-
-
-@classmethod
-def _check_fieldnames_exist(cls, fieldnames):
-    """
-    Raises ValueError if a fieldname does not exist in cls._fieldnames.
-    """
-    for fieldname in fieldnames:
-        if fieldname not in cls._fieldnames:
-            raise ValueError('field {0!r} is not defined'.format(fieldname))
 
 
 @classmethod
@@ -472,9 +461,6 @@ def _validate_name(name, nametype):
     """
     Perform name validation common to both type names and fieldnames.
     """
-    if not isinstance(name, str):
-        raise TypeError(
-            '{0}name must be a string: {1!r}'.format(nametype, name))
     if not name.isidentifier():
         raise ValueError(
             '{0}name must be a valid identifiers: {1:!r}'
