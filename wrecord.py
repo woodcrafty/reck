@@ -80,7 +80,8 @@ def wrecord(typename, fieldnames, rename=False):
         _update=_update,
         _get_defaults=_get_defaults,
         _replace_defaults=_replace_defaults,
-        _items=_items,
+        _asdict=_asdict,
+        _asitems=_asitems,
         # Protected/internal methods and attributes:
         __slots__=tuple(fieldnames),
         _fieldnames_set=frozenset(fieldnames),  # For fast membership testing
@@ -93,7 +94,7 @@ def wrecord(typename, fieldnames, rename=False):
         _defaults=defaults,
         _check_all_fields_defined=_check_all_fields_defined,
         _check_args=_check_args,
-        __dict__=__dict__,
+        __dict__=property(_asdict),
         __eq__=__eq__,
         __ne__=__ne__,
         __getstate__=__getstate__,
@@ -212,7 +213,15 @@ def _update(self, *values_by_field_order, **values_by_fieldname):
         setattr(self, fieldname, value)
 
 
-def _items(self):
+def _asdict(self):
+    """
+    Return a new ``collections.OrderedDict`` which maps fieldnames to their
+    values.
+    """
+    return collections.OrderedDict(zip(self._fieldnames, self))
+
+
+def _asitems(self):
     """
     Return a list of ``(fieldname, value)`` 2-tuples.
     """

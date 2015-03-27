@@ -105,6 +105,15 @@ These are the methods and attributes supported by wrecord types. To prevent
 conflicts with fieldnames, the method and attribute names start with an
 underscore.
 
+.. py:function:: somerecord._asdict()
+
+    Return a new ``collections.OrderedDict`` which maps fieldnames to their
+    values.
+
+.. py:function:: somerecord._asitems()
+
+    Return a list of ``(fieldname, value)`` 2-tuples.
+
 .. py:attribute:: somerecord._fieldnames
 
     Tuple of strings listing the fieldnames. Useful for introspection and

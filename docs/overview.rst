@@ -44,5 +44,7 @@ Quick taster
     >>> p._update(y=3, z=4)                   # update multiple fields at a time
     >>> p
     Point3D(x=1, y=3, z=4)
+    >>> p._asdict()                           # Covert the record to an OrderedDict
+    OrderedDict([('x', 1), ('y', 3), ('z', 4)])
 
 Interested? Check out the :doc:`tutorial`.

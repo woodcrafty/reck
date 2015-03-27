@@ -4,7 +4,7 @@ Tutorial
 
 The basics
 ==========
-First, create a wrecord like you would create a namedtuple type.
+First, create a wrecord type like you would create a namedtuple type.
 
     >>> from wrecord import wrecord
     >>> Person = wrecord('Person', ['name', 'age'])
@@ -324,11 +324,16 @@ The ``_fieldnames`` class attribute provides a tuple of fieldnames::
     >>> p._fieldnames
     ('x', 'y', 'z')
 
-A list of (fieldname, default_value) tuples is provided by the ``_items()``
-method::
+You can easily convert the wrecord to a list of (fieldname, default_value)
+tuples::
 
-    >>> p._items():
+    >>> p._asitems()
     [('x', 1), ('y', 2), ('z', 3)]
+
+You can convert the record to an ``OrderedDict`` using ``_asdict()``::
+
+    >>> p._asdict()
+    OrderedDict([('x', 1), ('y', 2), ('z', 3)])
 
 Miscellaneous operations
 ========================

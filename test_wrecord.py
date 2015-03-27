@@ -627,9 +627,17 @@ class TestWrecord(unittest.TestCase):
     # ==========================================================================
     # Miscellaneous tests
 
-    def test_items(self):
+    def test_asdict(self):
+        fieldnames = list('abcdefgh')
+        values = [1, 2, 3, 4, 5, 6, 7, 8]
+        Rec = wrecord('Rec', fieldnames)
+        rec = Rec(*values)
+        od = OrderedDict(zip(fieldnames, values))
+        self.assertEqual(rec._asdict(), od)
+
+    def test_asitems(self):
         rec = Rec(1, 2)
-        items = rec._items()
+        items = rec._asitems()
         self.assertEqual(items, [('a', 1), ('b', 2)])
 
     def test_pickle(self):
