@@ -62,7 +62,7 @@ Quick taster
     Point3D(x=1, y=3, z=4)
 
 Want to see more? Check out the
-`tutorial <http://wrecord.readthedocs.org/en/latest/tutorial.html>'_.
+`tutorial <http://wrecord.readthedocs.org/en/latest/tutorial.html>`_.
 
 Installation
 ============
