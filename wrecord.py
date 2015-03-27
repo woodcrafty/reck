@@ -302,14 +302,6 @@ def _check_args(cls, values_by_field_order, values_by_fieldname):
                 'got multiple values for argument {0!r}'.format(fieldname))
 
 
-@property
-def __dict__(self):
-    """
-    Return a new ``OrderedDict`` which maps fieldnames to their values.
-    """
-    return collections.OrderedDict(zip(self._fieldnames, self))
-
-
 def __eq__(self, other):
     return (isinstance(other, self.__class__)
         and self.__dict__ == other.__dict__)
