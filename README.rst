@@ -21,7 +21,7 @@ designed to make working with
 data both easy and intuitive.
 
 What problem does *wrecord* solve?
-----------------------------------
+==================================
 Python provides a range of data types for handling record-like data including
 dictionaries, namedtuples and SimpleNameSpaces, each with their own pros and
 cons.
@@ -61,20 +61,21 @@ Quick taster
     >>> p
     Point3D(x=1, y=3, z=4)
 
-Want to see more? Check out the `tutorial <TODO: insert tutorial link>'_
+Want to see more? Check out the
+`tutorial <http://wrecord.readthedocs.org/en/latest/tutorial.html>'_.
 
 Installation
-------------
+============
 
 TODO: complete this section
 
 Versions tested
----------------
+===============
 * Python 3.2
 * Python 3.3
 * Python 3.4
 * PyPy3
 
 License
--------
+=======
 BSD 3-Clause "New" or "Revised" License
