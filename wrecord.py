@@ -1,3 +1,11 @@
+"""
+This module implements the wrecord() factory function and DefaultFactory class
+for creating lightweight record classes with mutable fields and optional
+per-field defaults.
+
+:copyright: (c) 2015 by Mark Richards.
+:license: BSD 3-Clause, see LICENSE.txt for more details.
+"""
 
 import collections
 import keyword
