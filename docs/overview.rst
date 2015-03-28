@@ -17,9 +17,8 @@ that have a unique set of properties:
 
 * mutable field values accessible using named attributes
 * indexable, sliceable and iterable
-* support for optional per-field default values (including default factory
-  functions)
-* can have more than 255 fields
+* support for per-field default values (including default factory functions)
+* no limit on the number of fields (named tuples are limited to 255)
 * very low memory footprint
 
 Quick taster
@@ -27,15 +26,15 @@ Quick taster
 ::
 
     >>> from wrecord import wrecord
-    >>> Point = wrecord('Point', ['x', 'y'])  # create a new wrecord type
+    >>> Point = wrecord('Point', ['x', 'y'])  # create a new record type
     >>> p = Point(1, y=2)                     # pass values by field order or fieldname
     >>> p                                     # readable __repr__ with a name=value style
     Point(x=1, y=2)
-    >>> p.name                                # fields accessible by name
-    'Eric'
-    >>> p[0] + p[1]                           # fields are also indexable
-    3
+    >>> p.x                                   # fields accessible by name
+    1
     >>> p.x = 5                               # fields are mutable
+    >>> p.x
+    5
     >>> Point3D = wrecord('Point3D',
     ...     ['x', 'y', ('z', None)])          # per-field defaults can be set
     >>> p = Point3D(1, 2)
@@ -44,7 +43,11 @@ Quick taster
     >>> p._update(y=3, z=4)                   # update multiple fields at a time
     >>> p
     Point3D(x=1, y=3, z=4)
-    >>> p._asdict()                           # Covert the record to an OrderedDict
+    >>> p[0] + p[1]                           # fields are indexable
+    4
+    >>> p[:2]                                 # and sliceable
+    [1, 3]
+    >>> p._asdict()                           # Convert the record to an OrderedDict
     OrderedDict([('x', 1), ('y', 3), ('z', 4)])
 
 Interested? Check out the :doc:`tutorial`.
