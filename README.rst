@@ -23,7 +23,7 @@ data both easy and intuitive.
 What problem does *wrecord* solve?
 ==================================
 Python provides a range of data types for handling record-like data including
-dictionaries, namedtuples and SimpleNameSpaces, each with their own pros and
+dictionaries, named tuples and SimpleNameSpaces, each with their own pros and
 cons.
 
 *wrecord* provides a factory function to easily create custom record classes
@@ -32,11 +32,11 @@ that have a unique set of properties:
 * mutable field values accessible using named attributes
 * indexable, sliceable and iterable
 * support for per-field default values (including default factory functions)
-* can have more than 255 fields
+* no limit on the number of fields (named tuples are limited to 255)
 * very low memory footprint
 
 The documentation is available at
-`http://wrecord.readthedocs.org/en/latest/index.html`
+`wrecord.readthedocs.org`
 
 Quick taster
 ============
