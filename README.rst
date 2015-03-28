@@ -36,7 +36,7 @@ that have a unique set of properties:
 * very low memory footprint
 
 The documentation is available at
-`wrecord.readthedocs.org`
+`http://wrecord.readthedocs.org`
 
 Quick taster
 ============
