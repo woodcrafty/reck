@@ -17,9 +17,9 @@ Next, create an instance of ``Person`` with values for ``name`` and ``age``::
 
 You can also pass field values as positional arguments in field order::
 
-    >>> p = Person('Eric', 42)
-    >>> p
-    Person(name='Eric', age=42)
+    >>> p2 = Person('John', 44)
+    >>> p2
+    Person(name='John', age=44)
 
 Fields are accessible by attribute lookup and by index::
 
@@ -31,34 +31,45 @@ Fields are accessible by attribute lookup and by index::
 Field values are mutable::
 
     >>> p.name = 'Idle'
-    >>> p
-    Rec(name='Idle', age=42)
+    >>> p.name
+    'Idle'
 
 You can specify per-field default values when creating a wrecord::
 
     >>> Person = wrecord('Person', [('name', None), ('age', None)])
     >>> p = Person(name='Eric')   # no value supplied for the 'age' field
-    >>> p                         # 'age' has been set to its default value
+    >>> p                         # so 'age' has been set to its default value
     Person(name='Eric', age=None)
 
 Multiple field values can be changed using the ``_update()`` method::
 
-    >>> p._update(name='John', age=43)
+    >>> p._update(name='John', age=44)
     >>> p
-    Person(name='John', age=43)
+    Person(name='John', age=44)
 
 Field values can be iterated over::
 
-    >>> for value in p.:
+    >>> for value in p:
     ...     print(value)
     John
-    43
+    44
+
+Wrecords are very useful for assigning fieldnames to sequences of data
+returned by the ``csv`` module::
+
+    import csv
+    reader = csv.reader(open('employees.csv', newline=''))
+    fieldnames = next(reader)   # Get the fieldnames from the first row of the file
+    Employee = wrecord('Employee', fieldnames)
+    for row in reader:
+        emp = Employee(*row)
+        print(emp.name, emp.title)
 
 Type creation
 =============
-New types are created with the ``wrecord.wrecord()`` factory function::
+New types are created with the ``wrecord()`` factory function::
 
-    >>> Point = wrecord(typename='Point', fieldnames=['x', 'y'], rename=False)
+    >>> Point = wrecord(typename='Point', fieldnames=['x', 'y'])
 
 Setting fieldnames
 ------------------
@@ -71,10 +82,10 @@ space and/or comma separated fieldnames. These examples are equivalent::
 
 Setting defaults
 ----------------
-Per-field defaults can be specified by supplying a ``(fieldname, default)``
-tuple in place of a string for a fieldname::
+Per-field defaults can be set by supplying a ``(fieldname, default)`` tuple
+in place of a string for a fieldname::
 
-    >>> Point3D = wrecord('Point3D', [('x', None), ('y', None), ('z', None])
+    >>> Point3D = wrecord('Point3D', [('x', None), ('y', None), ('z', None)])
     >>> p = Point3D()
     >>> p
     Point3D(x=None, y=None, z=None)
@@ -137,7 +148,7 @@ arguments using the *args* and *kwargs* arguments of ``DefaultFactory()``.
 Here is an example using ``dict``::
 
     >>> Rec = wrecord('Rec', [
-    ...     ('a', DefaultFactory(dict, args=[('b', 2)], kwargs=dict(c=3)])
+    ...     ('a', DefaultFactory(dict, args=[[('b', 2)]], kwargs=dict(c=3)))])
     >>> rec1 = Rec()     # calls dict([('b', 2)], c=3) to initialise field 'a'
     >>> rec2 = Rec()     # calls dict([('b', 2)], c=3) to initialise field 'a'
     >>> rec1.a
@@ -145,7 +156,7 @@ Here is an example using ``dict``::
     >>> rec1.a['d'] = 4
     >>> rec1.a
     {'b': 2, 'c': 3, 'd': 4}
-    >>> rec2.a           # the value of 'a' remains unmodified
+    >>> rec2.a           # the value of 'a' in rec2 remains unmodified
     {'b': 2, 'c': 3}
 
 Renaming invalid fieldnames
@@ -226,17 +237,17 @@ By slice
 Fields can also be accessed using slicing::
 
     >>> p[:2]   # Slicing returns a list of field values
-    [1, 2]
+    [1, 22]
 
 Setting a slice of fields works as well::
 
     >>> p[:2] = [10, 11]  # Set field x to 10 and field y to 11
     >>> p
-    Point3D(x=10, y=11, z=33)
+    Point3D(x=10, y=11, z=22)
 
-Note, slice behaviour is different to that of lists. If the iterable being
-assigned to the slice is longer than the slice, the surplus iterable items are
-ignored (with a list the surplus items are inserted into the list)::
+Note, wrecord slice behaviour is different to that of lists. If the iterable
+being assigned to the slice is longer than the slice, the surplus iterable
+items are ignored (with a list the surplus items are inserted into the list)::
 
     >>> p[:3] = [1, 2, 3, 4, 5]   # Slice has 3 items, the iterable has 5
     >>> p                         # The last 2 items of the iterable were ignored
@@ -249,7 +260,6 @@ deleted)::
     >>> p[:3] = [None, None]   # Slice has 3 items, the iterable only 2
     >>> p                      # The last slice item (field z) was unaffected
     Point3D(x=None, y=None, z=3)
-        Point3D(x=None, y=None, z=3)
 
 Setting multiple fields
 -----------------------
@@ -258,8 +268,8 @@ values passed by field order, fieldname, or both (as with instantiation). The
 following examples all result in a record equivalent to
 ``Point3D(x=4, y=5, z=6)``::
 
-    >>> p._update(4, 5, 6)              # using values by field order
-    >>> p._update(x=4, y=5, z=6)        # using values by fieldname
+    >>> p._update(4, 5, 6)               # using values by field order
+    >>> p._update(x=4, y=5, z=6)         # using values by fieldname
     >>> p._update(*[4, 5, 6])            # using an unpacked sequence
     >>> p._update(**dict(x=4, y=5, z=6)) # using an unpacked mapping
     >>> p
@@ -281,7 +291,7 @@ Replacing defaults
 A dictionary of fieldname/default_value pairs can be retrieved with the
 ``_get_defaults()`` class method::
 
-    >>> Point3D = wrecord('Point3D', [('x', 1), ('y', 2), 'z')
+    >>> Point3D = wrecord('Point3D', [('x', 1), ('y', 2), 'z'])
     >>> Point3D._get_defaults()
     {'x': 1, 'y': 2}
 
@@ -289,7 +299,7 @@ The existing per-field default values can be replaced by supplying the
 ``_replace_defaults()`` class method with new default values by field order,
 fieldname, or both::
 
-    >>> Point3D._replace_defaults(dict(x=7, z=9))
+    >>> Point3D._replace_defaults(x=7, z=9)
     >>> Point3D._get_defaults()   # 'y' was not supplied a default value so it no longer has one
     {'x': 7, 'z': 9}
 
@@ -303,7 +313,7 @@ arguments::
 Replacing the default values can be useful if you wish to use the same record
 class in different contexts that require different default values::
 
-    >>> Car = wrecord('Car', [('make', 'Ford'), 'model', 'body_type')
+    >>> Car = wrecord('Car', [('make', 'Ford'), 'model', 'body_type'])
     >>> Car._get_defaults()
     {'make': 'Ford'}
     >>> # Create some Ford cars:
@@ -311,11 +321,11 @@ class in different contexts that require different default values::
     >>> car2 = Car(model='Mustang', body_type='saloon')
     >>> # Now create hatchback cars of different makes. To make life
     >>> # easier, replace the defaults with something more appropriate:
-    >>> Rec._replace_defaults(dict(body_type='hatchback'))
-    >>> Rec._get_defaults()   # note, 'make' no longer has a default value
+    >>> Car._replace_defaults(body_type='hatchback')
+    >>> Car._get_defaults()   # note, 'make' no longer has a default value
     {'body_type': 'hatchback'}
-    >>> car3 = Car(model='Fiat', model='Panda')
-    >>> car4 = Car(model='Volkswagon', model='Golf')
+    >>> car3 = Car(make='Fiat', model='Panda')
+    >>> car4 = Car(make='Volkswagon', model='Golf')
 
 Other methods/attributes
 ========================
@@ -358,11 +368,11 @@ Miscellaneous operations
     2
     >>> p._index(2)         # get the index of the first occurrence of a value
     1
-    >>> p._update(x=1, y=3, x=3)
+    >>> p._update(x=1, y=3, z=3)
     >>> p._count(3)         # find out how many times a value occurs in the record
     2
     >>> vars(p)             # return an OrderedDict mapping fieldnames to values
-    OrderedDict([('x': 1), ('y': 2), ('z': 3)])
+    OrderedDict([('x': 1), ('y': 3), ('z': 3)])
 
 
 Pickling
@@ -381,15 +391,16 @@ functionality with a subclass. Here is how to add a calculated field and a
 fixed-width print format::
 
     >>> class Point(wrecord('Point', 'x y')):
-    ...    __slots__ = ()
-    ...    @property
-    ...    def hypotenuse(self):
-    ...        return (self.x ** 2 + self.y ** 2) ** 0.5
-    ...    def __str__(self):
-    ...        return 'Point: x={0} y={1} z={2}'.format(self.x, self.y, self.hypotenuse)
-    >>> p = Point(x=3, y=4)
+    ...     __slots__ = ()
+    ...     @property
+    ...     def hypotenuse(self):
+    ...         return (self.x ** 2 + self.y ** 2) ** 0.5
+    ...     def __str__(self):
+    ...         return ('Point: x={0:6.3f} y={1:6.3f} hypotenuse={2:6.3f}'
+    ...             .format(self.x, self.y, self.hypotenuse))
+    >>> p = Point(x=3, y=4.5)
     >>> print(p)
-    Point: x=3 y=4 z=5.0
+    Point: x= 3.000 y= 4.500 hypotenuse= 5.408
 
 The subclass shown above sets ``__slots__`` to an empty tuple. This helps
 keep memory requirements low by preventing the creation of per-instance
@@ -401,19 +412,35 @@ Because *wrecord* objects are based on slots, new fields cannot be added after
 object creation::
 
     >>> Point = wrecord('Point', 'x y')
-    >>> p = Point([1, 2])
+    >>> p = Point(1, 2)
     >>> p.new_attribute = 4   # Can't do this!
     AttributeError                  Traceback (most recent call last)
     <ipython-input-8-55738ba62948> in <module>()
     ----> 1 rec.c = 3
 
-    AttributeError: 'Point3D' object has no attribute 'new_attribute'
+    AttributeError: 'Point' object has no attribute 'new_attribute'
 
 Subclassing is also not useful for adding new attributes. Instead, simply
-create a new wrecord from the ``_fieldnames`` class attribute::
+create a new wrecord type from the ``_fieldnames`` class attribute::
 
     >>> Point3D = wrecord('Point3D', Point._fieldnames + ('z',))
 
 More than 255 fields
 ====================
-Unlike
+Wrecord types have no limit on the number of fields whereas named tuples
+are limited to 255 fields::
+
+    >>> fieldnames = ['f{0}'.format(i) for i in range(1000)]
+    >>> values = [i for i in range(1000)]
+    >>> from collections import namedtuple
+    >>> NT = namedtuple('NT', fieldnames)
+    SyntaxError: more than 255 fields
+    >>> Rec = wrecord('Rec', fieldnames)
+    >>> rec = Rec(*values)
+    >>> rec.f0
+    0
+    >>> rec.f999
+    999
+
+Whilst it is unusual to require more than 255 fields it can sometimes be handy
+if reading data from a csv file (or similar) that has a lot of columns.
