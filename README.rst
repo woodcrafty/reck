@@ -47,20 +47,24 @@ Quick taster
     >>> p = Point(1, y=2)                     # pass values by field order or fieldname
     >>> p                                     # readable __repr__ with a name=value style
     Point(x=1, y=2)
-    >>> p.name                                # fields accessible by name
-    'Eric'
-    >>> p[0] + p[1]                           # fields are also indexable
-    3
+    >>> p.x                                   # fields accessible by name
+    1
     >>> p.x = 5                               # fields are mutable
+    >>> p.x
+    5
     >>> Point3D = wrecord('Point3D',
     ...     ['x', 'y', ('z', None)])          # per-field defaults can be set
     >>> p = Point3D(1, 2)
     >>> p
     Point3D(x=1, y=2, z=None)
-    >>> p._update(y=3, z=4)                   # update multiple fields
+    >>> p._update(y=3, z=4)                   # update multiple fields at a time
     >>> p
     Point3D(x=1, y=3, z=4)
-    >>> p._asdict()                           # Covert the record to an OrderedDict
+    >>> p[0] + p[1]                           # fields are indexable
+    4
+    >>> p[:2]                                 # and sliceable
+    [1, 3]
+    >>> p._asdict()                           # Convert the record to an OrderedDict
     OrderedDict([('x', 1), ('y', 3), ('z', 4)])
 
 Want to see more? Check out the
