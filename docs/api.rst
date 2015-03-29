@@ -23,14 +23,15 @@ attributes as well as being indexable and iterable.
 
     Basic example::
 
+        >>> from wrecord import wrecord
         >>> Point = wrecord('Point', 'x y')  # create a new record type
         >>> p = Point(x=1, y=2)              # instantiate with keyword arguments
-        >>> p[0]                             # indexable like lists
+        >>> p.x                              # fields are accessible by name
         1
-        >>> p.y                              # fields also accessible by name
+        >>> p[1]                             # and indexable like lists
         2
         >>> p                                # readable __repr__ with name=value style
-        Point(x=1, y=None)
+        Point(x=1, y=2)
         >>> # Create a new record type with default field values
         >>> Point = wrecord('Point', [('x', None), ('y', None)])
         >>> p = Point(x=1)                   # fields with defaults do not need to be specified
@@ -154,13 +155,13 @@ underscore.
 
     Example::
 
-        >>> Point3D = wrecord('Point3D', [('x', 1), ('y', 2), 'z')
+        >>> Point3D = wrecord('Point3D', [('x', 1), ('y', 2), 'z'])
         >>> Point3D._get_defaults()
         {'x': 1, 'y': 2}
-        >>> Point3D._set_defaults(z=None)  # Set default for z, remove default for x and y
-        >>> Point3D._get_defaults()
-        {'z': None}
-        >>> Point3D._set_defaults()        # Pass no arguments to remove all defaults
+        >>> Point3D._replace_defaults(x=7, z=9)
+        >>> Point3D._get_defaults()  # 'y' was not supplied a default so it no longer has one
+        {'x': 7, 'z': 9}
+        >>> Point3D._replace_defaults()  # Remove all defaults
         >>> Point3D._get_defaults()
         {}
 
@@ -180,8 +181,8 @@ underscore.
         >>> r = Rec(a=1, b=2, c=3)
         >>> r._update(b=5, c=6)   # Using keyword arguments
         >>> r
-        Rec(a=1, b=2, c=3)
-        >>> r._update(2, 3, c=4)  # Using positional and keyword arguments
+        Rec(a=1, b=5, c=6)
+        >>> r._update(2, 3, c=4)  # Using values by field order and by name
         >>> r
         Rec(a=2, b=3, c=4)
 
@@ -254,23 +255,25 @@ DefaultFactory
     Example of setting ``list`` (with no arguments), as a default factory
     during wrecord creation::
 
-        >>> Car = wrecord.wrecord('Car', [
+        >>> from wrecord import DefaultFactory
+        >>> Car = wrecord('Car', [
         ...     'make',
         ...     'model',
-        ...     ('colours', wrecord.DefaultFactory(list))]
+        ...     ('colours', DefaultFactory(list))])
         >>> car = Car(make='Lotus', model='Exige')
         >>> car.colours.append('Orange')
         >>> car.colours.append('Green')
+        >>> car
         Car(name='Lotus', model='Exige', colours=['Orange', 'Green'])
 
     An example using ``dict`` with positional and keyword arguments
     as a default factory::
 
-        >>> Rec = wwrecord.record('Rec', [('field', wrecord.DefaultFactory(
-        ...     dict, args=[('a', 1)], kwargs={'b': 2, 'c': 3})])
+        >>> Rec = wrecord('Rec', [
+        ...     ('a', DefaultFactory(dict, args=[[('b', 2)]], kwargs=dict(c=3)))])
         >>> rec = Rec()       # field will be set using the default factory
-        >>> rec
-        Rec(field={'a': 1, 'b': 2, 'c': 3})
+        >>> rec.a
+       {'b': 2, 'c': 3}
 
     :param factory_func: the callable object to be invoked as a default
         factory function (with *args* and *kwargs* if provided).
