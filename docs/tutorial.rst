@@ -261,6 +261,17 @@ deleted)::
     >>> p                      # The last slice item (field z) was unaffected
     Point3D(x=None, y=None, z=3)
 
+By iteration
+------------
+Field values can be iterated over::
+
+    >>> p = Point3D(1, 2, 3)
+    >>> for value in p:
+    ...     print(value)
+    1
+    2
+    3
+
 Setting multiple fields
 -----------------------
 Multiple field values can be updated using the ``_update()`` method, with field
@@ -275,16 +286,6 @@ following examples all result in a record equivalent to
     >>> p
     Point3D(x=4, y=5, z=6)
 
-Iteration
----------
-Field values can be iterated over::
-
-    >>> p = Point3D(1, 2, 3)
-    >>> for value in p:
-    ...     print(value)
-    1
-    2
-    3
 
 Replacing defaults
 ==================
@@ -300,7 +301,7 @@ The existing per-field default values can be replaced by supplying the
 fieldname, or both::
 
     >>> Point3D._replace_defaults(x=7, z=9)
-    >>> Point3D._get_defaults()   # 'y' was not supplied a default value so it no longer has one
+    >>> Point3D._get_defaults()   # 'y' was not supplied a default so it no longer has one
     {'x': 7, 'z': 9}
 
 To remove all default field values just call ``_replace_defaults()`` with no
