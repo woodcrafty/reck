@@ -2,17 +2,17 @@
 from setuptools import setup
 
 setup(
-        name='wrecord',
-        version='0.1',
-        description=(
-            'Easily create lightweight, writable record classes'
-        ),
+    name='wrecord',
+    version='0.1',
+    description=(
+        'Easily create lightweight, writable record classes'
+    ),
     long_description=open('README.rst').read(),
     author='Mark Richards',
     author_email='mark.l.a.richardsREMOVETHIS@gmail.com',
     license='BSD 3-Clause',
-    py_modules=['wrecord'],
-    test_suite='test_wrecord.py',
+    packages=['wrecord'],
+    test_suite='tests',
     package_data={'': ['*.rst', '*.txt']},
     classifiers=[
         'Programming Language :: Python',

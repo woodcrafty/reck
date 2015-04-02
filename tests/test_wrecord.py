@@ -4,6 +4,7 @@ import pickle
 from sys import version_info
 import unittest
 
+#from wrecord import wrecord, DefaultFactory
 from wrecord import wrecord, DefaultFactory
 
 Rec = wrecord('Rec', ['a', 'b'])
