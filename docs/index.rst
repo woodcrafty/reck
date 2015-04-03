@@ -16,6 +16,7 @@ Contents:
    choosing_a_data_type
    memory_usage
    api
+   changelog
 
 
 Indices and tables
