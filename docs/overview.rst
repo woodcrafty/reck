@@ -7,7 +7,7 @@ module for creating lightweight, easy-to-use
 types in Python 3.2+ and `PyPy3 <http://pypy.org/>`_.
 
 What problem does *wrecord* solve?
-----------------------------------
+==================================
 Python provides a range of data types for handling record-like data including
 dictionaries, namedtuples and SimpleNameSpaces, each with their own pros and
 cons.
