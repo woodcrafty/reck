@@ -1,14 +1,15 @@
 ========
 Overview
 ========
-*wrecord* is a an open source, BSD-licensed `Python <https://www.python.org/>`_
-package for creating lightweight, easy-to-use
-`record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
+*wrecord* is a an open source,
+`BSD-licensed <http://wrecord.readthedocs.org/en/latest/license.html>`_
+`Python <https://www.python.org/>`_ package for creating lightweight,
+easy-to-use `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
 types in Python 3.2+ and `PyPy3 <http://pypy.org/>`_.
 
 What problem does *wrecord* solve?
 ==================================
-Python provides a range of data types for handling record-like data including
+Python provides a range of data types for handling record data including
 dictionaries, namedtuples and SimpleNameSpaces, each with their own pros and
 cons.
 
