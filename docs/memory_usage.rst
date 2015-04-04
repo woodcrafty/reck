@@ -1,7 +1,7 @@
 ============
 Memory usage
 ============
-*Wrecord* objects have a very low memory footprint because they store
+*wrecord* objects have a low memory footprint because they store
 attributes using slots rather than a per-instance dictionary. They use
 significantly less memory than an equivalent dictionary and slightly less
 memory (8 bytes to be precise), than an equivalent namedtuple. The example
@@ -23,5 +23,5 @@ below was executed in Python 3.4::
     288
 
 These memory savings are usually not significant unless you have a very large
-large number of instances (e.g. hundreds of thousands) or are working on a low
-memory device.
+large number of instances (e.g. hundreds of thousands) or are working on a
+low memory device.
