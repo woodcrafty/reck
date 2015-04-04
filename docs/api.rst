@@ -56,13 +56,13 @@ API
         ('abc', '_1', 'ghi', '_3'), eliminating the keyword 'def' and the
         duplicate fieldname 'abc'.
     :returns: A subclass of ``collections.Sequence`` named *typename*.
-    :raises: ValueError if *typename* is invalid or *fieldnames*
-        contains an invalid fieldname and rename is ``False``.
+    :raises: ``ValueError`` if *typename* is invalid or *fieldnames*
+        contains an invalid fieldname and *rename* is ``False``.
 
 -----------------------------------------
 Methods and attributes of *wrecord* types
 -----------------------------------------
-These are the methods and attributes supported by wrecord types. To prevent
+These are the methods and attributes supported by *wrecord* types. To prevent
 conflicts with fieldnames, the method and attribute names start with an
 underscore.
 
@@ -84,7 +84,7 @@ underscore.
         >>> rec
         Rec(a=1, b=2, c=3)
 
-    Since wrecord instances are iterable they can be used to initialise
+    Since *wrecord* instances are iterable they can be used to initialise
     other instances of the same type by unpacking them::
 
         >>> rec2 = Rec(*rec)
@@ -99,6 +99,7 @@ underscore.
     :raises: ``TypeError`` if the number of positional arguments exceeds the
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
+
          ``ValueError`` if a field has not been defined by the positional
          or keyword arguments and has no default value set.
 
