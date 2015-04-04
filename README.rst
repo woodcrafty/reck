@@ -12,7 +12,7 @@ wrecord
 
 :Author: `Mark Richards <http://www.abdn.ac.uk/staffnet/profiles/m.richards/>`_
 :Email: mark.l.a.richardsREMOVETHIS@gmail.com
-:License: `BSD 3-Clause <http://opensource.org/licenses/BSD-3-Clause>`_
+:License: `BSD 3-Clause <http://wrecord.readthedocs.org/en/latest/license.html>`_
 :Status: Pre-alpha
 
 *wrecord* is a Python package for creating lightweight, flexible data types
@@ -85,4 +85,4 @@ Versions tested
 
 License
 =======
-BSD 3-Clause "New" or "Revised" License
+BSD 3-Clause "New" or "Revised" License. See LICENSE.txt for the full text.
