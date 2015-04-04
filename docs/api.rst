@@ -188,21 +188,22 @@ underscore.
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
 
-Operations supported by wrecords
---------------------------------
+----------------------------------
+Operations supported by *wrecords*
+----------------------------------
 The following operations are supported by wrecords:
 
 **len(rec)**
 
     Return the number of fields in the record *rec*.
 
-| **rec[index]**
+**rec[index]**
 | **rec[slice]**
 
     Return the value of the field in *rec* corresponding to the position given
     by integer *index* or position(s) given by slice object *slice*.
 
-| **rec[index] = value**
+**rec[index] = value**
 | **rec[slice] = values**
 
     Set the value(s) of the field corresponding to the position(s) given by
@@ -244,9 +245,9 @@ DefaultFactory
     Wrap a default factory function.
 
     Default factory functions must be wrapped using this class so that they
-    can be distinguished from non-factory default values. Optional positional
-    and keyword arguments to be passed to the factory function when it is
-    called can be set.
+    can be distinguished from non-factory callable default values. The *args*
+    and *kwargs* arguments can be used to specify optional positional and
+    keyword arguments to be passed to the factory function when it is called.
 
     Example of setting ``list`` (with no arguments), as a default factory
     during wrecord creation::
