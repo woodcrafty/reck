@@ -4,7 +4,7 @@ Tutorial
 
 The basics
 ==========
-First, create a wrecord type like you would create a namedtuple type.
+First, create a *wrecord* type like you would create a namedtuple type.
 
     >>> from wrecord import wrecord
     >>> Person = wrecord('Person', ['name', 'age'])
@@ -34,7 +34,7 @@ Field values are mutable::
     >>> p.name
     'Idle'
 
-You can specify per-field default values when creating a wrecord::
+You can specify per-field default values when creating a *wrecord*::
 
     >>> Person = wrecord('Person', [('name', None), ('age', None)])
     >>> p = Person(name='Eric')   # no value supplied for the 'age' field
@@ -54,7 +54,7 @@ Field values can be iterated over::
     John
     44
 
-Wrecords are very useful for assigning fieldnames to sequences of data
+*wrecords* are very useful for assigning fieldnames to sequences of data
 returned by the ``csv`` module::
 
     import csv
@@ -118,7 +118,7 @@ mapping such as ``collections.OrderedDict``::
 Factory function defaults
 -------------------------
 As with Python's mutable default arguments, mutable default field values will
-be shared amongst all instances of the wrecord::
+be shared amongst all instances of the *wrecord*::
 
     >>> Rec = wrecord('Rec', [('a', [])])
     >>> rec1 = Rec()
@@ -176,7 +176,7 @@ Instantiation
 =============
 When instantiating *wrecords*, field values can be passed by
 field order, fieldname, or both. The following examples all return a
-``wrecord`` equivalent to ``Point3D(x=1, y=2, z=3)``::
+*wrecord* equivalent to ``Point3D(x=1, y=2, z=3)``::
 
     >>> p = Point3D(1, 2, 3)                # using values by field order
     >>> p = Point3D(x=1, y=2, z=3)          # using values by fieldname
@@ -210,7 +210,7 @@ modified after creation::
     >>> p.z
     33
 
-To get and set a field whose name is stored in a string, use the ``getattr()``
+To get or set a field whose name is stored in a string, use the ``getattr()``
 and ``setattr()`` built-ins::
 
     >>> getattr(p, 'z')
@@ -245,7 +245,7 @@ Setting a slice of fields works as well::
     >>> p
     Point3D(x=10, y=11, z=22)
 
-Note, wrecord slice behaviour is different to that of lists. If the iterable
+Note, *wrecord* slice behaviour is different to that of lists. If the iterable
 being assigned to the slice is longer than the slice, the surplus iterable
 items are ignored (with a list the surplus items are inserted into the list)::
 
@@ -335,7 +335,7 @@ The ``_fieldnames`` class attribute provides a tuple of fieldnames::
     >>> p._fieldnames
     ('x', 'y', 'z')
 
-You can easily convert the wrecord to a list of (fieldname, default_value)
+You can easily convert the *wrecord* to a list of (fieldname, default_value)
 tuples::
 
     >>> p._asitems()
@@ -387,7 +387,7 @@ Instances can be pickled::
 
 Subclassing
 ===========
-Since wrecords are normal Python classes it is easy to add or change
+Since *wrecords* are normal Python classes it is easy to add or change
 functionality with a subclass. Here is how to add a calculated field and a
 fixed-width print format::
 
@@ -422,13 +422,13 @@ object creation::
     AttributeError: 'Point' object has no attribute 'new_attribute'
 
 Subclassing is also not useful for adding new attributes. Instead, simply
-create a new wrecord type from the ``_fieldnames`` class attribute::
+create a new *wrecord* type from the ``_fieldnames`` class attribute::
 
     >>> Point3D = wrecord('Point3D', Point._fieldnames + ('z',))
 
 More than 255 fields
 ====================
-Wrecord types have no limit on the number of fields whereas named tuples
+*wrecord* types have no limit on the number of fields whereas named tuples
 are limited to 255 fields::
 
     >>> fieldnames = ['f{0}'.format(i) for i in range(1000)]
