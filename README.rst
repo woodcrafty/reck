@@ -15,7 +15,7 @@ wrecord
 :License: `BSD 3-Clause <http://opensource.org/licenses/BSD-3-Clause>`_
 :Status: Pre-alpha
 
-*wrecord* is a Python module for creating lightweight, flexible data types
+*wrecord* is a Python package for creating lightweight, flexible data types
 designed to make working with
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_-like
 data both easy and intuitive.
@@ -35,8 +35,7 @@ that have a unique set of properties:
 * no limit on the number of fields (named tuples are limited to 255)
 * very low memory footprint
 
-The documentation is available at
-`http://wrecord.readthedocs.org`
+The documentation is available at `http://wrecord.readthedocs.org`
 
 Quick taster
 ============
@@ -72,8 +71,10 @@ Want to see more? Check out the
 
 Installation
 ============
+WRecord has no external dependencies and is available on PyPI or can be
+installed using pip::
 
-TODO: complete this section
+    pip install --pre wrecord
 
 Versions tested
 ===============

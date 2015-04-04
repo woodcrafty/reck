@@ -2,7 +2,7 @@
 Overview
 ========
 *wrecord* is a an open source, BSD-licensed `Python <https://www.python.org/>`_
-module for creating lightweight, easy-to-use
+package for creating lightweight, easy-to-use
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
 types in Python 3.2+ and `PyPy3 <http://pypy.org/>`_.
 
