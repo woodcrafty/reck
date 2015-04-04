@@ -1,5 +1,3 @@
-BSD 3-Clause "New" or "Revised" License
-
 Copyright (c) 2015, Mark Richards
 All rights reserved.
 

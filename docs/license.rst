@@ -1,0 +1,10 @@
+=======
+License
+=======
+
+*wrecord* is  under the BSD 3-Clause "New" or "Revised" License.
+
+License text
+============
+
+.. include:: ../LICENSE.txt

@@ -16,6 +16,7 @@ Contents:
    memory_usage
    api
    changelog
+   license
 
 
 Indices and tables
