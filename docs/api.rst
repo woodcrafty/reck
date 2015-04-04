@@ -1,13 +1,10 @@
 ===
 API
 ===
-*wrecord* is a Python module for creating lightweight record types with mutable
-field values and per-field defaults. Fields are accessible using named
-attributes as well as being indexable and iterable.
 
--------------------------------------------------------
-:py:func:`wrecord` factory function for *wrecord* types
--------------------------------------------------------
+---------------------------------------------------------
+:py:func:`wrecord()` factory function for *wrecord* types
+---------------------------------------------------------
 
 .. py:function:: wrecord(typename, fieldnames, rename=False)
 
@@ -62,7 +59,12 @@ attributes as well as being indexable and iterable.
     :raises: ValueError if *typename* is invalid or *fieldnames*
         contains an invalid fieldname and rename is ``False``.
 
-Instances of classes created by ``wrecord.wrecord()`` are created as follows:
+-----------------------------------------
+Methods and attributes of *wrecord* types
+-----------------------------------------
+These are the methods and attributes supported by wrecord types. To prevent
+conflicts with fieldnames, the method and attribute names start with an
+underscore.
 
 .. py:class:: SomeWrecordType(*values_by_field_order, **values_by_fieldname)
 
@@ -99,12 +101,6 @@ Instances of classes created by ``wrecord.wrecord()`` are created as follows:
          or a keyword argument redefines a positional argument.
          ``ValueError`` if a field has not been defined by the positional
          or keyword arguments and has no default value set.
-
-Methods and attributes
-----------------------
-These are the methods and attributes supported by wrecord types. To prevent
-conflicts with fieldnames, the method and attribute names start with an
-underscore.
 
 .. py:function:: somewrecord._asdict()
 
@@ -192,8 +188,8 @@ underscore.
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
 
-Operations
-----------
+Operations supported by wrecords
+--------------------------------
 The following operations are supported by wrecords:
 
 **len(rec)**
