@@ -17,7 +17,7 @@ wrecord
 
 *wrecord* is a Python package for creating lightweight, flexible data types
 designed to make working with
-`record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_-like
+`record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
 data both easy and intuitive.
 
 What problem does *wrecord* solve?
