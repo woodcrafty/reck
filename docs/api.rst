@@ -199,16 +199,14 @@ The following operations are supported by wrecords:
     Return the number of fields in the record *rec*.
 
 **rec[index]**
-| **rec[slice]**
 
-    Return the value of the field in *rec* corresponding to the position given
-    by integer *index* or position(s) given by slice object *slice*.
+    Return the field values(s) in *rec* corresponding to the position(s) given
+    by *index*. *index* can be an integer or slice object.
 
 **rec[index] = value**
-| **rec[slice] = values**
 
-    Set the value(s) of the field corresponding to the position(s) given by
-    integer *index* or slice object *slice*.
+    Set the value of the field corresponding to the position given by
+    *index*, which may be an integer or slice object.
 
     Note, the behaviour of setting field values using slices is
     different from that of lists. If *values* contains more items than
@@ -216,6 +214,17 @@ The following operations are supported by wrecords:
     surplus items are inserted into the list. Similarly, if *values* contains
     fewer items than *slice*, the surplus fields in the slice remain
     unaffected, whereas with a list the surplus list items are removed.
+
+    Example::
+
+        >>> Rec = wrecord('Rec', 'a b c')
+        >>> r = Rec(1, 2, 3)
+        >>> r[2] = 4            # using an integer index
+        >>> r[2]
+        4
+        >>> r[:2] = [5, 6, 7]   # using a slice
+        >>> r                   # the surplus value, 7, was discarded
+        Rec(a=5, b=6, c=4)
 
 **value in rec**
 
