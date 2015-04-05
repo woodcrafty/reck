@@ -15,18 +15,20 @@ Reck
 :License: `BSD 3-Clause <http://reck.readthedocs.org/en/latest/license.html>`_
 :Status: Pre-alpha
 
-*Reck* is a Python package for creating lightweight, flexible data types
-designed to make working with
+*Reck* is a Python package for creating lightweight,
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
-data both easy and intuitive.
+classes. It is the "REcord Creation Kit".
 
-What problem does *reck* solve?
+It aims to make working with record data easy and intuitive while removing
+the need to manually code record classes.
+
+What problem does *Reck* solve?
 ===============================
-Python provides a range of data types for handling record-like data including
-dictionaries, named tuples and SimpleNameSpaces, each with their own pros and
-cons.
+Python provides a range of data types that can handle record-like data
+including dictionaries, named tuples and SimpleNameSpaces, each with their own
+pros and cons.
 
-*reck* provides a factory function to easily create custom record classes
+*Reck* provides a factory function to easily create custom record classes
 that have a unique set of properties:
 
 * mutable field values accessible using named attributes
