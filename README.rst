@@ -15,7 +15,7 @@ Reck
 :License: `BSD 3-Clause <http://reck.readthedocs.org/en/latest/license.html>`_
 :Status: Pre-alpha
 
-*Weck* is a Python package for creating lightweight, flexible data types
+*Reck* is a Python package for creating lightweight, flexible data types
 designed to make working with
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
 data both easy and intuitive.
