@@ -28,27 +28,27 @@ Quick taster
 
     >>> from reck import make_rectype
     >>> Point = make_rectype('Point', ['x', 'y'])  # create a new record type
-    >>> p = Point(1, y=2)                     # pass values by field order or fieldname
-    >>> p                                     # readable __repr__ with a name=value style
+    >>> p = Point(1, y=2)              # pass values by field order or fieldname
+    >>> p                              # readable __repr__ with a name=value style
     Point(x=1, y=2)
-    >>> p.x                                   # fields accessible by name
+    >>> p.x                            # fields accessible by name
     1
-    >>> p.x = 5                               # fields are mutable
+    >>> p.x = 5                        # fields are mutable
     >>> p.x
     5
     >>> Point3D = make_rectype('Point3D',
-    ...     ['x', 'y', ('z', None)])          # per-field defaults can be set
+    ...     ['x', 'y', ('z', None)])   # per-field defaults can be set
     >>> p = Point3D(1, 2)
     >>> p
     Point3D(x=1, y=2, z=None)
-    >>> p._update(y=3, z=4)                   # update multiple fields at a time
+    >>> p._update(y=3, z=4)            # update multiple fields at a time
     >>> p
     Point3D(x=1, y=3, z=4)
-    >>> p[0] + p[1]                           # fields are indexable
+    >>> p[0] + p[1]                    # fields are indexable...
     4
-    >>> p[:2]                                 # and sliceable
+    >>> p[:2]                          # ...and sliceable
     [1, 3]
-    >>> p._asdict()                           # Convert the record to an OrderedDict
+    >>> p._asdict()                    # Convert the record to an OrderedDict
     OrderedDict([('x', 1), ('y', 3), ('z', 4)])
 
 Interested? Check out the :doc:`tutorial`.
