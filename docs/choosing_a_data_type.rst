@@ -1,7 +1,7 @@
 ====================
 Choosing a data type
 ====================
-Believe it or not, wrecords are not always the best data type to use.
+Believe it or not, *reck* records are not always the best data type to use.
 Depending on your use-case, other data types may be more appropriate. This
 table should help you choose:
 
@@ -9,7 +9,7 @@ table should help you choose:
 | Data type       | Dynamic | Dynamic   | Per-field | More than  | Large number |
 |                 ||values  | structure | defaults  | 255 fields | of instances |
 +-----------------+---------+-----------+-----------+------------+--------------+
-| wrecord         |    Y    |     N     |     Y     |      Y     |      Y       |
+| record          |    Y    |     N     |     Y     |      Y     |      Y       |
 +-----------------+---------+-----------+-----------+------------+--------------+
 | namedtuple      |    N*   |     N     |     N     |      N     |      Y       |
 +-----------------+---------+-----------+-----------+------------+--------------+
@@ -23,7 +23,7 @@ table should help you choose:
 Data type         | Dynamic  | Dynamic    | Per-field  | More than   | Large number
                   | values   | structure  | defaults   | 255 fields  | of instances
 ================  =========  ===========  ===========  ============  ==============
-wrecord           Y          N            Y            Y             Y
+record            Y          N            Y            Y             Y
 ----------------  ---------  -----------  -----------  ------------  --------------
 namedtuple        N*         N            N            N             Y
 ----------------  ---------  -----------  -----------  ------------  --------------
@@ -33,7 +33,7 @@ dict              Y          Y            N\ :sup:`%`  Y             N
 ================  =========  ===========  ===========  ============  ==============
 
 
-* *wrecord* may be a good choice when one or more of the following are true:
+* *record* may be a good choice when one or more of the following are true:
     - the data has a static structure but dynamic values
     - per-field default values (including factory function defaults) are
       required

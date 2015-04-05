@@ -1,6 +1,6 @@
 """
-This module implements the wrecord() factory function and DefaultFactory class
-for creating lightweight record classes with mutable fields and optional
+This module implements the make_rectype() factory function and DefaultFactory
+class for creating lightweight record classes with mutable fields and optional
 per-field defaults.
 
 :copyright: (c) 2015 by Mark Richards.
@@ -18,11 +18,11 @@ __author__ = 'Mark Richards'
 __email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
 
 
-def wrecord(typename, fieldnames, rename=False):
+def make_rectype(typename, fieldnames, rename=False):
     """
     Return a new subclass of ``collections.Sequence`` named *typename*.
 
-    The new subclass is used to create wrecord objects that have
+    The new subclass is used to create record objects that have
     fields accessible by attribute lookup as well as being indexable
     and iterable. Per-field default values can be set which are assigned
     to fields that are not supplied a value when new instances of the
@@ -30,7 +30,8 @@ def wrecord(typename, fieldnames, rename=False):
 
     Basic example::
 
-        >>> Point = wrecord('Point', 'x y')  # create a new record type
+        >>> from reck import make_rectype
+        >>> Point = make_rectype('Point', 'x y')  # create a new record type
         >>> p = Point(x=1, y=2)              # instantiate with keyword arguments
         >>> p[0]                             # indexable like lists
         1
@@ -39,12 +40,12 @@ def wrecord(typename, fieldnames, rename=False):
         >>> p                                # readable __repr__ with name=value style
         Point(x=1, y=None)
         >>> # Create a new record type with default field values
-        >>> Point = wrecord('Point', [('x', None), ('y', None)])
+        >>> Point = make_rectype('Point', [('x', None), ('y', None)])
         >>> p = Point(x=1)                   # fields with defaults do not need to be specified
         >>> p                                # y has been assigned a default value
         Point(x=1, y=None)
 
-    :param typename: Name of the subclass to create, .g. ``'MyRecord'``.
+    :param typename: Name of the subclass to create, e.g. ``'MyRecord'``.
     :param fieldnames: Can be a single string with each fieldname separated by
         whitespace and/or commas such as ``'x, y'``; a sequence of strings such
         as ``['x', 'y']`` and/or 2-tuples of the form ``(fieldname,
@@ -75,7 +76,7 @@ def wrecord(typename, fieldnames, rename=False):
 
     fieldnames, defaults = _parse_fieldnames(fieldnames, rename)
 
-    # Create the __dict__ of the Record subclass:
+    # Create the __dict__ of the new record type:
     # The new type is composed from module-level functions rather than
     # by subclassing a predefined Record base class because this offers
     # approach offer greater flexibility for contructing different types
@@ -122,7 +123,7 @@ def wrecord(typename, fieldnames, rename=False):
         __len__=__len__,
     )
 
-    wrecord = type(typename, (collections.Sequence,), type_dct)
+    rectype = type(typename, (collections.Sequence,), type_dct)
 
     # Explanation from collections.namedtuple:
     # For pickling to work, the __module__ variable needs to be set to the
@@ -131,24 +132,24 @@ def wrecord(typename, fieldnames, rename=False):
     # or sys._getframe is not defined for arguments greater than 0
     # (e.g. IronPython).
     try:
-        wrecord.__module__ = sys._getframe(1).f_globals.get(
+        rectype.__module__ = sys._getframe(1).f_globals.get(
             '__name__', '__main__')
     except (AttributeError, ValueError):
         pass
 
-    return wrecord
+    return rectype
 
 
 def __init__(self, *values_by_field_order, **values_by_fieldname):
     """
-    Return a new wrecord object.
+    Return a new record object.
 
     Field values can be passed by field order, fieldname, or both.
 
-    The following examples all return a wrecord equivalent to
+    The following examples all return a record equivalent to
     ``Rec(a=1, b=2, c=3)``::
 
-        >>> Rec = wrecord('Rec', 'a b c')
+        >>> Rec = make_rectype('Rec', 'a b c')
         >>> rec = Rec(1, 2, 3)                # using positional args
         >>> rec = Rec(a=1, b=2, c=3)          # using keyword args
         >>> rec = Rec(*[1, 2, 3])             # using an unpacked sequence
@@ -157,8 +158,8 @@ def __init__(self, *values_by_field_order, **values_by_fieldname):
         >>> rec
         Rec(a=1, b=2, c=3)
 
-    Since wrecord instances are iterable they can be used to initialise
-    other instances of the same type by unpacking them::
+    Since record objects are iterable they can be used to initialise
+    other objects of the same type by unpacking them::
 
         >>> rec2 = Rec(*rec)
         >>> rec2 == rec
@@ -201,9 +202,9 @@ def _update(self, *values_by_field_order, **values_by_fieldname):
 
     Example::
 
-        >>> Rec = wrecord('Rec', 'a b c')
+        >>> Rec = make_rectype('Rec', 'a b c')
         >>> r = Rec(a=1, b=2, c=3)
-        >>> r._update(b=5, c=6)     # using keyword arguments
+        >>> r._update(b=5, c=6)   # using keyword arguments
         >>> r
         Rec(a=1, b=2, c=3)
         >>> r._update(2, 3, c=4)  # using positional and keyword arguments
@@ -250,7 +251,7 @@ def _get_defaults(cls):
     default value (if they have one). If no default values are set an empty
      ``dict`` is returned.
     ::
-        >>> Point = wrecord('Point', [('x', None), ('y', None)])
+        >>> Point = make_rectype('Point', [('x', None), ('y', None)])
         >>> Point._get_defaults()
         {'x': None, 'y': None}
     """
@@ -437,14 +438,14 @@ def _parse_fieldnames(fieldnames, rename):
 def _validate_fieldname(fieldname, used_names, rename, idx):
     """
     Return fieldname if it is valid, a renamed fieldname if it is invalid
-    and *rename* is True, esle raise a ValueError.
+    and *rename* is True, else raise a ValueError.
 
     :param fieldname: fieldname to validate.
     :param used_names:: set of fieldnames that have already been used.
     :param rename: If True invalid fieldnames are replaced with a valid name.
-    :param idx: integer ndex of fieldname in the class fieldnames sequence.
+    :param idx: integer index of fieldname in the class fieldnames sequence.
         Used in the renaming of invalid fieldnames.
-    :eturns: The fieldname, which may have been renamed if it was invalid and
+    :returns: The fieldname, which may have been renamed if it was invalid and
         rename is True.
     :raises ValueError: if the fieldname is invalid and rename is False.
     """
@@ -497,10 +498,11 @@ class DefaultFactory(object):
     factory function (with the optional positional and keyword arguments), the
     DefaultFactory instance should be called.
 
-    Example of setting ``list`` as a default factory during wrecord creation::
+    Example of setting ``list`` as a default factory during record type
+    creation::
 
-        >>> from wrecord import wrecord, DefaultFactory
-        >>> Car = wrecord('Car', [
+        >>> from reck import make_rectype, DefaultFactory
+        >>> Car = make_rectype('Car', [
         ...     'make',
         ...     'model',
         ...     ('colours', DefaultFactory(list))]
@@ -512,7 +514,7 @@ class DefaultFactory(object):
     Example using ``dict`` as a default factory with positional and keyword
     arguments::
 
-        >>> Rec = wrecord.wrecord('Rec', ['field1',
+        >>> Rec = make_rectype('Rec', ['field1',
         ...     ('field2', DefaultFactory(
         ...         dict, args=[('a', 1)], kwargs={'b': 2, 'c': 3})])
         >>> rec = Rec(field1=1)   # field2 will be set using the default factory

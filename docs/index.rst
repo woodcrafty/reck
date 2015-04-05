@@ -1,10 +1,10 @@
-.. wrecord documentation master file, created by
+.. reck documentation master file, created by
    sphinx-quickstart on Mon Mar 16 12:26:20 2015.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to wrecord's documentation!
-===================================
+Welcome to reck's documentation!
+================================
 
 Contents:
 
@@ -25,4 +25,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
 

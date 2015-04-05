@@ -1,19 +1,19 @@
 ========
 Overview
 ========
-*wrecord* is a an open source,
-`BSD-licensed <http://wrecord.readthedocs.org/en/latest/license.html>`_
-`Python <https://www.python.org/>`_ package for creating lightweight,
-easy-to-use `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
+*Reck* is an open source,
+BSD-licensed `Python <https://www.python.org/>`_ package for creating
+lightweight, easy-to-use
+`record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
 types in Python 3.2+ and `PyPy3 <http://pypy.org/>`_.
 
-What problem does *wrecord* solve?
-==================================
+What problem does *Reck* solve?
+===============================
 Python provides a range of data types for handling record data including
 dictionaries, namedtuples and SimpleNameSpaces, each with their own pros and
 cons.
 
-*wrecord* provides a factory function to easily create custom record classes
+*Reck* provides a factory function to easily create custom record classes
 that have a unique set of properties:
 
 * mutable field values accessible using named attributes
@@ -26,8 +26,8 @@ Quick taster
 ============
 ::
 
-    >>> from wrecord import wrecord
-    >>> Point = wrecord('Point', ['x', 'y'])  # create a new record type
+    >>> from reck import make_rectype
+    >>> Point = make_rectype('Point', ['x', 'y'])  # create a new record type
     >>> p = Point(1, y=2)                     # pass values by field order or fieldname
     >>> p                                     # readable __repr__ with a name=value style
     Point(x=1, y=2)
@@ -36,7 +36,7 @@ Quick taster
     >>> p.x = 5                               # fields are mutable
     >>> p.x
     5
-    >>> Point3D = wrecord('Point3D',
+    >>> Point3D = make_rectype('Point3D',
     ...     ['x', 'y', ('z', None)])          # per-field defaults can be set
     >>> p = Point3D(1, 2)
     >>> p

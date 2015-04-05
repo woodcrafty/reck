@@ -1,32 +1,32 @@
-=======
-wrecord
-=======
+====
+Reck
+====
 
-.. image:: https://travis-ci.org/woodcrafty/wrecord.png?branch=master
-    :target: https://travis-ci.org/woodcrafty/wrecord
+.. image:: https://travis-ci.org/woodcrafty/reck.png?branch=master
+    :target: https://travis-ci.org/woodcrafty/reck
     :alt: Build Status
 
-.. image:: https://coveralls.io/repos/woodcrafty/wrecord/badge.png?branch=master
-    :target: https://coveralls.io/r/woodcrafty/wrecord?branch=master
+.. image:: https://coveralls.io/repos/woodcrafty/reck/badge.png?branch=master
+    :target: https://coveralls.io/r/woodcrafty/reck?branch=master
     :alt: Coverage Status
 
 :Author: `Mark Richards <http://www.abdn.ac.uk/staffnet/profiles/m.richards/>`_
 :Email: mark.l.a.richardsREMOVETHIS@gmail.com
-:License: `BSD 3-Clause <http://wrecord.readthedocs.org/en/latest/license.html>`_
+:License: `BSD 3-Clause <http://reck.readthedocs.org/en/latest/license.html>`_
 :Status: Pre-alpha
 
-*wrecord* is a Python package for creating lightweight, flexible data types
+*Weck* is a Python package for creating lightweight, flexible data types
 designed to make working with
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
 data both easy and intuitive.
 
-What problem does *wrecord* solve?
-==================================
+What problem does *reck* solve?
+===============================
 Python provides a range of data types for handling record-like data including
 dictionaries, named tuples and SimpleNameSpaces, each with their own pros and
 cons.
 
-*wrecord* provides a factory function to easily create custom record classes
+*reck* provides a factory function to easily create custom record classes
 that have a unique set of properties:
 
 * mutable field values accessible using named attributes
@@ -35,24 +35,24 @@ that have a unique set of properties:
 * no limit on the number of fields (named tuples are limited to 255)
 * very low memory footprint
 
-The documentation is available at `http://wrecord.readthedocs.org`
+The documentation is available at `http://reck.readthedocs.org`
 
 Quick taster
 ============
 ::
 
-    >>> from wrecord import wrecord
-    >>> Point = wrecord('Point', ['x', 'y'])  # create a new record type
-    >>> p = Point(1, y=2)                     # pass values by field order or fieldname
-    >>> p                                     # readable __repr__ with a name=value style
+    >>> from reck import make_rectype
+    >>> Point = make_rectype('Point', ['x', 'y'])  # create a new record type
+    >>> p = Point(1, y=2)              # pass values by field order or fieldname
+    >>> p                              # readable __repr__ with a name=value style
     Point(x=1, y=2)
-    >>> p.x                                   # fields accessible by name
+    >>> p.x                            # fields accessible by name
     1
-    >>> p.x = 5                               # fields are mutable
+    >>> p.x = 5                        # fields are mutable
     >>> p.x
     5
-    >>> Point3D = wrecord('Point3D',
-    ...     ['x', 'y', ('z', None)])          # per-field defaults can be set
+    >>> Point3D = make_rectype('Point3D',
+    ...     ['x', 'y', ('z', None)])   # per-field defaults can be set
     >>> p = Point3D(1, 2)
     >>> p
     Point3D(x=1, y=2, z=None)
@@ -67,14 +67,14 @@ Quick taster
     OrderedDict([('x', 1), ('y', 3), ('z', 4)])
 
 Want to see more? Check out the
-`tutorial <http://wrecord.readthedocs.org/en/latest/tutorial.html>`_.
+`tutorial <http://reck.readthedocs.org/en/latest/tutorial.html>`_.
 
 Installation
 ============
-WRecord has no external dependencies and is available on PyPI or can be
+Reck has no external dependencies and is available on PyPI or can be
 installed using pip::
 
-    pip install --pre wrecord
+    pip install --pre reck
 
 Versions tested
 ===============
