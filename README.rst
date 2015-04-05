@@ -13,7 +13,7 @@ Reck
 :Author: `Mark Richards <http://www.abdn.ac.uk/staffnet/profiles/m.richards/>`_
 :Email: mark.l.a.richardsREMOVETHIS@gmail.com
 :License: `BSD 3-Clause <http://reck.readthedocs.org/en/latest/license.html>`_
-:Status: Pre-alpha
+:Status: Alpha
 
 *Reck* is a Python package for creating lightweight,
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
