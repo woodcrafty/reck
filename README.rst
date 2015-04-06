@@ -73,10 +73,11 @@ Want to see more? Check out the
 
 Installation
 ============
-Reck has no external dependencies and is available on PyPI or can be
-installed using pip::
-
+::
     pip install --pre reck
+
+or download the `GitHub source <https://github.com/woodcrafty/reck>`_.
+
 
 Versions tested
 ===============
