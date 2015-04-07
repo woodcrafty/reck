@@ -2,8 +2,8 @@
 Tutorial
 ========
 
-The basics
-==========
+Getting started
+===============
 First, create a record type like you would create a namedtuple type.
 
     >>> from reck import make_rectype
@@ -162,8 +162,7 @@ Here is an example using ``dict``::
 Renaming invalid fieldnames
 ---------------------------
 Any valid Python identifier may be used for a fieldname except keywords
-such as *class* or *def* for names starting with an underscore. Valid cannot
-be a keyword such as *class* or *def*.
+(such as *class* or *def*), and names starting with an underscore.
 
 You can set the *rename* argument of ``make_rectype()`` to ``True`` to
 automatically replace invalid fieldnames with position names::
@@ -171,6 +170,9 @@ automatically replace invalid fieldnames with position names::
     >>> Rec = make_rectype('Rec', ['abc', 'def', 'ghi', 'abc'], rename=True)
     >>> Rec._fieldnames    # keyword 'def' and duplicate fieldname 'abc' have been renamed
     ('abc', '_1', 'ghi', '_3')
+
+This is particularly useful if the fieldnames are being read in from a file,
+e.g. from the header row of a csv file.
 
 Instantiation
 =============
