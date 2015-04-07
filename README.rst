@@ -74,6 +74,7 @@ Want to see more? Check out the
 Installation
 ============
 ::
+
     pip install --pre reck
 
 or download the `GitHub source <https://github.com/woodcrafty/reck>`_.
