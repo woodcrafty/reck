@@ -117,7 +117,7 @@ mapping such as ``collections.OrderedDict``::
 
 Factory function defaults
 -------------------------
-As with Python's mutable default arguments, mutable default field values will
+Like Python's mutable default arguments, mutable default field values will
 be shared amongst all instances of the record type::
 
     >>> Rec = make_rectype('Rec', [('a', [])])
@@ -171,7 +171,7 @@ automatically replace invalid fieldnames with position names::
     >>> Rec._fieldnames    # keyword 'def' and duplicate fieldname 'abc' have been renamed
     ('abc', '_1', 'ghi', '_3')
 
-This is particularly useful if the fieldnames are being read in from a file,
+This can be useful if the fieldnames are being read in from a file,
 e.g. from the header row of a csv file.
 
 Instantiation
@@ -194,6 +194,9 @@ other record objects of the same type::
     >>> p2 = Point3D(*p)
     >>> p2 == p
     True
+
+Note, that the field order of instantiation parameters is not affected by
+defaults.
 
 Getting and setting fields
 ==========================
@@ -249,15 +252,16 @@ Setting a slice of fields works as well::
 
 Note, record slice behaviour is different to that of lists. If the iterable
 being assigned to the slice is longer than the slice, the surplus iterable
-items are ignored (with a list the surplus items are inserted into the list)::
+items are ignored (whereas with a list the surplus items are inserted into
+the list)::
 
     >>> p[:3] = [1, 2, 3, 4, 5]   # Slice has 3 items, the iterable has 5
     >>> p                         # The last 2 items of the iterable were ignored
     Point3D(x=1, y=2, z=3)
 
 Likewise, if the iterable contains fewer items than the slice, the surplus
-fields in the slice remain unaffected (with a list the surplus items are
-deleted)::
+fields in the slice remain unaffected (whereas with a list the surplus items
+are deleted)::
 
     >>> p[:3] = [None, None]   # Slice has 3 items, the iterable only 2
     >>> p                      # The last slice item (field z) was unaffected
@@ -277,8 +281,8 @@ Field values can be iterated over::
 Setting multiple fields
 -----------------------
 Multiple field values can be updated using the ``_update()`` method, with field
-values passed by field order, fieldname, or both (as with instantiation). The
-following examples all result in a record equivalent to
+values passed by field order, fieldname, or both (the same as with
+instantiation). The following examples all result in a record equivalent to
 ``Point3D(x=4, y=5, z=6)``::
 
     >>> p._update(4, 5, 6)               # using values by field order
@@ -287,7 +291,6 @@ following examples all result in a record equivalent to
     >>> p._update(**dict(x=4, y=5, z=6)) # using an unpacked mapping
     >>> p
     Point3D(x=4, y=5, z=6)
-
 
 Replacing defaults
 ==================
@@ -430,7 +433,7 @@ create a new record type from the ``_fieldnames`` class attribute::
 
 More than 255 fields
 ====================
-Record types have no limit on the number of fields whereas named tuples
+Record types have no limit on the number of fields, whereas named tuples
 are limited to 255 fields::
 
     >>> fieldnames = ['f{0}'.format(i) for i in range(1000)]
