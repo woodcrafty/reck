@@ -2,71 +2,22 @@
 API
 ===
 
+.. module:: reck
+
 -----------------------------------------------------------
 :py:func:`make_rectype()` factory function for record types
 -----------------------------------------------------------
 
-.. py:function:: make_rectype(typename, fieldnames, rename=False)
+.. autofunction:: make_rectype
 
-    Create a new record class with fields accessible by named attributes.
-
-    The new type is a subclass of ``collections.Sequence`` named *typename*.
-
-    The new subclass is used to create record objects that have fields
-    accessible by attribute lookup as well as being indexable and
-    iterable. Per-field default values can be set. These are assigned
-    to fields that are not supplied a value when new instances of the
-    subclass are initialised.
-
-    Basic example::
-
-        >>> from reck import make_rectype
-        >>> Point = make_rectype('Point', 'x y')  # create a new record type
-        >>> p = Point(x=1, y=2)              # instantiate with keyword arguments
-        >>> p.x                              # fields are accessible by name
-        1
-        >>> p[1]                             # and indexable like lists
-        2
-        >>> p                                # readable __repr__ with name=value style
-        Point(x=1, y=2)
-        >>> # Create a new record type with default field values
-        >>> Point = make_rectype('Point', [('x', None), ('y', None)])
-        >>> p = Point(x=1)                   # fields with defaults do not need to be specified
-        >>> p                                # y has been assigned a default value
-        Point(x=1, y=None)
-
-    :param typename: Name of the subclass to create, e.g. ``'MyRecord'``.
-    :param fieldnames: Specifies the fieldnames and optional per-field
-        default values of the record. It cam be a single string with each
-        fieldname separated by whitespace and/or commas such as ``'x, y'``;
-        a sequence of strings such as ``['x', 'y']`` and/or 2-tuples of the
-        form ``(fieldname, default_value)`` such as
-        ``[('x', None), ('y', None)]``; a mapping of fieldname-default_value
-        pairs such as ``collections.OrderedDict([('x', None), ('y', None)])``.
-
-        Note, it only makes sense to use an ordered mapping (e.g.
-        ``OrderedDict``) since access by index or iteration is affected by the
-        order of the fieldnames.
-
-        A fieldname may be any valid Python identifier except for names
-        starting with an underscore.
-    :param rename: If set to ``True``, invalid fieldnames are automatically
-        replaced with positional names. For example,
-        ('abc', 'def', 'ghi', 'abc') is converted to
-        ('abc', '_1', 'ghi', '_3'), eliminating the keyword 'def' and the
-        duplicate fieldname 'abc'.
-    :returns: A subclass of ``collections.Sequence`` named *typename*.
-    :raises: ``ValueError`` if *typename* is invalid or *fieldnames*
-        contains an invalid fieldname and *rename* is ``False``.
-
---------------------------------------
-Methods and attributes of record types
---------------------------------------
+----------------------------------
+Record type methods and attributes
+----------------------------------
 These are the methods and attributes supported by record types. To prevent
 conflicts with fieldnames, the method and attribute names start with an
 underscore.
 
-.. py:class:: SomeRecordType(*values_by_field_order, **values_by_fieldname)
+.. py:class:: somemodule.SomeRecordType(*values_by_field_order, **values_by_fieldname)
 
     Return a new record object.
 
@@ -78,9 +29,9 @@ underscore.
         >>> Rec = make_rectype('Rec', 'a b c')
         >>> rec = Rec(1, 2, 3)                # using positional args
         >>> rec = Rec(a=1, b=2, c=3)          # using keyword args
-        >>> rec = Rec(*[1, 2, 3])             # using a sequence
-        >>> rec = Rec(**dict(a=1, b=2, c=3))  # using a mapping
-        >>> rec = Rec(*[1, 2], c=3)           # using an unpacked sequence and keyword arg
+        >>> rec = Rec(*[1, 2, 3])             # using an unpacked sequence
+        >>> rec = Rec(**dict(a=1, b=2, c=3))  # using an unpacked mapping
+        >>> rec = Rec(*[1, 2], c=3)           # using an unpacked sequence and a keyword arg
         >>> rec
         Rec(a=1, b=2, c=3)
 
@@ -243,6 +194,7 @@ The following operations are supported by records:
     Return a reverse iterator over the field values of record *rec*.
 
 **vars(rec)**
+
     Return a new ``collections.OrderedDict`` which maps the fieldnames of
     *rec* to their corresponding values. This is equivalent to calling
     ``rec._asdict()``.
@@ -250,40 +202,6 @@ The following operations are supported by records:
 --------------
 DefaultFactory
 --------------
-.. py:class:: DefaultFactory(factory_func, args=(), kwargs={})
 
-    Wrap a default factory function.
+.. autoclass:: DefaultFactory
 
-    Default factory functions must be wrapped using this class so that they
-    can be distinguished from non-factory callable default values. The *args*
-    and *kwargs* arguments can be used to specify optional positional and
-    keyword arguments to be passed to the factory function when it is called.
-
-    Example of setting ``list`` (with no arguments), as a default factory
-    during record type creation::
-
-        >>> from reck import DefaultFactory
-        >>> Car = make_rectype('Car', [
-        ...     'make',
-        ...     'model',
-        ...     ('colours', DefaultFactory(list))])
-        >>> car = Car(make='Lotus', model='Exige')
-        >>> car.colours.append('Orange')
-        >>> car.colours.append('Green')
-        >>> car
-        Car(name='Lotus', model='Exige', colours=['Orange', 'Green'])
-
-    An example using ``dict`` with positional and keyword arguments
-    as a default factory::
-
-        >>> Rec = make_rectype('Rec', [
-        ...     ('a', DefaultFactory(dict, args=[[('b', 2)]], kwargs=dict(c=3)))])
-        >>> rec = Rec()       # field will be set using the default factory
-        >>> rec.a
-       {'b': 2, 'c': 3}
-
-    :param factory_func: the callable object to be invoked as a default
-        factory function (with *args* and *kwargs* if provided).
-    :param args: a tuple of arguments for the factory function invocation.
-    :param kwargs: a dictionary of keyword arguments for the factory function
-        invocation.
