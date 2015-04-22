@@ -47,11 +47,10 @@ underscore.
 
     :param *values_by_field_order: Field values passed by field order.
     :param **values_by_fieldname: Field values passed by fieldname.
-    :raises: ``TypeError`` if the number of positional arguments exceeds the
+    :raises TypeError: if the number of positional arguments exceeds the
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
-
-         ``ValueError`` if a field has not been defined by the positional
+    :rasies ValueError: if a field has not been defined by the positional
          or keyword arguments and has no default value set.
 
 .. py:function:: somerecord._asdict()
@@ -115,7 +114,7 @@ underscore.
 
     :param *values_by_field_order: Default field values passed by field order.
     :param **values_by_fieldname: Default field values passed by fieldname.
-    :raises: ``TypeError`` if the number of positional arguments exceeds the
+    :raises TypeError: if the number of positional arguments exceeds the
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
 
@@ -136,7 +135,7 @@ underscore.
 
     :param *values_by_field_order: Field values passed by field order.
     :param **values_by_fieldname: Field values passed by fieldname.
-    :raises: ``TypeError`` if the number of positional arguments exceeds the
+    :raises TypeError: if the number of positional arguments exceeds the
          number of fields, a keyword argument does not match a fieldname,
          or a keyword argument redefines a positional argument.
 
