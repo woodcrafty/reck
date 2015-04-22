@@ -22,6 +22,6 @@ below was executed in Python 3.4::
     >>> sys.getsizeof(dct)    # Number of bytes used by a dict
     288
 
-These memory savings are usually not significant unless you have a very large
-large number of instances (e.g. hundreds of thousands) or are working on a
-low memory device.
+These memory savings are usually not significant unless you have a very
+large number of instances (e.g. hundreds of thousands), or are working on
+a low memory device.

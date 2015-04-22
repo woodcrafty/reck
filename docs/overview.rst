@@ -1,8 +1,7 @@
 ========
 Overview
 ========
-*Reck* is an open source,
-BSD-licensed `Python <https://www.python.org/>`_ package for creating
+*Reck* is a `Python <https://www.python.org/>`_ package for creating
 lightweight, easy-to-use
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
 types in Python 3.2+ and `PyPy3 <http://pypy.org/>`_.
@@ -52,3 +51,11 @@ Quick taster
     OrderedDict([('x', 1), ('y', 3), ('z', 4)])
 
 Interested? Check out the :doc:`tutorial`.
+
+Installation
+============
+::
+
+    pip install --pre reck
+
+or download the `GitHub source <https://github.com/woodcrafty/reck>`_.
