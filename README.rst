@@ -44,7 +44,7 @@ Quick taster
 ::
 
     >>> from reck import make_rectype
-    >>> Point = make_rectype('Point', ['x', 'y'])  # create a new record type
+    >>> Point = recktype('Point', ['x', 'y'])  # create a new record type
     >>> p = Point(1, y=2)              # pass values by field order or fieldname
     >>> p                              # readable __repr__ with a name=value style
     Point(x=1, y=2)
@@ -53,7 +53,7 @@ Quick taster
     >>> p.x = 5                        # fields are mutable
     >>> p.x
     5
-    >>> Point3D = make_rectype('Point3D',
+    >>> Point3D = recktype('Point3D',
     ...     ['x', 'y', ('z', None)])   # per-field defaults can be set
     >>> p = Point3D(1, 2)
     >>> p

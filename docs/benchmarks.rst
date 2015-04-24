@@ -44,7 +44,7 @@ of 3 fields with the following code statements:
     2. reck: ``r.f0 = 6; r.f1 = 7; r.f2 = 8``
     3. namedtuple: ``r = r._replace(f0=6, f1=7, f2=8)``
 
-where r is an instance of a reck type or namedtuple.
+where r is an instance of a recktype or namedtuple.
 
 Results
 =======
@@ -61,7 +61,7 @@ Set value by attribute         1.0e+07     22.14       0.50          44.28
 Set value by index             1.0e+07       n/a       6.39            n/a
 Update multiple field values   1.0e+05      0.24       0.26 (0.02*)   0.92 (12.0)
 =============================  ==========  ==========  ============  ========================
-* using multiple set-by-attribute statements instead of _update()
+| * using multiple set-by-attribute statements instead of ``_update()``
 
 Conclusions
 ===========

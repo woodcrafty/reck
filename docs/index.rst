@@ -6,7 +6,7 @@
 :License: `BSD 3-Clause <http://reck.readthedocs.org/en/latest/license.html>`_
 :Latest version: `1.0rc1`
 
-*Reck* is an package for creating lightweight,
+*Reck* is a package for creating lightweight,
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
 classes (aka 'struct' in C) in Python v3.x. The record classes are similar to
 `named tuples <https://docs.python.org/3.4/library/collections.html#collections.namedtuple>`_,
@@ -28,7 +28,7 @@ manually write classes full of boilerplate, just to hold record data.
 What does it look like? Here is a quick taster::
 
     >>> from reck import make_rectype
-    >>> Point = make_rectype('Point', ['x', 'y'])  # create a new record type
+    >>> Point = recktype('Point', ['x', 'y'])  # create a new record type
     >>> p = Point(1, y=2)              # pass values by field order or fieldname
     >>> p                              # readable __repr__ with a name=value style
     Point(x=1, y=2)
@@ -37,7 +37,7 @@ What does it look like? Here is a quick taster::
     >>> p.x = 5                        # fields are mutable
     >>> p.x
     5
-    >>> Point3D = make_rectype('Point3D', ['x', 'y', ('z', 0)])  # default field values can be set
+    >>> Point3D = recktype('Point3D', ['x', 'y', ('z', 0)])  # default field values can be set
     >>> p = Point3D(x=1, y=2)
     >>> p
     Point3D(x=1, y=2, z=0)

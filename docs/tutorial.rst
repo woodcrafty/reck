@@ -6,8 +6,8 @@ Getting started
 ===============
 First, create a record type like you would create a namedtuple type.
 
-    >>> from reck import make_rectype
-    >>> Person = make_rectype('Person', ['name', 'age'])
+    >>> from reck import recktype
+    >>> Person = recktype('Person', ['name', 'age'])
 
 Next, create an instance of ``Person`` with values for ``name`` and ``age``::
 
@@ -36,7 +36,7 @@ Field values are mutable::
 
 You can specify per-field default values when creating a record type::
 
-    >>> Person = make_rectype('Person', [('name', None), ('age', None)])
+    >>> Person = recktype('Person', [('name', None), ('age', None)])
     >>> p = Person(name='Eric')   # no value supplied for the 'age' field
     >>> p                         # so 'age' has been set to its default value
     Person(name='Eric', age=None)
@@ -60,39 +60,39 @@ returned by the ``csv`` module::
     import csv
     reader = csv.reader(open('employees.csv', newline=''))
     fieldnames = next(reader)   # Get the fieldnames from the first row of the file
-    Employee = make_rectype('Employee', fieldnames)
+    Employee = recktype('Employee', fieldnames)
     for row in reader:
         emp = Employee(*row)
         print(emp.name, emp.title)
 
 Type creation
 =============
-New types are created with the ``make_rectype()`` factory function::
+New types are created with the ``recktype()`` factory function::
 
-    >>> Point = make_rectype(typename='Point', fieldnames=['x', 'y'])
+    >>> Point = recktype(typename='Point', fieldnames=['x', 'y'])
 
 Setting fieldnames
 ------------------
 Fieldnames can be specified with a sequence of strings or a single string of
 space and/or comma separated fieldnames. These examples are equivalent::
 
-    >>> Point = make_rectype('Point', ['x',  'y'])
-    >>> Point = make_rectype('Point', 'x y')
-    >>> Point = make_rectype('Point', 'x,y')
+    >>> Point = recktype('Point', ['x',  'y'])
+    >>> Point = recktype('Point', 'x y')
+    >>> Point = recktype('Point', 'x,y')
 
 Setting defaults
 ----------------
 Per-field defaults can be set by supplying a ``(fieldname, default)`` tuple
 in place of a string for a fieldname::
 
-    >>> Point3D = make_rectype('Point3D', [('x', None), ('y', None), ('z', None)])
+    >>> Point3D = recktype('Point3D', [('x', None), ('y', None), ('z', None)])
     >>> p = Point3D()
     >>> p
     Point3D(x=None, y=None, z=None)
 
 A default does not have to be supplied for every field::
 
-    >>> Point3D = make_rectype('Point3D', ['x', ('y', None), 'z'])
+    >>> Point3D = recktype('Point3D', ['x', ('y', None), 'z'])
     >>> p = Point3D(x=1, z=3)
     >>> p
     Point3D(x=1, y=None, z=3)
@@ -107,7 +107,7 @@ Per-field defaults can also be specified for every field using an ordered
 mapping such as ``collections.OrderedDict``::
 
     >>> from collections import OrderedDict
-    >>> Point3D = make_rectype('Point3D', OrderedDict([
+    >>> Point3D = recktype('Point3D', OrderedDict([
     ...     ('x', None),
     ...     ('y', None),
     ...     ('z', None)]))
@@ -120,7 +120,7 @@ Factory function defaults
 Like Python's mutable default arguments, mutable default field values will
 be shared amongst all instances of the record type::
 
-    >>> Rec = make_rectype('Rec', [('a', [])])
+    >>> Rec = recktype('Rec', [('a', [])])
     >>> rec1 = Rec()
     >>> rec2 = Rec()
     >>> rec1.a.append(1)
@@ -134,7 +134,7 @@ default value to a factory function wrapped with a ``reck.DefaultFactory``
 object. Here is an example using the ``list`` factory with no arguments::
 
     >>> from reck import DefaultFactory
-    >>> Rec = make_rectype('Rec', [('a', DefaultFactory(list))])
+    >>> Rec = recktype('Rec', [('a', DefaultFactory(list))])
     >>> rec1 = Rec()     # calls list() to initialise field 'a'
     >>> rec2 = Rec()     # calls list() to initialise field 'a'
     >>> rec1.a.append(1)
@@ -147,7 +147,7 @@ A default factory function can also be called with positional and keyword
 arguments using the *args* and *kwargs* arguments of ``DefaultFactory()``.
 Here is an example using ``dict``::
 
-    >>> Rec = make_rectype('Rec', [
+    >>> Rec = recktype('Rec', [
     ...     ('a', DefaultFactory(dict, args=[[('b', 2)]], kwargs=dict(c=3)))])
     >>> rec1 = Rec()     # calls dict([('b', 2)], c=3) to initialise field 'a'
     >>> rec2 = Rec()     # calls dict([('b', 2)], c=3) to initialise field 'a'
@@ -164,10 +164,10 @@ Renaming invalid fieldnames
 Any valid Python identifier may be used for a fieldname except keywords
 (such as *class* or *def*), and names starting with an underscore.
 
-You can set the *rename* argument of ``make_rectype()`` to ``True`` to
+You can set the *rename* argument of ``recktype()`` to ``True`` to
 automatically replace invalid fieldnames with position names::
 
-    >>> Rec = make_rectype('Rec', ['abc', 'def', 'ghi', 'abc'], rename=True)
+    >>> Rec = recktype('Rec', ['abc', 'def', 'ghi', 'abc'], rename=True)
     >>> Rec._fieldnames    # keyword 'def' and duplicate fieldname 'abc' have been renamed
     ('abc', '_1', 'ghi', '_3')
 
@@ -297,7 +297,7 @@ Replacing defaults
 A dictionary of fieldname/default_value pairs can be retrieved with the
 ``_get_defaults()`` class method::
 
-    >>> Point3D = make_rectype('Point3D', [('x', 1), ('y', 2), 'z'])
+    >>> Point3D = recktype('Point3D', [('x', 1), ('y', 2), 'z'])
     >>> Point3D._get_defaults()
     {'x': 1, 'y': 2}
 
@@ -319,7 +319,7 @@ arguments::
 Replacing the default values can be useful if you wish to use the same record
 class in different contexts that require different default values::
 
-    >>> Car = make_rectype('Car', [('make', 'Ford'), 'model', 'body_type'])
+    >>> Car = recktype('Car', [('make', 'Ford'), 'model', 'body_type'])
     >>> Car._get_defaults()
     {'make': 'Ford'}
     >>> # Create some Ford cars:
@@ -396,7 +396,7 @@ Since record types are normal Python classes it is easy to add or change
 functionality with a subclass. Here is how to add a calculated field and a
 fixed-width print format::
 
-    >>> class Point(make_rectype('Point', 'x y')):
+    >>> class Point(recktype('Point', 'x y')):
     ...     __slots__ = ()
     ...     @property
     ...     def hypotenuse(self):
@@ -417,7 +417,7 @@ Adding fields/attributes
 Because record objects are based on slots, new fields cannot be added after
 object creation::
 
-    >>> Point = make_rectype('Point', 'x y')
+    >>> Point = recktype('Point', 'x y')
     >>> p = Point(1, 2)
     >>> p.new_attribute = 4   # Can't do this!
     AttributeError                  Traceback (most recent call last)
@@ -429,7 +429,7 @@ object creation::
 Subclassing is also not useful for adding new attributes. Instead, simply
 create a new record type from the ``_fieldnames`` class attribute::
 
-    >>> Point3D = make_rectype('Point3D', Point._fieldnames + ('z',))
+    >>> Point3D = recktype('Point3D', Point._fieldnames + ('z',))
 
 More than 255 fields
 ====================
@@ -441,7 +441,7 @@ are limited to 255 fields::
     >>> from collections import namedtuple
     >>> NT = namedtuple('NT', fieldnames)
     SyntaxError: more than 255 fields
-    >>> Rec = make_rectype('Rec', fieldnames)
+    >>> Rec = recktype('Rec', fieldnames)
     >>> rec = Rec(*values)
     >>> rec.f0
     0

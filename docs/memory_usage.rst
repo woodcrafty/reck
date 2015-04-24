@@ -10,7 +10,7 @@ below was executed in Python 3.4::
     >>> from reck import make_rectype
     >>> from collections import namedtuple
     >>> import sys
-    >>> Rec = make_rectype('Rec', ['a', 'b'])
+    >>> Rec = recktype('Rec', ['a', 'b'])
     >>> rec = Rec(a=1, b=2)
     >>> NT = namedtuple('NT', ['a', 'b'])
     >>> nt = NT(a=1, b=2)

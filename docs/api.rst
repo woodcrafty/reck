@@ -5,10 +5,10 @@ API
 .. module:: reck
 
 -----------------------------------------------------------
-:py:func:`make_rectype()` factory function for record types
+:py:func:`recktype()` factory function for record types
 -----------------------------------------------------------
 
-.. autofunction:: make_rectype
+.. autofunction:: recktype
 
 ----------------------------------
 Record type methods and attributes
@@ -17,7 +17,7 @@ These are the methods and attributes supported by record types. To prevent
 conflicts with fieldnames, the method and attribute names start with an
 underscore.
 
-.. py:class:: somemodule.SomeRecordType(*values_by_field_order, **values_by_fieldname)
+.. py:class:: somemodule.SomeReckType(*values_by_field_order, **values_by_fieldname)
 
     Return a new record object.
 
@@ -26,7 +26,7 @@ underscore.
     The following examples all return a record equivalent to
     ``Rec(a=1, b=2, c=3)``::
 
-        >>> Rec = make_rectype('Rec', 'a b c')
+        >>> Rec = recktype('Rec', 'a b c')
         >>> rec = Rec(1, 2, 3)                # using positional args
         >>> rec = Rec(a=1, b=2, c=3)          # using keyword args
         >>> rec = Rec(*[1, 2, 3])             # using an unpacked sequence
@@ -78,10 +78,10 @@ underscore.
 
     Example usage::
 
-        >>> Point = make_rectype('Point', 'x y')  # create a new record type
+        >>> Point = recktype('Point', 'x y')  # create a new record type
         >>> Point._fieldnames       # view the fieldnames
         ('x', 'y')
-        >>> Point3D = make_rectype('Point3D', Point._fieldnames + ('z',))
+        >>> Point3D = recktype('Point3D', Point._fieldnames + ('z',))
         >>> Point3D._fieldnames
         ('x', 'y', 'z')
 
@@ -102,7 +102,7 @@ underscore.
 
     Example::
 
-        >>> Point3D = make_rectype('Point3D', [('x', 1), ('y', 2), 'z'])
+        >>> Point3D = recktype('Point3D', [('x', 1), ('y', 2), 'z'])
         >>> Point3D._get_defaults()
         {'x': 1, 'y': 2}
         >>> Point3D._replace_defaults(x=7, z=9)
@@ -124,7 +124,7 @@ underscore.
 
     Example::
 
-        >>> Rec = make_rectype('Rec', 'a b c')
+        >>> Rec = recktype('Rec', 'a b c')
         >>> r = Rec(a=1, b=2, c=3)
         >>> r._update(b=5, c=6)   # Using keyword arguments
         >>> r
@@ -167,7 +167,7 @@ The following operations are supported by records:
 
     Example::
 
-        >>> Rec = make_rectype('Rec', 'a b c')
+        >>> Rec = recktype('Rec', 'a b c')
         >>> r = Rec(1, 2, 3)
         >>> r[2] = 4            # using an integer index
         >>> r[2]

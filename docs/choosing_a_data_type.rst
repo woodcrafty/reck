@@ -1,7 +1,7 @@
 ====================
 Choosing a data type
 ====================
-Believe it or not, *reck* records are not always the best data type to use.
+Believe it or not, recktypes are not always the best data type to use.
 Depending on your use-case, other data types may be more appropriate. This
 table should help you choose:
 
@@ -9,7 +9,7 @@ table should help you choose:
 | Data type       | Dynamic | Dynamic   | Per-field | More than  | Large number |
 |                 ||values  | structure | defaults  | 255 fields | of instances |
 +-----------------+---------+-----------+-----------+------------+--------------+
-| record          |    Y    |     N     |     Y     |      Y     |      Y       |
+| recktype        |    Y    |     N     |     Y     |      Y     |      Y       |
 +-----------------+---------+-----------+-----------+------------+--------------+
 | namedtuple      |    N*   |     N     |     N     |      N     |      Y       |
 +-----------------+---------+-----------+-----------+------------+--------------+
