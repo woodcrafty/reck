@@ -73,6 +73,7 @@ def make_rectype(typename, fieldnames, rename=False):
         fieldnames = fieldnames.replace(',', ' ').split()
 
     fieldnames, defaults = _parse_fieldnames(fieldnames, rename)
+    default_factory_fields = _get_default_factory_fields(defaults)
 
     # Create the __dict__ of the new record type:
     # The new type is composed from module-level functions rather than
@@ -97,6 +98,9 @@ def make_rectype(typename, fieldnames, rename=False):
         # Internal methods and attributes:
         __slots__=tuple(fieldnames),
         _fieldnames_set=frozenset(fieldnames),  # For fast membership testing
+        # isintance() testing is slow so store names of fields with default
+        # factories in a set for fast membership testing.
+        _default_factory_fields=frozenset(default_factory_fields),
         _nfields=len(fieldnames),  # For speed
         # An operator.attrgetter is stored for each field because it offers
         # a slight speedup over getattr(). TODO: test that this holds true
@@ -104,7 +108,6 @@ def make_rectype(typename, fieldnames, rename=False):
         _attr_getters=tuple(
             [operator.attrgetter(field) for field in fieldnames]),
         _defaults=defaults,
-        _check_all_fields_defined=_check_all_fields_defined,
         _check_args=_check_args,
 
         # Special methods
@@ -115,6 +118,7 @@ def make_rectype(typename, fieldnames, rename=False):
         __setstate__=__setstate__,
         __repr__=__repr__,
         __str__=__str__,
+
         # Sequence-like methods:
         __getitem__=__getitem__,
         __setitem__=__setitem__,
@@ -176,20 +180,22 @@ def __init__(self, *values_by_field_order, **values_by_fieldname):
     """
     self._check_args(values_by_field_order, values_by_fieldname)
 
-    # Progressively assemble a dict representation of the record from
-    # the field defaults, the positional arg and the keyword args.
-    field_values = self._defaults.copy()
-    field_values.update(zip(self._fieldnames, values_by_field_order))
-    field_values.update(values_by_fieldname)
+    for fieldname, value in zip(self._fieldnames, values_by_field_order):
+        setattr(self, fieldname, value)
 
-    self._check_all_fields_defined(field_values)
+    for fieldname in values_by_fieldname:
+        setattr(self, fieldname, values_by_fieldname[fieldname])
 
-    for fieldname, value in field_values.items():
-        if isinstance(value, DefaultFactory):
-            # Call the default factory function
-            setattr(self, fieldname, value())
-        else:
-            setattr(self, fieldname, value)
+    for fieldname in self._fieldnames:
+        if not hasattr(self, fieldname):
+            if fieldname in self._defaults:
+                if fieldname in self._default_factory_fields:
+                    # Call the default factory function (value)
+                    setattr(self, fieldname, self._defaults[fieldname]())
+                else:
+                    setattr(self, fieldname, self._defaults[fieldname])
+            else:
+                raise ValueError('field {0!r} is not defined'.format(fieldname))
 
 
 def _update(self, *values_by_field_order, **values_by_fieldname):
@@ -217,14 +223,11 @@ def _update(self, *values_by_field_order, **values_by_fieldname):
     """
     self._check_args(values_by_field_order, values_by_fieldname)
 
-    # Progressively assemble a dict representation of the record from
-    # the field defaults, the positional arg and the keyword args.
-    field_values = {}
-    field_values.update(zip(self._fieldnames, values_by_field_order))
-    field_values.update(values_by_fieldname)
-
-    for fieldname, value in field_values.items():
+    for fieldname, value in zip(self._fieldnames, values_by_field_order):
         setattr(self, fieldname, value)
+
+    for fieldname in values_by_fieldname:
+        setattr(self, fieldname, values_by_fieldname[fieldname])
 
 
 def _asdict(self):
@@ -279,16 +282,8 @@ def _replace_defaults(cls, *values_by_field_order, **values_by_fieldname):
     defaults.update(values_by_fieldname)
     cls._defaults = defaults
 
-
-@classmethod
-def _check_all_fields_defined(cls, fieldnames):
-    """
-    Raise a ValueError if fieldnames does not contain all of the
-    fieldnames in cls._fieldnames.
-    """
-    for fieldname in cls._fieldnames:
-        if fieldname not in fieldnames:
-            raise ValueError('field {0!r} is not defined'.format(fieldname))
+    cls._default_factory_fields = frozenset(
+        _get_default_factory_fields(defaults))
 
 
 @classmethod
@@ -309,9 +304,8 @@ def _check_args(cls, values_by_field_order, values_by_fieldname):
                 .format(fieldname))
 
     # Check that none of the keyword args are redefining a positional arg
-    positional_fields = frozenset(cls._fieldnames[:len(values_by_field_order)])
-    for fieldname in values_by_fieldname:
-        if fieldname in positional_fields:
+    for _, fieldname, in zip(values_by_field_order, cls._fieldnames):
+        if fieldname in values_by_fieldname:
             raise TypeError(
                 'got multiple values for argument {0!r}'.format(fieldname))
 
@@ -396,12 +390,26 @@ def __str__(self):
         self.__class__.__name__, ', '.join('{}={}'.format(
             attr, str(getattr(self, attr))) for attr in self._fieldnames))
 
+
 # ------------------------------------------------------------------------------
 # Helper functions
 
+def _get_default_factory_fields(defaults):
+    """
+    Return a list of fieldnames that have a factory function default.
+
+    :param defaults: a fieldname/default_value mapping.
+    """
+    default_factory_fields = []
+    for fieldname, default_value in defaults.items():
+        if isinstance(default_value, DefaultFactory):
+            default_factory_fields.append(fieldname)
+    return default_factory_fields
+
+
 def _parse_fieldnames(fieldnames, rename):
     """
-    Process a sequence of fieldnames/(fieldname, default) tuples,
+    Process a sequence of fieldname strings and/or (fieldname, default) tuples,
     creating a list of corrected fieldnames and a map of fieldname to
     default-values.
     """
