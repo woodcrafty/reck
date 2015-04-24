@@ -15,9 +15,9 @@ Reck
 :License: `BSD 3-Clause <http://reck.readthedocs.org/en/latest/license.html>`_
 :Status: Alpha
 
-*Reck* is a Python package for creating lightweight,
+*Reck* is a package for creating lightweight,
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
-classes. It is the "REcord Creation Kit".
+classes in python v3.x. It is the "REcord Creation Kit".
 
 It aims to make working with record data easy and intuitive while removing
 the need to manually code record classes.
