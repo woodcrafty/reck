@@ -2,11 +2,15 @@
 *reck*
 ======
 
-*Reck* is an Python package for creating lightweight,
+:Author: `Mark Richards <http://www.abdn.ac.uk/staffnet/profiles/m.richards/>`_
+:License: `BSD 3-Clause <http://reck.readthedocs.org/en/latest/license.html>`_
+:Latest version: `1.0rc1`
+
+*Reck* is an package for creating lightweight,
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
-classes (aka 'struct' in C). The record classes are similar to
+classes (aka 'struct' in C) in Python v3.x. The record classes are similar to
 `named tuples <https://docs.python.org/3.4/library/collections.html#collections.namedtuple>`_,
-but with a unique set of properties:
+but have a unique set of properties:
 
 * mutable field values accessible using named attributes
 * indexable, sliceable and iterable
@@ -15,7 +19,7 @@ but with a unique set of properties:
 * very low memory footprint
 
 Depending on your use-case, records may be a better choice than named tuples,
-dictionaries or custom classes.
+dictionaries or manually coded custom classes.
 
 *Reck* provides a factory function to easily create custom record classes -
 it's the "REcord Creation Kit". The factory function saves you having to
@@ -61,6 +65,7 @@ Documentation contents
 
    tutorial
    memory_usage
+   benchmarks
    changelog
    license
 
