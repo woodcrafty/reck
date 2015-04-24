@@ -1,5 +1,5 @@
 """
-This module implements the make_rectype() factory function and DefaultFactory
+This module implements the recktype() factory function and DefaultFactory
 class for creating lightweight record classes with mutable fields and optional
 per-field defaults.
 
@@ -18,7 +18,7 @@ __author__ = 'Mark Richards'
 __email__ = 'mark.l.a.richardsREMOVETHIS@gmail.com'
 
 
-def make_rectype(typename, fieldnames, rename=False):
+def recktype(typename, fieldnames, rename=False):
     """
     Create a new record class with fields accessible by named attributes.
 
@@ -31,11 +31,11 @@ def make_rectype(typename, fieldnames, rename=False):
 
     Basic example::
 
-        >>> from reck import make_rectype
-        >>> Point3D = make_rectype('Point3D', 'x y z')  # Create new record type
+        >>> from reck import recktype
+        >>> Point3D = recktype('Point3D', 'x y z')  # Create new record type
         >>> p = Point3D(x=1, y=2, z=3)
         >>> # Make a new Point3D class in which 'z' defaults to zero
-        >>> Point3D = make_rectype('Point3D', ['x', 'y', ('z', 0)])
+        >>> Point3D = recktype('Point3D', ['x', 'y', ('z', 0)])
         >>> p = Point3D(x=1, y=2)
         >>> p                                   # z has been assigned its default value
         Point3D(x=1, y=2, z=0)
@@ -151,7 +151,7 @@ def __init__(self, *values_by_field_order, **values_by_fieldname):
     The following examples all return a record equivalent to
     ``Rec(a=1, b=2, c=3)``::
 
-        >>> Rec = make_rectype('Rec', 'a b c')
+        >>> Rec = recktype('Rec', 'a b c')
         >>> rec = Rec(1, 2, 3)                # using positional args
         >>> rec = Rec(a=1, b=2, c=3)          # using keyword args
         >>> rec = Rec(*[1, 2, 3])             # using an unpacked sequence
@@ -206,7 +206,7 @@ def _update(self, *values_by_field_order, **values_by_fieldname):
 
     Example::
 
-        >>> Rec = make_rectype('Rec', 'a b c')
+        >>> Rec = recktype('Rec', 'a b c')
         >>> r = Rec(a=1, b=2, c=3)
         >>> r._update(b=5, c=6)   # using keyword arguments
         >>> r
@@ -252,7 +252,7 @@ def _get_defaults(cls):
     default value (if they have one). If no default values are set an empty
      ``dict`` is returned.
     ::
-        >>> Point = make_rectype('Point', [('x', None), ('y', None)])
+        >>> Point = recktype('Point', [('x', None), ('y', None)])
         >>> Point._get_defaults()
         {'x': None, 'y': None}
     """
@@ -506,7 +506,7 @@ class DefaultFactory(object):
     creation::
 
         >>> from reck import DefaultFactory
-        >>> Car = make_rectype('Car', [
+        >>> Car = recktype('Car', [
         ...     'make',
         ...     'model',
         ...     ('colours', DefaultFactory(list))])
@@ -519,7 +519,7 @@ class DefaultFactory(object):
     An example using ``dict`` with positional and keyword arguments
     as a default factory::
 
-        >>> Rec = make_rectype('Rec', [
+        >>> Rec = recktype('Rec', [
         ...     ('a', DefaultFactory(dict, args=[[('b', 2)]], kwargs=dict(c=3)))])
         >>> rec = Rec()       # field 'a' will be set using the default factory
         >>> rec.a

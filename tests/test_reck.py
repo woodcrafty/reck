@@ -4,9 +4,9 @@ import pickle
 from sys import version_info
 import unittest
 
-from reck import make_rectype, DefaultFactory
+from reck import recktype, DefaultFactory
 
-Rec = make_rectype('Rec', ['a', 'b'])
+Rec = recktype('Rec', ['a', 'b'])
 
 
 class TestDefaultFactory(unittest.TestCase):
@@ -64,38 +64,38 @@ class TestReck(unittest.TestCase):
     # ==========================================================================
     # Test record type creation
 
-    def test_make_rectype_with_sequence(self):
+    def test_recktype_with_sequence(self):
         # Simple sequence
-        Rec = make_rectype('Rec', ['a', 'b'])
+        Rec = recktype('Rec', ['a', 'b'])
         rec = Rec(1, 2)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
         # Sequence of 2-tuples
-        Rec = make_rectype('Rec', [('a', None), ('b', None)])
+        Rec = recktype('Rec', [('a', None), ('b', None)])
         rec = Rec(1, 2)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
         # Simple sequence with some 2-tuples
-        Rec = make_rectype('Rec', ['a', ('b', None)])
+        Rec = recktype('Rec', ['a', ('b', None)])
         rec = Rec(1, 2)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
 
         # String sequence
-        Rec = make_rectype('Rec', 'a b,c, d')
+        Rec = recktype('Rec', 'a b,c, d')
         rec = Rec(1, 2, 3, 4)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
         self.assertEqual(rec.c, 3)
         self.assertEqual(rec.d, 4)
-        Rec = make_rectype('Rec', 'ab')
+        Rec = recktype('Rec', 'ab')
         rec = Rec(1)
         self.assertEqual(rec.ab, 1)
 
         # With DefaultFactory with no args/kwargs
-        Rec = make_rectype('Rec', ['a', ('b', DefaultFactory(list))])
+        Rec = recktype('Rec', ['a', ('b', DefaultFactory(list))])
         rec1 = Rec(a=1)
         rec2 = Rec(a=1)
         self.assertEqual(rec1.a, 1)
@@ -107,7 +107,7 @@ class TestReck(unittest.TestCase):
         self.assertEqual(rec2.b, [])
 
         # With DefaultFactory with args
-        Rec = make_rectype('Rec', [
+        Rec = recktype('Rec', [
             ('a', DefaultFactory(list, args=[[1, 2]]))])
         rec1 = Rec()
         rec2 = Rec()
@@ -119,7 +119,7 @@ class TestReck(unittest.TestCase):
 
         # With DefaultFactory with kwargs
         kwargs = {'a': 1}
-        Rec = make_rectype('Rec', [
+        Rec = recktype('Rec', [
             ('a', DefaultFactory(dict, kwargs=kwargs))])
         rec1 = Rec()
         rec2 = Rec()
@@ -133,7 +133,7 @@ class TestReck(unittest.TestCase):
         args = [[('a', 1), ('b', 2)]]
         kwargs = {'c': 3}
         dct = dict(*args, **kwargs)
-        Rec = make_rectype('Rec', [
+        Rec = recktype('Rec', [
             ('a', DefaultFactory(dict, args=args, kwargs=kwargs))])
         rec1 = Rec()
         rec2 = Rec()
@@ -144,41 +144,41 @@ class TestReck(unittest.TestCase):
         dct.update(d=4)
         self.assertEqual(rec1.a, dct)
 
-    def test_make_rectype_with_mapping(self):
+    def test_recktype_with_mapping(self):
         # Use lots of fields to check that field order is preserved
         nfields = 50
         fieldnames = ['f{0}'.format(i) for i in range(nfields)]
         tuples = [(name, None) for name in fieldnames]
-        Rec = make_rectype('Rec', OrderedDict(tuples))
+        Rec = recktype('Rec', OrderedDict(tuples))
         rec = Rec(*list(range(nfields)))
         for i in range(nfields):
             self.assertEqual(rec[i], i)
             fieldname = 'f{0}'.format(i)
             self.assertEqual(getattr(rec, fieldname), i)
 
-    def test_make_rectype_with_bad_sequence(self):
+    def test_recktype_with_bad_sequence(self):
         with self.assertRaises(ValueError):
             # 3-tuple instead of 2-tuple
-            Rec = make_rectype('Rec', [('a', 1, 2)])
+            Rec = recktype('Rec', [('a', 1, 2)])
 
         with self.assertRaises(ValueError):
             # 1-tuple instead of 2-tuple
-            Rec = make_rectype('Rec', [('a',)])
+            Rec = recktype('Rec', [('a',)])
 
-    def test_make_rectype_with_defaults(self):
-        Rec = make_rectype('Rec', dict(a=1))
+    def test_recktype_with_defaults(self):
+        Rec = recktype('Rec', dict(a=1))
         rec = Rec()
         self.assertEqual(rec.a, 1)
 
-        Rec = make_rectype('Rec', [('a', 1), 'b', ('c', 3)])
+        Rec = recktype('Rec', [('a', 1), 'b', ('c', 3)])
         rec = Rec(b=2)
         self.assertEqual(rec.a, 1)
         self.assertEqual(rec.b, 2)
         self.assertEqual(rec.c, 3)
 
-    def test_make_rectype_with_default_factory(self):
+    def test_recktype_with_default_factory(self):
         # default factory with no args/kwargs
-        Rec = make_rectype('Rec', ['a', ('b', DefaultFactory(list))])
+        Rec = recktype('Rec', ['a', ('b', DefaultFactory(list))])
         rec1 = Rec(a=1)
         rec2 = Rec(a=1)
         self.assertEqual(rec1.a, 1)
@@ -190,7 +190,7 @@ class TestReck(unittest.TestCase):
         self.assertEqual(rec2.b, [])
 
         # default factory with args
-        Rec = make_rectype('Rec', [
+        Rec = recktype('Rec', [
             'a',
             ('b', DefaultFactory(list, args=([1, 2],)))])
         rec1 = Rec(a=1)
@@ -203,7 +203,7 @@ class TestReck(unittest.TestCase):
         self.assertEqual(rec2.b, [1, 2])
 
         # default factory with kwargs
-        Rec = make_rectype('Rec', [
+        Rec = recktype('Rec', [
             'a',
             ('b', DefaultFactory(dict, kwargs=dict(val1=1, val2=2)))])
         rec1 = Rec(a=1)
@@ -216,7 +216,7 @@ class TestReck(unittest.TestCase):
         self.assertEqual(rec2.b, dict(val1=1, val2=2))
 
         # default factory with args and kwargs
-        Rec = make_rectype('Rec', [
+        Rec = recktype('Rec', [
             'a',
             ('b', DefaultFactory(
                 dict, args=([('val1', 1)],), kwargs=dict(val2=2)))])
@@ -232,85 +232,85 @@ class TestReck(unittest.TestCase):
     def test_bad_typename(self):
         with self.assertRaises(ValueError):
             # Typename is a keyword
-            R = make_rectype('for', ['a', 'b'])
+            R = recktype('for', ['a', 'b'])
 
         with self.assertRaises(ValueError):
             # Typename with a leading digit
-            R = make_rectype('1R', ['a', 'b'])
+            R = recktype('1R', ['a', 'b'])
 
         with self.assertRaises(ValueError):
             # Typename contains a non alpha-numeric/underscore character
-            R = make_rectype('R-', ['a', 'b'])
+            R = recktype('R-', ['a', 'b'])
 
     def test_bad_fieldname(self):
         with self.assertRaises(ValueError):
             # Duplicate fieldname
-            R = make_rectype('R', ['a', 'a', 'b', 'a'])
+            R = recktype('R', ['a', 'a', 'b', 'a'])
 
         with self.assertRaises(ValueError):
             # Fieldname with leading underscore
-            R = make_rectype('R', ['a', '_b'])
+            R = recktype('R', ['a', '_b'])
 
         with self.assertRaises(ValueError):
             # Fieldname is a keyword
-            R = make_rectype('R', ['a', 'for'])
+            R = recktype('R', ['a', 'for'])
 
         with self.assertRaises(ValueError):
             # Fieldname with a leading digit
-            R = make_rectype('R', ['a', '1b'])
+            R = recktype('R', ['a', '1b'])
 
         with self.assertRaises(ValueError):
             # Fieldname contains a non alpha-numeric character/underscore char
-            R = make_rectype('R', ['a', 'b!'])
+            R = recktype('R', ['a', 'b!'])
 
         with self.assertRaises(ValueError):
             # tuple of len 1 (2-tuple is required)
-            R = make_rectype('R', [('a',)])
+            R = recktype('R', [('a',)])
 
         with self.assertRaises(ValueError):
             # tuple of len 3 (2-tuple is required)
-            R = make_rectype('R', [('a', 1, 1)])
+            R = recktype('R', [('a', 1, 1)])
 
         with self.assertRaises(ValueError):
             # Non-string/2-tuple fieldname
-            R = make_rectype('R', ['a', {'b': 1}])
+            R = recktype('R', ['a', {'b': 1}])
 
         with self.assertRaises(TypeError):
             # Non-string/2-tuple fieldname
-            R = make_rectype('R', ['a', 1])
+            R = recktype('R', ['a', 1])
 
     def test_rename(self):
         # Duplicate fieldname
-        R = make_rectype('R', ['a', 'a', 'b', 'a'], rename=True)
+        R = recktype('R', ['a', 'a', 'b', 'a'], rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1', 'b', '_3'))
 
         # Fieldname with leading underscore
-        R = make_rectype('R', ['a', '_b'], rename=True)
+        R = recktype('R', ['a', '_b'], rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1'))
 
         # Fieldname is a keyword
-        R = make_rectype('R', ['a', 'for'], rename=True)
+        R = recktype('R', ['a', 'for'], rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1'))
 
         # Fieldname with a leading digit
-        R = make_rectype('R', ['a', '1b'], rename=True)
+        R = recktype('R', ['a', '1b'], rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1'))
 
         # Fieldname contains a non alpha-numeric chanacter/underscore char
-        R = make_rectype('R', ['a', 'b!'], rename=True)
+        R = recktype('R', ['a', 'b!'], rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1'))
 
         # Multiple rename required
-        R = make_rectype(
+        R = recktype(
             'R', ['a', 'a', 'b!', 'c', 'for'], rename=True)
         self.assertEqual(R._fieldnames, ('a', '_1', '_2', 'c', '_4'))
 
         # Rename should not break anything when all fieldnames are valid
-        R = make_rectype('R', ['a', 'b', 'c'], rename=True)
+        R = recktype('R', ['a', 'b', 'c'], rename=True)
         self.assertEqual(R._fieldnames, ('a', 'b', 'c'))
 
         # Rename with defaults
-        R = make_rectype('R', [('_a', 1), ('b!', 2)], rename=True)
+        R = recktype('R', [('_a', 1), ('b!', 2)], rename=True)
         r = R()
         self.assertEqual(r._0, 1)
         self.assertEqual(r._1, 2)
@@ -320,7 +320,7 @@ class TestReck(unittest.TestCase):
         # fields argument of the constructor are preserved in __slots__
         fields = (
             ['field_b', 'field_d', 'field_c', 'field_f', 'field_e', 'field_a'])
-        Rec = make_rectype('Rec', fields)
+        Rec = recktype('Rec', fields)
         rec = Rec(*list(range(len(fields))))
         self.assertEqual(rec.field_b, 0)
         self.assertEqual(rec.field_d, 1)
@@ -403,13 +403,13 @@ class TestReck(unittest.TestCase):
         kwargs = {k: v for k, v in zip(fieldnames, values)}
 
         # With values unpacked to positional arguments
-        Rec = make_rectype('Rec', fieldnames)
+        Rec = recktype('Rec', fieldnames)
         rec = Rec(*values)
         self.assertEqual(rec.f0, 0)
         self.assertEqual(getattr(rec, 'f{0}'.format(nfields - 1)),  nfields - 1)
 
         # With values unpacked to keyword arguments
-        Rec = make_rectype('Rec', fieldnames)
+        Rec = recktype('Rec', fieldnames)
         rec = Rec(**kwargs)
         self.assertEqual(rec.f0, 0)
         self.assertEqual(rec.f0, 0)
@@ -419,11 +419,11 @@ class TestReck(unittest.TestCase):
     # Test getting and setting of defaults
 
     def test_get_defaults(self):
-        Rec = make_rectype('Rec', ['a', ('b', 2), ('c', 3)])
+        Rec = recktype('Rec', ['a', ('b', 2), ('c', 3)])
         self.assertEqual(Rec._get_defaults(), dict(b=2, c=3))
 
     def test_replace_defaults(self):
-        Rec = make_rectype('Rec', ['a', ('b', 2), ('c', 3)])
+        Rec = recktype('Rec', ['a', ('b', 2), ('c', 3)])
         self.assertEqual(Rec._get_defaults(), dict(b=2, c=3))
 
         # With args
@@ -463,7 +463,7 @@ class TestReck(unittest.TestCase):
     def test_index(self):
         rec = Rec(1, 2)
         self.assertEqual(rec._index(2), 1)
-        R = make_rectype('R', 'a b c d')
+        R = recktype('R', 'a b c d')
         rec = R(1, 2, 2, 3)
         self.assertEqual(rec._index(2), 1)  # 1st occurrence of 2
         self.assertEqual(rec._index(3), 3)
@@ -471,14 +471,14 @@ class TestReck(unittest.TestCase):
         # Test it still works if one of the fields is called count. This is
         # done because _index() is set to the baseclass index() (implemented by
         # collections.Sequence)
-        R = make_rectype('R', 'a b c index')
+        R = recktype('R', 'a b c index')
         rec = R(1, 2, 2, 3)
         self.assertEqual(rec.index, 3)
         self.assertEqual(rec._index(2), 1)  # 1st occurrence of 2
         self.assertEqual(rec._index(3), 3)
 
     def test_count(self):
-        R = make_rectype('R', 'a b c')
+        R = recktype('R', 'a b c')
         rec = R(1, 2, 2)
         c =rec._count(1)
         self.assertEqual(rec._count(1), 1)
@@ -487,7 +487,7 @@ class TestReck(unittest.TestCase):
         # Test it still works if one of the fields is called count. This is
         # done because _count() calls the baseclass count() (inherited from
         # collections.Sequence
-        R = make_rectype('R', 'a b count')
+        R = recktype('R', 'a b count')
         rec = R(1, 2, 2)
         self.assertEqual(rec.count, 2)
         self.assertEqual(rec._count(1), 1)
@@ -535,7 +535,7 @@ class TestReck(unittest.TestCase):
             rec.c = 3
 
     def test_getitem(self):
-        R = make_rectype('R', ['a', 'b', 'c', 'd'])
+        R = recktype('R', ['a', 'b', 'c', 'd'])
         rec = R(1, 2, 3, 4)
 
         # Test access by numerical index
@@ -557,7 +557,7 @@ class TestReck(unittest.TestCase):
             _ = rec[99999]
 
     def test_setitem(self):
-        R = make_rectype('R', ['a', 'b', 'c', 'd', 'e'])
+        R = recktype('R', ['a', 'b', 'c', 'd', 'e'])
         rec = R(1, 2, 3, 4, 5)
 
         # Test __setitem__ by numerical index
@@ -613,7 +613,7 @@ class TestReck(unittest.TestCase):
         self.assertEqual(rec.b, 4)
 
     def test_update_with_bad_args(self):
-        Rec = make_rectype('Rec', 'a b')
+        Rec = recktype('Rec', 'a b')
         rec = Rec(1, 2)
 
         with self.assertRaises(TypeError):
@@ -650,7 +650,7 @@ class TestReck(unittest.TestCase):
     def test_asdict(self):
         fieldnames = list('abcdefgh')
         values = [1, 2, 3, 4, 5, 6, 7, 8]
-        Rec = make_rectype('Rec', fieldnames)
+        Rec = recktype('Rec', fieldnames)
         rec = Rec(*values)
         od = OrderedDict(zip(fieldnames, values))
         self.assertEqual(rec._asdict(), od)

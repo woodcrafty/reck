@@ -1,5 +1,5 @@
 
 
-from .reck import make_rectype, DefaultFactory
+from .reck import recktype, DefaultFactory
 
-__all__ = ['make_rectype', 'DefaultFactory']
+__all__ = ['recktype', 'DefaultFactory']
