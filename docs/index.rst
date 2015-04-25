@@ -1,5 +1,5 @@
 ======
-*reck*
+*Reck*
 ======
 
 :Author: `Mark Richards <http://www.abdn.ac.uk/staffnet/profiles/m.richards/>`_
@@ -57,17 +57,14 @@ You can install the package directly from PyPI::
 
 or download the `GitHub source <https://github.com/woodcrafty/reck>`_.
 
-Documentation contents
+Documentation Contents
 ----------------------
-
 .. toctree::
    :maxdepth: 2
 
    tutorial
    memory_usage
    benchmarks
-   changelog
-   license
 
 API Reference
 -------------
@@ -78,3 +75,11 @@ of the documentation is for you.
    :maxdepth: 2
 
    api
+
+Miscellaneous Pages
+-------------------
+.. toctree::
+   :maxdepth: 2
+
+   changelog
+   license
