@@ -4,7 +4,7 @@ Tutorial
 
 Getting started
 ===============
-First, create a record type like you would create a namedtuple type.
+First, create a reck type like you would create a namedtuple type.
 
     >>> from reck import recktype
     >>> Person = recktype('Person', ['name', 'age'])
@@ -34,7 +34,7 @@ Field values are mutable::
     >>> p.name
     'Idle'
 
-You can specify per-field default values when creating a record type::
+You can specify per-field default values when creating a reck type::
 
     >>> Person = recktype('Person', [('name', None), ('age', None)])
     >>> p = Person(name='Eric')   # no value supplied for the 'age' field
@@ -67,7 +67,7 @@ returned by the ``csv`` module::
 
 Type creation
 =============
-New types are created with the ``recktype()`` factory function::
+New reck types are created with the ``recktype()`` factory function::
 
     >>> Point = recktype(typename='Point', fieldnames=['x', 'y'])
 
@@ -118,7 +118,7 @@ mapping such as ``collections.OrderedDict``::
 Factory function defaults
 -------------------------
 Like Python's mutable default arguments, mutable default field values will
-be shared amongst all instances of the record type::
+be shared amongst all instances of the reck type::
 
     >>> Rec = recktype('Rec', [('a', [])])
     >>> rec1 = Rec()
@@ -168,7 +168,7 @@ You can set the *rename* argument of ``recktype()`` to ``True`` to
 automatically replace invalid fieldnames with position names::
 
     >>> Rec = recktype('Rec', ['abc', 'def', 'ghi', 'abc'], rename=True)
-    >>> Rec._fieldnames    # keyword 'def' and duplicate fieldname 'abc' have been renamed
+    >>> Rec._fieldnames  # keyword 'def' and duplicate fieldname 'abc' have been renamed
     ('abc', '_1', 'ghi', '_3')
 
 This can be useful if the fieldnames are being read in from a file,
@@ -194,9 +194,6 @@ other record objects of the same type::
     >>> p2 = Point3D(*p)
     >>> p2 == p
     True
-
-Note, that the field order of instantiation parameters is not affected by
-defaults.
 
 Getting and setting fields
 ==========================
@@ -255,8 +252,8 @@ being assigned to the slice is longer than the slice, the surplus iterable
 items are ignored (whereas with a list the surplus items are inserted into
 the list)::
 
-    >>> p[:3] = [1, 2, 3, 4, 5]   # Slice has 3 items, the iterable has 5
-    >>> p                         # The last 2 items of the iterable were ignored
+    >>> p[:3] = [1, 2, 3, 4, 5]  # Slice has 3 items, the iterable has 5
+    >>> p                        # The last 2 items of the iterable were ignored
     Point3D(x=1, y=2, z=3)
 
 Likewise, if the iterable contains fewer items than the slice, the surplus
@@ -353,7 +350,7 @@ You can convert the record to an ``OrderedDict`` using ``_asdict()``::
 
 Miscellaneous operations
 ========================
-Record types support various operations that are demonstrated below::
+Reck types support various operations that are demonstrated below::
 
     >>> p = Point3D(x=1, y=2, z=3)
     >>> len(p)              # get the number of fields in the record
@@ -392,7 +389,7 @@ Instances can be pickled::
 
 Subclassing
 ===========
-Since record types are normal Python classes it is easy to add or change
+Since reck types are normal Python classes it is easy to add or change
 functionality with a subclass. Here is how to add a calculated field and a
 fixed-width print format::
 
@@ -414,8 +411,8 @@ dictionaries.
 
 Adding fields/attributes
 ========================
-Because record objects are based on slots, new fields cannot be added after
-object creation::
+Because reck types are based on slots, new fields cannot be added after object
+creation::
 
     >>> Point = recktype('Point', 'x y')
     >>> p = Point(1, 2)
@@ -427,13 +424,13 @@ object creation::
     AttributeError: 'Point' object has no attribute 'new_attribute'
 
 Subclassing is also not useful for adding new attributes. Instead, simply
-create a new record type from the ``_fieldnames`` class attribute::
+create a new reck type from the ``_fieldnames`` class attribute::
 
     >>> Point3D = recktype('Point3D', Point._fieldnames + ('z',))
 
 More than 255 fields
 ====================
-Record types have no limit on the number of fields, whereas named tuples
+Reck types have no limit on the number of fields, whereas named tuples
 are limited to 255 fields::
 
     >>> fieldnames = ['f{0}'.format(i) for i in range(1000)]
