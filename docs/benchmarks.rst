@@ -12,12 +12,14 @@ the timeit module with 1000000 repetitions, in Python 3.4 (CPython), running
 under Windows 7 on a Hewlett Packard Intel i7 laptop, operating on mains power
 (yes, that can make a big difference!). All times are the best of three
 attempts. The relative timings should not be treated as definitive since they
-will likely vary with hardware and Python interpreter used, but should give a
-rough idea of relative performance. The code statements provided to
-``timeit.timeit()`` for each test are given below.
+will likely vary with hardware, Python interpreter, and record size. Despite
+these issues the benchmarks should give a rough idea of relative performance.
+The code statements provided to ``timeit.timeit()`` for each test are given
+below.
 
-Timing of instantiation was carried out by passing field values as positional
-arguments and as keyword arguments. The statements tested were:
+Timing of instantiation was carried out twice, once with passing field values
+as positional arguments and again passing field values as keyword arguments.
+The statements tested were:
 
     1. Values by position: ``r = R(0, 1, 2, 3, 4)`` for reck and named tuple
        (N/A for dict).
@@ -61,7 +63,7 @@ Get value by attribute/name      90          43          40    2.1            2.
 Get value by index               48         558         n/a    0.09           n/a
 Set value by attribute/name    2246          50          55   44.9           40.9
 Set value by index              n/a         640         n/a     n/a           n/a
-Set multiple field value   s   2414        2612 (215*)  174^   0.92 (11.2*)  13.9
+Set multiple field values      2414        2612 (215*)  174^   0.92 (11.2*)  13.9
 =============================  ==========  ===========  ====  =============  =========
 | * using multiple set-by-attribute statements instead of ``_update()``
 | ^ using multiple assignment statements of the form ``d[key] = value``
