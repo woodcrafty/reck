@@ -10,7 +10,7 @@ Reck
     :target: https://coveralls.io/r/woodcrafty/reck?branch=master
     :alt: Coverage Status
 
-:Author: `Mark Richards <http://www.abdn.ac.uk/staffnet/profiles/m.richards/>`_
+:Author: `Mark Richards <https://www.abdn.ac.uk/people/mark.richards/>`_
 :Email: mark.l.a.richardsREMOVETHIS@gmail.com
 :License: `BSD 3-Clause <http://reck.readthedocs.org/en/latest/license.html>`_
 :Status: Alpha
