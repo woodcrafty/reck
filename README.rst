@@ -19,7 +19,7 @@ Reck
 `record <http://en.wikipedia.org/wiki/Record_(computer_science)>`_
 classes in python v3.x. It is the "REcord Creation Kit".
 
-It aims to make working with record data easy and intuitive while removing
+Aims to make working with record data easy and intuitive while removing
 the need to manually code record classes.
 
 What problem does *Reck* solve?
